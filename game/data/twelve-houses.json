@@ -1,0 +1,78 @@
+{
+  "title": "Les 12 maisons",
+  "aiDifficulty": "difficile",
+  "houses": [
+    {
+      "id": "house-01",
+      "name": "Maison des Ténèbres",
+      "tier": 1,
+      "knights": ["phenix-noir", "dragon-noir", "pegase-noir", "cygne-noir", "andromede-noir"]
+    },
+    {
+      "id": "house-02",
+      "name": "Maison du Colisée",
+      "tier": 2,
+      "knights": ["bronze_jabu", "bronze_nachi", "bronze_ichi", "bronze_geki", "bronze_ban", "bronze_homme_docrates"]
+    },
+    {
+      "id": "house-03",
+      "name": "Maison de Grèce",
+      "tier": 3,
+      "knights": ["bronze_docrates", "bronze_june", "bronze_ban", "bronze_jabu", "bronze_nachi", "bronze_ichi"]
+    },
+    {
+      "id": "house-04",
+      "name": "Maison des Bronzes",
+      "tier": 4,
+      "knights": ["seiya-de-pegase", "shiryu-du-dragon", "hyoga-du-cygne", "shun_andromede", "ikki-du-phenix", "marine-aigle"]
+    },
+    {
+      "id": "house-05",
+      "name": "Maison du Sanctuaire",
+      "tier": 5,
+      "knights": ["kiki", "marine-aigle", "capela-du-cocher", "jamian-du-corbeau", "tremy-de-la-fleche", "babel-du-centaure"]
+    },
+    {
+      "id": "house-06",
+      "name": "Maison de l'Arène",
+      "tier": 6,
+      "knights": ["babel-du-centaure", "moises_baleine", "arachne-de-la-tarentule", "dante-du-cerbere", "agora-du-lotus", "misty-du-lezard"]
+    },
+    {
+      "id": "house-07",
+      "name": "Maison du Serpent",
+      "tier": 7,
+      "knights": ["shina-du-cobra", "misty-du-lezard", "asterion-des-chiens-de-chasse", "moises_baleine", "jamian-du-corbeau", "orphee-de-la-lyre"]
+    },
+    {
+      "id": "house-08",
+      "name": "Maison d'Argent",
+      "tier": 8,
+      "knights": ["orphee-de-la-lyre", "hakurai", "asterion-des-chiens-de-chasse", "arachne-de-la-tarentule", "dante-du-cerbere", "agora-du-lotus"]
+    },
+    {
+      "id": "house-09",
+      "name": "Maison d'Asgard",
+      "tier": 9,
+      "knights": ["fenril_alioth", "thor_phecda", "hagen_merak", "mime_veneta", "alberic_megrez", "syd_mizar"]
+    },
+    {
+      "id": "house-10",
+      "name": "Maison du Valhalla",
+      "tier": 10,
+      "knights": ["siegfried_dubhe", "bud_alcor", "hilda_polaris", "aldebaran_taureau", "shura-du-capricorne", "masque-de-mort-du-cancer"]
+    },
+    {
+      "id": "house-11",
+      "name": "Maison des Ors",
+      "tier": 11,
+      "knights": ["aior-du-lion", "milo-du-scorpion", "mu_belier", "saga", "shakka", "aioros_sagittaire"]
+    },
+    {
+      "id": "house-12",
+      "name": "Maison des Dieux",
+      "tier": 12,
+      "knights": ["seiya_armure_divine", "shiryu_armure_divine", "hyoga_armure_divine", "thanatos", "hypnos", "hades-corps-humain"]
+    }
+  ]
+}

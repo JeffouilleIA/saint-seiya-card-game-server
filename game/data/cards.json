@@ -1,0 +1,757 @@
+[
+  {
+    "id": "phenix-noir",
+    "name": "Ph nix noir",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 60,
+    "type": "chevalier-noir",
+    "retreat": 1,
+    "image": "phenix-noir.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps   corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Illusion du diable",
+        "cost": 3,
+        "damage": 30,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "confused"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dragon-noir",
+    "name": "Dragon noir",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 60,
+    "type": "chevalier-noir",
+    "retreat": 2,
+    "image": "dragon-noir.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps   corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Tornade noire",
+        "cost": 3,
+        "damage": 50,
+        "effects": []
+      }
+    ]
+  },
+  {
+    "id": "pegase-noir",
+    "name": "P gase noir",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 60,
+    "type": "chevalier-noir",
+    "retreat": 1,
+    "image": "pegase-noir.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps   corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "M t ores noirs",
+        "cost": 2,
+        "damage": 30,
+        "effects": [
+          {
+            "type": "coin_flip"
+          },
+          {
+            "type": "status_on_heads",
+            "target": "opponent_active",
+            "status": "poisoned"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cygne-noir",
+    "name": "Cygne noir",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 50,
+    "type": "chevalier-noir",
+    "retreat": 2,
+    "image": "cygne-noir.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps   corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Blizzard noir",
+        "cost": 2,
+        "damage": 30,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "frozen"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "andromede-noir",
+    "name": "Androm de noir",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 50,
+    "type": "chevalier-noir",
+    "retreat": 2,
+    "image": "andromede-noir.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps   corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Cha ne serpents",
+        "cost": 3,
+        "damage": 30,
+        "effects": [
+          {
+            "type": "coin_flip"
+          },
+          {
+            "type": "status_on_heads",
+            "target": "opponent_active",
+            "status": "poisoned"
+          },
+          {
+            "type": "status_on_tails",
+            "target": "opponent_active",
+            "status": "paralyzed"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ikki-phenix-mechant",
+    "name": "Ikki du Phénix méchant",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 100,
+    "bronzeCategory": "majeur",
+    "type": "chevalier-bronze",
+    "retreat": 2,
+    "image": "ikki-phenix-mechant.jpg",
+    "talent": {
+      "name": "Chef des ombres",
+      "effect": "Cherchez un homme de phénix ou un chevalier noir dans votre deck et mettez-le dans votre main.",
+      "effects": [
+        {
+          "type": "search_deck",
+          "count": 1,
+          "filter": {
+            "or": [
+              {
+                "cardIds": [
+                  "ikki-du-phenix",
+                  "ikki-phenix-mechant",
+                  "ikki-cosmo-ardent"
+                ]
+              },
+              {
+                "type": "chevalier-noir"
+              }
+            ]
+          },
+          "destination": "hand"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Illusion du Phénix",
+        "cost": 2,
+        "damage": 20,
+        "effect": "Le Chevalier adverse est confus.",
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "confused"
+          }
+        ]
+      },
+      {
+        "name": "Battement d’aile du Phénix",
+        "cost": 3,
+        "damage": 60,
+        "effect": "Défaussez une carte énergie. Inflige 30 dégâts à tous les chevaliers de banc adverses et 10 dégâts à vos propres chevaliers de banc.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "count": 1,
+            "target": "self"
+          },
+          {
+            "type": "bench_damage",
+            "target": "opponent_bench_all",
+            "damage": 30
+          },
+          {
+            "type": "bench_damage",
+            "target": "self_bench_all",
+            "damage": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ikki-du-phenix",
+    "name": "Ikki du Ph nix",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 90,
+    "bronzeCategory": "majeur",
+    "type": "chevalier-bronze",
+    "retreat": 2,
+    "image": "20260520_080911.jpg",
+    "talent": {
+      "name": "Ph nix immortel !",
+      "effects": [
+        {
+          "type": "min_hp_threshold",
+          "threshold": 40,
+          "set_hp_to": 40
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps   corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Illusion du Ph nix",
+        "cost": 2,
+        "damage": 20,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "confused"
+          }
+        ]
+      },
+      {
+        "name": "Battement d'ailes",
+        "cost": 3,
+        "damage": 80,
+        "effects": [
+          {
+            "type": "bench_damage",
+            "target": "opponent_bench_all",
+            "damage": 20
+          },
+          {
+            "type": "discard_cards_from_hand",
+            "count": 2,
+            "owner": "opponent"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ikki-cosmo-ardent",
+    "name": "Ikki Cosmo Ardent",
+    "stage": "evolution",
+    "evolvesFrom": "Ikki du Ph nix",
+    "hp": 130,
+    "type": "chevalier-bronze",
+    "retreat": 2,
+    "image": "ikki-cosmo-ardent.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps   corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Le ph nix qui vole",
+        "cost": 4,
+        "damage": 30,
+        "effects": [
+          {
+            "type": "bonus_damage_per_energy",
+            "target": "self",
+            "amountPerEnergy": 20
+          },
+          {
+            "type": "discard_energy",
+            "count": 1,
+            "target": "self"
+          }
+        ]
+      },
+      {
+        "name": "L'envol final",
+        "cost": 1,
+        "damage": 100,
+        "effects": [
+          {
+            "type": "self_damage",
+            "damage": 100
+          },
+          {
+            "type": "discard_all_energy",
+            "target": "self"
+          },
+          {
+            "type": "cant_use_attack_next_turn",
+            "attackName": "L'envol final"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "shun-cosmo-ardent",
+    "name": "Shun Cosmo Ardent",
+    "stage": "evolution",
+    "evolvesFrom": "Shun d'Andromède",
+    "hp": 90,
+    "type": "chevalier-bronze",
+    "retreat": 2,
+    "image": "20260520_080900.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps   corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "D fense tournoyante",
+        "cost": 1,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "reduce_damage_taken_next_turn",
+            "target": "self",
+            "amount": 40
+          }
+        ]
+      },
+      {
+        "name": "Vague de tonnerre",
+        "cost": 3,
+        "damage": 70,
+        "effects": [
+          {
+            "type": "bonus_if_attack_used_last_turn",
+            "requiredAttack": "D fense tournoyante",
+            "bonusDamage": 30
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "hyoga-du-cygne",
+    "name": "Hyoga du Cygne",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 80,
+    "bronzeCategory": "majeur",
+    "bronzeMineur": false,
+    "type": "chevalier-bronze",
+    "retreat": 2,
+    "image": "20260520_080835.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps   corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Poussi re de diamant",
+        "cost": 2,
+        "damage": 30,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "frozen"
+          }
+        ]
+      },
+      {
+        "name": "Tonnerre de l'aube",
+        "cost": 3,
+        "damage": 50,
+        "effects": [
+          {
+            "type": "coin_flip"
+          },
+          {
+            "type": "bonus_damage_on_heads",
+            "bonusDamage": 20
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "hyoga-cosmo-ardent",
+    "name": "Hyoga Cosmo Ardent",
+    "stage": "evolution",
+    "evolvesFrom": "Hyoga du Cygne",
+    "hp": 110,
+    "type": "chevalier-bronze",
+    "retreat": 2,
+    "image": "20260520_080845.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps   corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Poussi re de diamant",
+        "cost": 2,
+        "damage": 40,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "frozen"
+          }
+        ]
+      },
+      {
+        "name": "Tonnerre de l'aube",
+        "cost": 3,
+        "damage": 70,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "paralyzed"
+          },
+          {
+            "type": "cant_use_card_next_turn"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "shiryu-du-dragon",
+    "name": "Shiryu du Dragon",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 90,
+    "bronzeCategory": "majeur",
+    "type": "chevalier-bronze",
+    "retreat": 2,
+    "image": "20260520_080813.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps   corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Col re du dragon",
+        "cost": 2,
+        "damage": 60,
+        "effects": [
+          {
+            "type": "discard_energy",
+            "count": 1,
+            "target": "self"
+          },
+          {
+            "type": "increase_damage_taken_next_turn",
+            "target": "self",
+            "amount": 20
+          }
+        ]
+      },
+      {
+        "name": "Bouclier",
+        "cost": 0,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "reduce_damage_taken_next_turn",
+            "target": "self_team",
+            "amount": 30
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "shiryu-cosmo-ardent",
+    "name": "Shiryu Cosmo Ardent",
+    "stage": "evolution",
+    "evolvesFrom": "Shiryu du Dragon",
+    "hp": 130,
+    "type": "chevalier-bronze",
+    "retreat": 2,
+    "image": "20260520_080758.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps   corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "La fureur du dragon",
+        "cost": 4,
+        "damage": 90,
+        "effects": [
+          {
+            "type": "discard_energy",
+            "count": 2,
+            "target": "self"
+          }
+        ]
+      },
+      {
+        "name": "Enlever son armure",
+        "cost": 0,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "search_deck_energy",
+            "count": 3,
+            "attachTo": "self"
+          },
+          {
+            "type": "increase_damage_taken_next_turn",
+            "target": "self",
+            "amount": 30
+          },
+          {
+            "type": "cant_use_attack_next_turn",
+            "attackName": "Enlever son armure"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "seiya-de-pegase",
+    "name": "Seiya de Pégase",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 70,
+    "bronzeCategory": "majeur",
+    "bronzeMineur": false,
+    "type": "chevalier-bronze",
+    "retreat": 2,
+    "image": "seiya-de-pegase.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Météores de Pégase",
+        "cost": 2,
+        "damage": 40,
+        "effects": [
+          {
+            "type": "bonus_if_attack_used_last_turn",
+            "requiredAttack": "Météores de Pégase",
+            "bonusDamage": 20,
+            "text": "Si Météores de Pégase a été joué au tour précédent, cette attaque fait 20 dégâts supplémentaires."
+          }
+        ],
+        "description": "Si Météores de Pégase a été joué au tour précédent, cette attaque fait 20 dégâts supplémentaires."
+      }
+    ]
+  },
+  {
+    "id": "seiya-cosmo-ardent",
+    "name": "Seiya Cosmo Ardent",
+    "stage": "evolution",
+    "evolvesFrom": "Seiya de Pégase",
+    "hp": 130,
+    "type": "chevalier-bronze",
+    "retreat": 3,
+    "image": "20260520_080747.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps   corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Com te de P gase",
+        "cost": 3,
+        "damage": 60,
+        "effects": [
+          {
+            "type": "bonus_if_attack_used_last_turn",
+            "requiredAttack": "M t ores de P gase",
+            "bonusDamage": 30
+          }
+        ]
+      },
+      {
+        "name": "Tourbillon de P gase",
+        "cost": 3,
+        "damage": 100,
+        "effects": [
+          {
+            "type": "self_damage",
+            "damage": 30
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "argol-de-persee",
+    "name": "Argol de Pers e",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 100,
+    "type": "chevalier-argent",
+    "retreat": 3,
+    "image": "argol-de-persee.jpg",
+    "talent": {
+      "name": "P trifi ",
+      "effects": [
+        {
+          "type": "petrify_on_opponent_swap",
+          "text": "Si Argol est votre chevalier actif et si le chevalier actif adverse est  chang  contre un chevalier de banc pendant son tour, il meurt."
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps   corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "La chevelure diabolique",
+        "cost": 2,
+        "damage": 40,
+        "energyCost": "etoile",
+        "effects": []
+      },
+      {
+        "name": "Bouclier de la Meduse",
+        "cost": 2,
+        "damage": 20,
+        "energyCost": "etoile",
+        "effectText": "Cette attaque inflige 10 dégâts de plus pour chaque marqueur de dégât sur le Chevalier actif adverse.",
+        "effects": [
+          {
+            "type": "bonus_damage_per_damage_marker",
+            "target": "opponent_active",
+            "amountPerMarker": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "shun_andromede",
+    "name": "Shun d'Andromède",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 70,
+    "bronzeCategory": "majeur",
+    "bronzeMineur": false,
+    "type": "chevalier-bronze",
+    "retreat": 0,
+    "image": "shun-d-andromede.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Chaînes de défense",
+        "cost": 1,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "reduce_and_reflect_damage",
+            "amount": 20,
+            "reflect": 20,
+            "untilNextTurn": true
+          }
+        ]
+      },
+      {
+        "name": "Chaîne nebulaire",
+        "cost": 2,
+        "damage": 40,
+        "effects": []
+      }
+    ]
+  }
+]

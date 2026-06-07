@@ -1,0 +1,683 @@
+[
+  {
+    "id": "rhadamanthe_wyverne",
+    "name": "Rhadamanthe de la Wyverne",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 170,
+    "type": "armee-hades",
+    "knightType": "Juge",
+    "rewardCards": 3,
+    "faction": "Hades",
+    "tags": ["Hades", "juge"],
+    "retreat": 3,
+    "talent": {
+      "name": "Le serviteur le plus fidèle",
+      "effect": "Si Hadès est sur votre banc, ce chevalier ne peut pas avoir d'état spécial.",
+      "effects": [
+        {
+          "type": "immune_all_status_if_hades_on_bench",
+          "hadesCardIds": ["hades-corps-humain", "hades-vrai-corps"]
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 30,
+        "effects": []
+      },
+      {
+        "name": "Rugissement Destructeur",
+        "cost": 2,
+        "damage": 70,
+        "effects": []
+      },
+      {
+        "name": "Eveil Maximal",
+        "cost": 3,
+        "damage": 80,
+        "effectText": "Vous pouvez défausser autant d'énergies que vous le souhaitez. Ajoutez 30 dégâts par énergie défaussée.",
+        "effects": [
+          {
+            "type": "optional_discard_energy_bonus",
+            "maxDiscard": 99,
+            "amountPerEnergy": 30
+          }
+        ]
+      }
+    ],
+    "image": "20260530_233546.jpg"
+  },
+  {
+    "id": "minos_griffon",
+    "name": "Minos du Griffon",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 160,
+    "type": "armee-hades",
+    "knightType": "Juge",
+    "rewardCards": 3,
+    "faction": "Hades",
+    "tags": ["Hades", "juge"],
+    "retreat": 3,
+    "talent": {
+      "name": "Général de Guerre",
+      "effect": "Lorsque vous posez cette carte, piochez 2 cartes.",
+      "effects": [
+        {
+          "type": "on_play_draw",
+          "count": 2
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Envol du Griffon",
+        "cost": 1,
+        "damage": 30,
+        "effects": []
+      },
+      {
+        "name": "Manipulation Cosmique",
+        "cost": 3,
+        "damage": 100,
+        "effectText": "Défaussez 2 énergies. Le chevalier actif adverse défausse toutes ses énergies.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 2
+          },
+          {
+            "type": "discard_all_energy",
+            "target": "opponent_active"
+          }
+        ]
+      }
+    ],
+    "image": "20260530_233551.jpg"
+  },
+  {
+    "id": "eaque_garuda",
+    "name": "Eaque de Garuda",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 160,
+    "type": "armee-hades",
+    "knightType": "Juge",
+    "rewardCards": 3,
+    "faction": "Hades",
+    "tags": ["Hades", "juge"],
+    "retreat": 3,
+    "talent": {
+      "name": "Le plus rapide",
+      "effect": "Lorsque vous posez ce chevalier, vous pouvez l'échanger avec votre chevalier actif.",
+      "effects": [
+        {
+          "type": "on_play_swap_with_active",
+          "whenOnBench": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Envol de Garuda",
+        "cost": 1,
+        "damage": 30,
+        "effects": []
+      },
+      {
+        "name": "Condamnation Galactique",
+        "cost": 2,
+        "damage": 100,
+        "effectText": "Ne peut être utilisée qu'en sacrifiant un de vos chevaliers de type Spectre, Juge ou Chevalier d'Or. L'adversaire ne reçoit pas de récompense.",
+        "effects": [
+          {
+            "type": "requires_sacrifice_bench",
+            "tags": ["spectre", "juge"],
+            "orTypes": ["chevalier-or"],
+            "noPrize": true
+          },
+          {
+            "type": "ko_no_prize_on_attack"
+          }
+        ]
+      },
+      {
+        "name": "Illusion Galactique",
+        "cost": 3,
+        "damage": 120,
+        "effects": []
+      }
+    ],
+    "image": "20260530_233601.jpg"
+  },
+  {
+    "id": "kagaho_benou",
+    "name": "Kagaho du Benou",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 140,
+    "type": "armee-hades",
+    "knightType": "Spectre",
+    "rewardCards": 2,
+    "faction": "Hades",
+    "tags": ["Hades", "spectre"],
+    "retreat": 2,
+    "talent": {
+      "name": "Guerrier Solitaire",
+      "effect": "S'il est seul, ses attaques (hors corps à corps) infligent 40 dégâts supplémentaires et il reçoit 40 dégâts de moins. Si ce chevalier meurt, l'adversaire gagne une récompense supplémentaire.",
+      "effects": [
+        {
+          "type": "solo_combat_modifiers",
+          "bonusDamage": 40,
+          "reduceDamage": 40,
+          "excludeMelee": true
+        },
+        {
+          "type": "bonus_prize_when_knocked_out",
+          "amount": 1
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Couronne Flamboyante",
+        "cost": 2,
+        "damage": 50,
+        "effectText": "20 dégâts à tous les chevaliers de banc adverses.",
+        "effects": [
+          {
+            "type": "bench_damage",
+            "target": "opponent_bench_all",
+            "damage": 20
+          }
+        ]
+      },
+      {
+        "name": "Ankh Sacrificielle",
+        "cost": 4,
+        "damage": 120,
+        "effectText": "20 dégâts supplémentaires par énergie défaussée.",
+        "effects": [
+          {
+            "type": "optional_discard_energy_bonus",
+            "maxDiscard": 99,
+            "amountPerEnergy": 20
+          }
+        ]
+      }
+    ],
+    "image": "20260530_233606.jpg"
+  },
+  {
+    "id": "myu_papillon",
+    "name": "Myu du Papillon",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 90,
+    "type": "armee-hades",
+    "knightType": "Spectre",
+    "rewardCards": 2,
+    "faction": "Hades",
+    "tags": ["Hades", "spectre"],
+    "retreat": 1,
+    "talent": {
+      "name": "Envoie de Fairy",
+      "effect": "Une fois par tour, vous pouvez défausser une carte. Choisissez un talent adverse : il est annulé pendant ce tour et le prochain.",
+      "effects": [
+        {
+          "type": "discard_hand_silence_opponent_talent",
+          "oncePerTurn": true,
+          "turns": 2
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Psychokinésie",
+        "cost": 1,
+        "damage": 30,
+        "effectText": "L'adversaire est paralysé. Défaussez une énergie.",
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "paralyzed"
+          },
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 1
+          },
+          {
+            "type": "discard_energy",
+            "target": "opponent_active",
+            "count": 1
+          }
+        ]
+      },
+      {
+        "name": "Nuée de Fairy",
+        "cost": 2,
+        "damage": 60,
+        "effectText": "Inflige 60 dégâts à n'importe quel chevalier adverse. Au prochain tour retirez 30 dégâts d'une de vos cartes.",
+        "effects": [
+          {
+            "type": "damage_opponent_any",
+            "damage": 60
+          },
+          {
+            "type": "heal_ally_next_turn",
+            "amount": 30
+          }
+        ]
+      }
+    ],
+    "image": "20260530_233611.jpg"
+  },
+  {
+    "id": "rune_balron",
+    "name": "Rune du Balron",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 100,
+    "type": "armee-hades",
+    "knightType": "Spectre",
+    "rewardCards": 2,
+    "faction": "Hades",
+    "tags": ["Hades", "spectre"],
+    "retreat": 2,
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Fouet de Balron",
+        "cost": 2,
+        "damage": 50,
+        "effectText": "Lancez une pièce. Si face, l'adversaire est paralysé.",
+        "effects": [
+          {
+            "type": "coin_flip"
+          },
+          {
+            "type": "status_on_heads",
+            "target": "opponent_active",
+            "status": "paralyzed"
+          }
+        ]
+      },
+      {
+        "name": "Réincarnation",
+        "cost": 4,
+        "damage": 90,
+        "effectText": "N'inflige aucun dégât aux Divinités ou aux porteurs du Sang d'Athéna.",
+        "effects": [
+          {
+            "type": "skip_damage_to_protected",
+            "exceptKnightTypes": ["Divinite"],
+            "exceptToolIds": ["tool_sang_athena", "SangAthena"]
+          }
+        ]
+      }
+    ],
+    "image": "20260530_233617.jpg"
+  },
+  {
+    "id": "niobe_deep",
+    "name": "Niobe du Deep",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 90,
+    "type": "armee-hades",
+    "knightType": "Spectre",
+    "rewardCards": 2,
+    "faction": "Hades",
+    "tags": ["Hades", "spectre"],
+    "retreat": 1,
+    "talent": {
+      "name": "Empoisonneur",
+      "effect": "S'il est empoisonné, il récupère 10 PV à chaque tour au lieu d'en perdre.",
+      "effects": [
+        {
+          "type": "poison_becomes_heal",
+          "amount": 10
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Nuage Empoisonné",
+        "cost": 2,
+        "damage": 0,
+        "effectText": "Les deux chevaliers actifs sont empoisonnés.",
+        "effects": [
+          {
+            "type": "status_both_actives",
+            "status": "poisoned"
+          }
+        ]
+      },
+      {
+        "name": "Deep Fragrance",
+        "cost": 3,
+        "damage": 50,
+        "effectText": "Inflige 30 dégâts supplémentaires si l'adversaire est empoisonné. L'adversaire devient empoisonné.",
+        "effects": [
+          {
+            "type": "bonus_damage_if_opponent_poisoned",
+            "bonusDamage": 30
+          },
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "poisoned"
+          }
+        ]
+      }
+    ],
+    "image": "20260530_233624.jpg"
+  },
+  {
+    "id": "gordon_minotaure",
+    "name": "Gordon du Minotaure",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 100,
+    "type": "armee-hades",
+    "knightType": "Spectre",
+    "rewardCards": 2,
+    "faction": "Hades",
+    "tags": ["Hades", "spectre"],
+    "retreat": 2,
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Hache du Minotaure",
+        "cost": 2,
+        "damage": 40,
+        "effectText": "Vous pouvez défausser jusqu'à 2 énergies. Cette attaque inflige 30 dégâts supplémentaires par énergie défaussée.",
+        "effects": [
+          {
+            "type": "optional_discard_energy_bonus",
+            "maxDiscard": 2,
+            "amountPerEnergy": 30
+          }
+        ]
+      }
+    ],
+    "image": "20260530_233630.jpg"
+  },
+  {
+    "id": "pharaon_sphinx",
+    "name": "Pharaon du Sphinx",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 80,
+    "type": "armee-hades",
+    "knightType": "Spectre",
+    "rewardCards": 2,
+    "faction": "Hades",
+    "tags": ["Hades", "spectre"],
+    "retreat": 1,
+    "talent": {
+      "name": "Musicien d'Hadès",
+      "effect": "Vous pouvez transférer une énergie de ce chevalier vers Hadès humain ou Hadès vrai corps.",
+      "effects": [
+        {
+          "type": "transfer_energy_to_hades_bench",
+          "oncePerTurn": true,
+          "sourceSelfOnly": true,
+          "hadesCardIds": ["hades-corps-humain", "hades-vrai-corps"]
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Note Fatale",
+        "cost": 1,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Lyre Maudite",
+        "cost": 2,
+        "damage": 20,
+        "effectText": "Le chevalier actif adverse est confus.",
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "confused"
+          }
+        ]
+      },
+      {
+        "name": "Balance de la Malédiction",
+        "cost": 4,
+        "damage": 140,
+        "effectText": "Lancez une pièce. Si pile, l'attaque ne fait aucun dégât.",
+        "effects": [
+          {
+            "type": "coin_flip"
+          },
+          {
+            "type": "attack_miss_on_tails"
+          }
+        ]
+      }
+    ],
+    "image": "20260530_233635.jpg"
+  },
+  {
+    "id": "charon_acheron",
+    "name": "Charon de l'Achéron",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 70,
+    "type": "armee-hades",
+    "knightType": "Spectre",
+    "rewardCards": 2,
+    "faction": "Hades",
+    "tags": ["Hades", "spectre"],
+    "retreat": 1,
+    "talent": {
+      "name": "Passeur",
+      "effect": "Depuis le banc, permet d'échanger votre chevalier actif Spectre ou Juge avec une carte de votre banc.",
+      "effects": [
+        {
+          "type": "swap_active_with_bench_tag",
+          "tags": ["spectre", "juge"],
+          "oncePerTurn": true,
+          "fromBenchOnly": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Rame Tournoyante",
+        "cost": 1,
+        "damage": 20,
+        "effectText": "Réduit de 30 les dégâts reçus au prochain tour.",
+        "effects": [
+          {
+            "type": "reduce_damage_taken_next_turn",
+            "amount": 30,
+            "target": "self"
+          }
+        ]
+      },
+      {
+        "name": "Courant Dévastateur",
+        "cost": 2,
+        "damage": 50,
+        "effects": []
+      }
+    ],
+    "image": "20260530_233643.jpg"
+  },
+  {
+    "id": "giganto_cyclope",
+    "name": "Giganto du Cyclope",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 110,
+    "type": "armee-hades",
+    "knightType": "Spectre",
+    "rewardCards": 2,
+    "faction": "Hades",
+    "tags": ["Hades", "spectre"],
+    "retreat": 2,
+    "talent": {
+      "name": "Déloyal",
+      "effect": "Si l'adversaire est confus, paralysé ou gelé, ses attaques infligent 40 dégâts supplémentaires.",
+      "effects": [
+        {
+          "type": "opponent_attack_bonus_if_opponent_status",
+          "statuses": ["confused", "paralyzed", "frozen"],
+          "bonusDamage": 40
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Grand Coup de Poing",
+        "cost": 2,
+        "damage": 70,
+        "effectText": "Défaussez une énergie.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 1
+          }
+        ]
+      }
+    ],
+    "image": "20260530_233652.jpg"
+  },
+  {
+    "id": "laimi_ver",
+    "name": "Laimi du Ver",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 80,
+    "type": "armee-hades",
+    "knightType": "Spectre",
+    "rewardCards": 2,
+    "faction": "Hades",
+    "tags": ["Hades", "spectre"],
+    "retreat": 1,
+    "talent": {
+      "name": "Enfouissement",
+      "effect": "Ne peut pas être attaqué lorsqu'il est sur le banc et ne peut pas être échangé par l'adversaire.",
+      "effects": [
+        {
+          "type": "bench_untargetable"
+        },
+        {
+          "type": "bench_no_swap",
+          "opponentOnly": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Coup de Tentacule",
+        "cost": 1,
+        "damage": 30,
+        "effects": []
+      },
+      {
+        "name": "Paralysie Tentaculaire",
+        "cost": 2,
+        "damage": 60,
+        "effectText": "Le chevalier actif adverse est paralysé. Défaussez 1 énergie.",
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "paralyzed"
+          },
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 1
+          }
+        ]
+      }
+    ],
+    "image": "20260530_233657.jpg"
+  },
+  {
+    "id": "zelos_grenouille",
+    "name": "Zelos de la Grenouille",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 60,
+    "type": "armee-hades",
+    "knightType": "Spectre",
+    "rewardCards": 2,
+    "faction": "Hades",
+    "tags": ["Hades", "spectre"],
+    "retreat": 1,
+    "talent": {
+      "name": "Un vantard lâche",
+      "effect": "Si votre chevalier actif meurt alors que Zelos est actif, vous prenez une récompense supplémentaire. Si Zelos est vaincu, l'adversaire prend une récompense de moins.",
+      "effects": [
+        {
+          "type": "zelos_coward_prize_modifiers",
+          "bonusPrizeWhenActiveKoWhileSelfActive": 1,
+          "reducePrizeWhenKnockedOut": 1
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Saut Écrasant",
+        "cost": 2,
+        "damage": 30,
+        "effectText": "Inflige 40 dégâts supplémentaires si l'adversaire est confus ou glacé.",
+        "effects": [
+          {
+            "type": "bonus_damage_if_opponent_status",
+            "statuses": ["confused", "frozen"],
+            "bonusDamage": 40
+          }
+        ]
+      }
+    ],
+    "image": "20260530_233701.jpg"
+  }
+]

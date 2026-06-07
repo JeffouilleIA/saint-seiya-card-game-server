@@ -1,0 +1,42 @@
+[
+  {
+    "id": "test_dummy_active",
+    "name": "Cible actif (test)",
+    "type": "chevalier-bronze",
+    "hp": 1000,
+    "retreat": 0,
+    "testOnly": true,
+    "image": "",
+    "attacks": []
+  },
+  {
+    "id": "test_dummy_bench_1",
+    "name": "Cible banc 1 (test)",
+    "type": "chevalier-bronze",
+    "hp": 1000,
+    "retreat": 0,
+    "testOnly": true,
+    "image": "",
+    "attacks": []
+  },
+  {
+    "id": "test_dummy_bench_2",
+    "name": "Cible banc 2 (test)",
+    "type": "chevalier-bronze",
+    "hp": 1000,
+    "retreat": 0,
+    "testOnly": true,
+    "image": "",
+    "attacks": []
+  },
+  {
+    "id": "test_dummy_bench_3",
+    "name": "Cible banc 3 (test)",
+    "type": "chevalier-bronze",
+    "hp": 1000,
+    "retreat": 0,
+    "testOnly": true,
+    "image": "",
+    "attacks": []
+  }
+]

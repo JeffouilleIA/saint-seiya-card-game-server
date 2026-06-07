@@ -1,0 +1,658 @@
+[
+  {
+    "id": "marine-aigle",
+    "name": "Marine de l'Aigle",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 70,
+    "type": "chevalier-argent",
+    "retreat": 3,
+    "talent": {
+      "name": "Un maître protecteur",
+      "effect": "Si votre Chevalier actif est Seiya, vous pouvez lui transférer une ou plusieurs cartes Énergie de ce chevalier."
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Météores de l'Aigle",
+        "cost": 1,
+        "damage": 30,
+        "effects": [
+          {
+            "type": "bench_damage",
+            "target": "opponent_bench_one",
+            "damage": 20
+          }
+        ]
+      },
+      {
+        "name": "Griffes de l'Aigle",
+        "cost": 2,
+        "damage": 60,
+        "effects": [
+          {
+            "type": "switch_active_self",
+            "chooser": "attacker"
+          }
+        ]
+      }
+    ],
+    "image": "20260521_234139.jpg"
+  },
+  {
+    "id": "capela-du-cocher",
+    "name": "Capela du Cocher",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 90,
+    "type": "chevalier-argent",
+    "retreat": 3,
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Disques tranchants",
+        "cost": 1,
+        "damage": 40,
+        "effects": []
+      },
+      {
+        "name": "Disques multiples",
+        "cost": 2,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "bonus_damage_per_energy",
+            "amountPerEnergy": 20
+          }
+        ]
+      }
+    ],
+    "image": "20260521_234049.jpg"
+  },
+  {
+    "id": "kiki",
+    "name": "Kiki",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 50,
+    "type": "chevalier-argent",
+    "retreat": 0,
+    "talent": {
+      "name": "Téléportation",
+      "effect": "Une fois par tour, piochez jusqu'à avoir 4 cartes en main.",
+      "effects": [
+        {
+          "type": "draw_until_hand_size",
+          "size": 4,
+          "oncePerTurn": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Pierres volantes",
+        "cost": 1,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Kiki va chercher !",
+        "cost": 1,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "search_combo_hand",
+            "comboCount": 2,
+            "drawEnergy": 1,
+            "filter": {
+              "or": [
+                { "cardType": "supporter" },
+                { "cardType": "objet" },
+                { "cardType": "stade" }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "image": "20260521_234055.jpg"
+  },
+  {
+    "id": "jamian-du-corbeau",
+    "name": "Jamian du Corbeau",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 70,
+    "type": "chevalier-argent",
+    "retreat": 1,
+    "talent": {
+      "name": "Maîtres des Oiseaux Espions",
+      "effect": "Vous pouvez regarder la première carte de votre pioche autant de fois que vous le voulez dans votre tour."
+    },
+    "attacks": [
+      {
+        "name": "Le vol des corbeaux",
+        "cost": 1,
+        "damage": 10,
+        "effects": [
+          {
+            "type": "coin_flip"
+          },
+          {
+            "type": "swap_opponent_active_on_heads",
+            "chooser": "attacker",
+            "description": "Échangez le Chevalier actif adverse avec un de son banc."
+          }
+        ]
+      },
+      {
+        "name": "Les Plumes Noires",
+        "cost": 3,
+        "damage": 40,
+        "effects": [
+          {
+            "type": "coin_flip"
+          },
+          {
+            "type": "status_on_heads",
+            "target": "opponent_active",
+            "status": "paralyzed"
+          }
+        ]
+      }
+    ],
+    "image": "20260521_234034.jpg"
+  },
+  {
+    "id": "dante-du-cerbere",
+    "name": "Dante du Cerbère",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 90,
+    "type": "chevalier-argent",
+    "retreat": 2,
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Chaînes mortelles",
+        "cost": 2,
+        "damage": 40,
+        "effects": [
+          {
+            "type": "coin_flip"
+          },
+          {
+            "type": "status_on_heads",
+            "target": "opponent_active",
+            "status": "paralyzed"
+          }
+        ]
+      },
+      {
+        "name": "Boulets de l'enfer",
+        "cost": 3,
+        "damage": 50,
+        "effects": [
+          {
+            "type": "bonus_damage_per_own_bench",
+            "amountPerBench": 10
+          }
+        ]
+      }
+    ],
+    "image": "20260521_234037.jpg"
+  },
+  {
+    "id": "arachne-de-la-tarentule",
+    "name": "Arachne de la Tarentule",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 80,
+    "type": "chevalier-argent",
+    "retreat": 3,
+    "talent": {
+      "name": "Charognard",
+      "effect": "Si ce chevalier est actif et qu'il met K.O. un chevalier adverse, il soigne immédiatement 30 dégâts.",
+      "effects": [
+        {
+          "type": "heal_on_ko_opponent_active",
+          "amount": 30,
+          "requiresActive": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "La toile de la tarentule",
+        "cost": 1,
+        "damage": 20,
+        "effect": "Ce chevalier soigne un nombre de dégâts égal aux dégâts infligés par cette attaque.",
+        "effects": [
+          {
+            "type": "heal_self_equal_damage_dealt"
+          }
+        ]
+      },
+      {
+        "name": "La toile mortelle",
+        "cost": 2,
+        "damage": 40,
+        "effect": "Votre adversaire défausse une carte Énergie attachée à son chevalier actif.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "opponent_active",
+            "count": 1
+          }
+        ]
+      }
+    ],
+    "image": "20260521_234040.jpg"
+  },
+  {
+    "id": "babel-du-centaure",
+    "name": "Babel du Centaure",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 80,
+    "type": "chevalier-argent",
+    "retreat": 2,
+    "talent": {
+      "name": "Chaleur infernale",
+      "effect": "Si ce chevalier est votre chevalier actif, ajoutez 10 dégâts au chevalier actif adverse à la fin de chaque tour, sauf lors du tout premier tour où ce chevalier devient actif.",
+      "effects": [
+        {
+          "type": "burn_opponent_active_end_turn",
+          "amount": 10,
+          "skipFirstTurn": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Boules de Feu",
+        "cost": 2,
+        "damage": 20,
+        "effectText": "Lancez 2 pièces. Cette attaque inflige 20 dégâts supplémentaires pour chaque face obtenue.",
+        "effects": [
+          {
+            "type": "multi_coin_flip",
+            "count": 2
+          },
+          {
+            "type": "bonus_damage_per_heads",
+            "amountPerHeads": 20
+          }
+        ]
+      },
+      {
+        "name": "Tourbillon de Flamme",
+        "cost": 3,
+        "damage": 50,
+        "effectText": "Un violent tourbillon de flammes frappe le chevalier actif adverse.",
+        "effects": []
+      }
+    ],
+    "image": "20260521_234045.jpg"
+  },
+  {
+    "id": "tremy-de-la-fleche",
+    "name": "Tremy de la Flèche",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 80,
+    "type": "chevalier-argent",
+    "retreat": 2,
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "La flèche fantôme",
+        "cost": 2,
+        "damage": 40,
+        "effects": []
+      },
+      {
+        "name": "Les 100 flèches fantômes",
+        "cost": 3,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "multi_coin_flip",
+            "count": 6
+          },
+          {
+            "type": "bonus_damage_per_heads",
+            "amountPerHeads": 20
+          }
+        ]
+      }
+    ],
+    "image": "20260521_234131.jpg"
+  },
+  {
+    "id": "moises_baleine",
+    "name": "Moïses de la Baleine",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 120,
+    "type": "chevalier-argent",
+    "retreat": 3,
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Typhon",
+        "cost": 2,
+        "damage": 40,
+        "effects": []
+      },
+      {
+        "name": "Écrasement",
+        "cost": 4,
+        "damage": 90,
+        "effects": []
+      }
+    ],
+    "image": "20260524_225159.jpg"
+  },
+  {
+    "id": "agora-du-lotus",
+    "name": "Agora du Lotus",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 70,
+    "type": "chevalier-argent",
+    "retreat": 4,
+    "talent": {
+      "name": "Disciple de Shaka",
+      "effect": "Si Shaka est sur votre banc, toutes les attaques reçues par ce chevalier sont réduites de 20."
+    },
+    "attacks": [
+      {
+        "name": "Les 1000 poings de Shiva",
+        "cost": 1,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "multi_coin_flip",
+            "count": 2
+          },
+          {
+            "type": "bonus_damage_per_heads",
+            "amountPerHeads": 20
+          }
+        ]
+      },
+      {
+        "name": "Révolution du Lotus",
+        "cost": 2,
+        "damage": 30,
+        "effects": []
+      },
+      {
+        "name": "Explosion du Lotus",
+        "cost": 3,
+        "damage": 40,
+        "effects": [
+          {
+            "type": "bonus_if_attack_used_last_turn",
+            "requiredAttack": "Révolution du Lotus",
+            "bonusDamage": 50
+          }
+        ]
+      }
+    ],
+    "image": "20260521_234152.jpg"
+  },
+  {
+    "id": "shina-du-cobra",
+    "name": "Shina du Cobra",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 90,
+    "type": "chevalier-argent",
+    "retreat": 3,
+    "talent": {
+      "name": "Chef de meute",
+      "effect": "Si ce chevalier est votre chevalier actif, vous pouvez l'échanger contre un chevalier d'Argent de votre banc."
+    },
+    "attacks": [
+      {
+        "name": "Les griffes du tonnerre",
+        "cost": 2,
+        "damage": 40,
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "opponent_active",
+            "count": 1
+          }
+        ]
+      },
+      {
+        "name": "La morsure du Cobra",
+        "cost": 3,
+        "damage": 60,
+        "effects": [
+          {
+            "type": "coin_flip"
+          },
+          {
+            "type": "status_on_heads",
+            "target": "opponent_active",
+            "status": "poisoned"
+          }
+        ]
+      }
+    ],
+    "image": "20260521_234142.jpg"
+  },
+  {
+    "id": "misty-du-lezard",
+    "name": "Misty du Lézard",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 110,
+    "type": "chevalier-argent",
+    "retreat": 3,
+    "talent": {
+      "name": "Intouchable",
+      "effect": "Si ce chevalier n'a aucun marqueur de dégâts, retirez 30 dégâts à toute attaque reçue.",
+      "effects": [
+        {
+          "type": "reduce_damage_if_no_markers",
+          "amount": 30
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Tourbillon du Lézard",
+        "cost": 3,
+        "damage": 60,
+        "effectText": "Vous pouvez défausser une carte énergie. Dans ce cas, l'adversaire échange son chevalier actif avec un chevalier de son banc choisi par lui.",
+        "effects": [
+          {
+            "type": "optional_discard_energy_bonus",
+            "maxDiscard": 1,
+            "amountPerEnergy": 0
+          },
+          {
+            "type": "swap_opponent_active",
+            "chooser": "defender",
+            "requiresDiscardedEnergy": 1
+          }
+        ]
+      }
+    ],
+    "image": "20260521_234146.jpg"
+  },
+  {
+    "id": "asterion-des-chiens-de-chasse",
+    "name": "Astérion des Chiens de Chasse",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 80,
+    "type": "chevalier-argent",
+    "retreat": 1,
+    "talent": {
+      "name": "Analyse de la situation",
+      "effect": "Lorsque ce chevalier entre en jeu, vous pouvez défausser votre main. Si vous le faites, piochez 6 cartes.",
+      "effects": [
+        {
+          "type": "on_enter_discard_hand_draw",
+          "optional": true,
+          "draw": 6
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Télépathie",
+        "cost": 1,
+        "damage": 30,
+        "effectText": "Regardez la main adverse, choisissez une carte et mélangez-la dans le deck adverse.",
+        "effects": [
+          {
+            "type": "reveal_opponent_hand_shuffle"
+          }
+        ]
+      },
+      {
+        "name": "Corps multiples",
+        "cost": 3,
+        "damage": 40,
+        "effectText": "Lancez une pièce. Face : ce chevalier ne subit aucun dégât au prochain tour de l'adversaire.",
+        "effects": [
+          {
+            "type": "coin_flip"
+          },
+          {
+            "type": "immune_damage_next_turn",
+            "target": "self",
+            "onHeads": true
+          }
+        ]
+      }
+    ],
+    "image": "20260521_234155.jpg"
+  },
+  {
+    "id": "orphee-de-la-lyre",
+    "name": "Orphée de la Lyre",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 90,
+    "type": "chevalier-argent",
+    "retreat": 1,
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Notes fatales",
+        "cost": 1,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Symphonie Nocturne",
+        "cost": 2,
+        "damage": 40,
+        "effectText": "Cherchez une carte énergie dans votre deck et attachez-la à l'un de vos chevaliers de banc.",
+        "effects": [
+          {
+            "type": "search_deck_energy",
+            "count": 1,
+            "attachTo": "own_bench_first"
+          }
+        ]
+      },
+      {
+        "name": "Mélodie mortelle",
+        "cost": 3,
+        "damage": 80,
+        "effectText": "Le chevalier actif adverse est paralysé. Ce chevalier ne peut pas lancer d'attaque à son prochain tour.",
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "paralyzed"
+          },
+          {
+            "type": "cant_use_attack_next_turn",
+            "attackName": "*"
+          }
+        ]
+      }
+    ],
+    "image": "20260521_234159.jpg"
+  },
+  {
+    "id": "hakurai",
+    "name": "Hakurai",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 60,
+    "type": "chevalier-argent",
+    "retreat": 2,
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Collecte d'information",
+        "cost": 1,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "draw_until_hand_size",
+            "size": 6
+          }
+        ]
+      },
+      {
+        "name": "Cycle des Âmes de Praesepe",
+        "cost": 2,
+        "damage": 30,
+        "effects": [
+          {
+            "type": "bonus_damage_per_discard_chevaliers",
+            "amountPerCard": 10
+          }
+        ]
+      }
+    ],
+    "image": "20260521_234205.jpg"
+  }
+]

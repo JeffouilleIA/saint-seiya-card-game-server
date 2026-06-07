@@ -1,0 +1,1552 @@
+[
+  {
+    "id": "vieux-maitre",
+    "name": "Vieux Maître",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 60,
+    "type": "chevalier-or",
+    "retreat": 1,
+    "talent": {
+      "name": "Maître protecteur",
+      "effect": "Une fois par tour, récupérez une Énergie de votre défausse et attachez-la à un Chevalier de Bronze ou d'Argent sur votre banc.",
+      "effects": [
+        {
+          "type": "recover_energy_from_discard",
+          "attachFilter": {
+            "or": [
+              {
+                "type": "chevalier-bronze"
+              },
+              {
+                "type": "chevalier-argent"
+              }
+            ]
+          },
+          "target": "own_bench"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Appel aux amis",
+        "cost": 1,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "search_deck",
+            "filter": {
+              "or": [
+                {
+                  "cardType": "supporter"
+                },
+                {
+                  "cardType": "objet"
+                },
+                {
+                  "cardType": "stade"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Les éclairs de Rozan",
+        "cost": 2,
+        "damage": 30,
+        "effects": [
+          {
+            "type": "bench_damage",
+            "target": "opponent_bench_all",
+            "damage": 10
+          }
+        ]
+      }
+    ],
+    "image": "vieux-maitre.jpg",
+    "zodiacSign": "balance",
+    "zodiacRank": 0
+  },
+  {
+    "id": "dokko-de-la-balance",
+    "name": "Dokko de la Balance",
+    "stage": "evolution",
+    "evolvesFrom": "Vieux Maître",
+    "hp": 180,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "talent": {
+      "name": "Armes de la Balance",
+      "effect": "Une fois par tour, l'attaque Corps à corps d'un de vos Chevaliers inflige +20 dégâts supplémentaires ce tour.",
+      "effects": [
+        {
+          "type": "melee_bonus_one_ally_turn",
+          "amount": 20,
+          "oncePerTurn": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Colère du dragon",
+        "cost": 2,
+        "damage": 60,
+        "effects": []
+      },
+      {
+        "name": "Les 100 Dragons",
+        "cost": 4,
+        "damage": 90,
+        "effects": [
+          {
+            "type": "optional_discard_energy_bonus",
+            "maxDiscard": 99,
+            "amountPerEnergy": 30
+          }
+        ]
+      }
+    ],
+    "image": "dokko-de-la-balance.jpg",
+    "zodiacSign": "balance",
+    "zodiacRank": 1
+  },
+  {
+    "id": "milo-du-scorpion",
+    "name": "Milo du Scorpion",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 150,
+    "type": "chevalier-or",
+    "retreat": 2,
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Aiguille Écarlate",
+        "cost": 1,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "bonus_damage_per_energy",
+            "amountPerEnergy": 20
+          },
+          {
+            "type": "bonus_if_played_attack_last_turn",
+            "requiredAttack": "Aiguille Écarlate",
+            "bonusDamage": 30
+          }
+        ]
+      },
+      {
+        "name": "Antarès",
+        "cost": 3,
+        "damage": 60,
+        "effects": [
+          {
+            "type": "requires_played_attack_last_turn",
+            "requiredAttack": "Aiguille Écarlate"
+          },
+          {
+            "type": "bonus_damage_per_energy",
+            "amountPerEnergy": 20
+          }
+        ]
+      }
+    ],
+    "image": "milo-du-scorpion.jpg",
+    "zodiacSign": "scorpion",
+    "zodiacRank": 0
+  },
+  {
+    "id": "aior-du-lion",
+    "name": "Aior du Lion",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 160,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "talent": {
+      "name": "Un ami précieux",
+      "effect": "Si votre chevalier actif est Seiya, Shiryu, Hyoga, Shun, Ikki, Marine ou Shina, vous pouvez l'échanger avec ce chevalier en le soignant de 40 dégâts.",
+      "effects": [
+        {
+          "type": "swap_active_with_self_if_card_ids",
+          "heal": 40,
+          "cardIds": [
+            "seiya-de-pegase",
+            "seiya-cosmo-ardent",
+            "shiryu-du-dragon",
+            "shiryu-cosmo-ardent",
+            "hyoga-du-cygne",
+            "hyoga-cosmo-ardent",
+            "shun_andromede",
+            "shun-cosmo-ardent",
+            "ikki-du-phenix",
+            "ikki-phenix-mechant",
+            "ikki-cosmo-ardent",
+            "marine-aigle",
+            "shina-du-cobra"
+          ]
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 30,
+        "effects": []
+      },
+      {
+        "name": "Plasma foudroyant",
+        "cost": 2,
+        "damage": 50,
+        "effects": [
+          {
+            "type": "place_damage_markers_opponent_bench",
+            "count": 4
+          }
+        ]
+      },
+      {
+        "name": "Boule de feu",
+        "cost": 3,
+        "damage": 120,
+        "effects": [
+          {
+            "type": "cant_use_attack_next_turn",
+            "target": "self",
+            "attackName": "Boule de feu"
+          }
+        ]
+      }
+    ],
+    "image": "aior-du-lion.jpg",
+    "zodiacSign": "lion",
+    "zodiacRank": 0
+  },
+  {
+    "id": "aioros_sagittaire",
+    "name": "Aioros du Sagittaire",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 160,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "talent": {
+      "name": "Protecteur d'Athéna",
+      "effect": "Si vous avez joué Athéna ou Enfant Divin ce tour-ci, soignez 30 dégâts à ce chevalier. Les attaques de ce chevalier infligent 30 dégâts supplémentaires jusqu'à la fin du tour.",
+      "effects": [
+        {
+          "type": "athena_or_divine_child_synergy",
+          "heal": 30,
+          "bonusDamage": 30
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Foudre atomique",
+        "cost": 2,
+        "damage": 60,
+        "effects": [
+          {
+            "type": "bench_damage",
+            "target": "opponent_bench_all",
+            "damage": 10
+          }
+        ]
+      },
+      {
+        "name": "Flèche d'Or",
+        "cost": 3,
+        "damage": 80,
+        "effects": [
+          {
+            "type": "bonus_damage_per_opponent_active_energy",
+            "amountPerEnergy": 20
+          }
+        ]
+      }
+    ],
+    "image": "aioros-du-sagittaire.jpg",
+    "zodiacSign": "sagittaire",
+    "zodiacRank": 0
+  },
+  {
+    "id": "shura-du-capricorne",
+    "name": "Shura du Capricorne",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 150,
+    "type": "chevalier-or",
+    "retreat": 2,
+    "talent": {
+      "name": "Exécuteur",
+      "effect": "Si vous mettez K.O. un Chevalier adverse et que Shura est actif, soignez 30 PV sur ce chevalier et piochez 1 carte.",
+      "effects": [
+        {
+          "type": "heal_on_ko_opponent_active",
+          "amount": 30,
+          "draw": 1,
+          "requiresActive": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Excalibur",
+        "cost": 1,
+        "damage": 50,
+        "effects": [
+          {
+            "type": "optional_discard_energy_bonus",
+            "maxDiscard": 3,
+            "amountPerEnergy": 20
+          }
+        ]
+      },
+      {
+        "name": "Saut du Capricorne",
+        "cost": 2,
+        "damage": 40,
+        "effects": [
+          {
+            "type": "swap_opponent_active",
+            "chooser": "attacker"
+          }
+        ]
+      }
+    ],
+    "image": "shura-du-capricorne.jpg",
+    "zodiacSign": "capricorne",
+    "zodiacRank": 0
+  },
+  {
+    "id": "le-grand-pope",
+    "name": "Le Grand Pope",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 70,
+    "type": "chevalier-or",
+    "retreat": 2,
+    "talent": {
+      "name": "Chef du Sanctuaire",
+      "effect": "Une fois par tour, cherchez un Chevalier d'Argent ou Noir dans votre deck et ajoutez-le à votre main.",
+      "effects": [
+        {
+          "type": "search_deck",
+          "oncePerTurn": true,
+          "filter": {
+            "or": [
+              {
+                "type": "chevalier-argent"
+              },
+              {
+                "type": "chevalier-noir"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Dague Sacrée",
+        "cost": 1,
+        "damage": 30,
+        "effects": [
+          {
+            "type": "bonus_damage_vs_divinity",
+            "bonusDamage": 100
+          }
+        ]
+      },
+      {
+        "name": "Rayon Diabolique",
+        "cost": 2,
+        "damage": 20,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "confused"
+          }
+        ]
+      },
+      {
+        "name": "Armure des Gémeaux",
+        "cost": 3,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "evolve_self_from_deck_search",
+            "cardId": "saga-mechant"
+          }
+        ]
+      }
+    ],
+    "image": "le-grand-pope.jpg",
+    "zodiacSign": "gemeaux",
+    "zodiacRank": 1
+  },
+  {
+    "id": "saga-mechant",
+    "name": "Saga Méchant",
+    "stage": "evolution",
+    "evolvesFrom": "Le Grand Pope",
+    "hp": 220,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "talent": {
+      "name": "Cœur Diabolique",
+      "effect": "Ce chevalier ne peut pas être Confus ni soigné.",
+      "effects": [
+        {
+          "type": "immune_status",
+          "status": "confused"
+        },
+        {
+          "type": "immune_all_heal"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 30,
+        "effects": []
+      },
+      {
+        "name": "Une autre dimension",
+        "cost": 2,
+        "damage": 50,
+        "effects": [
+          {
+            "type": "swap_opponent_active",
+            "chooser": "attacker"
+          }
+        ]
+      },
+      {
+        "name": "Privation des 5 sens",
+        "cost": 5,
+        "damage": 150,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "paralyzed"
+          }
+        ]
+      }
+    ],
+    "image": "saga-mechant.jpg",
+    "zodiacSign": "gemeaux",
+    "zodiacRank": 2
+  },
+  {
+    "id": "mu-de-jamir",
+    "name": "Mu de Jamir",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 70,
+    "type": "chevalier-or",
+    "retreat": 1,
+    "image": "mu-de-jamir.jpg",
+    "talent": {
+      "name": "Téléportation",
+      "effect": "Une fois par tour, défaussez une Énergie de votre main, puis échangez votre chevalier actif avec un chevalier de votre banc ou le chevalier actif adverse avec un de son banc.",
+      "effects": [
+        {
+          "type": "teleport_once_per_turn",
+          "discardEnergyFromHand": 1,
+          "swapScope": "own_or_opponent"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Réparation Armure",
+        "cost": 2,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "heal_other_friendly",
+            "amount": 60
+          }
+        ]
+      },
+      {
+        "name": "Télékinésie",
+        "cost": 2,
+        "damage": 30,
+        "effects": [
+          {
+            "type": "bench_damage",
+            "target": "opponent_bench_one",
+            "damage": 20
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "belier",
+    "zodiacRank": 0
+  },
+  {
+    "id": "mu_belier",
+    "name": "Mu du Bélier",
+    "stage": "evolution",
+    "evolvesFrom": "Mu de Jamir",
+    "hp": 180,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "image": "mu-du-belier.jpg",
+    "talent": {
+      "name": "Réparateur",
+      "effect": "Au début de votre tour, soignez 20 PV à un autre chevalier allié.",
+      "effects": [
+        {
+          "type": "turn_start_heal_other_friendly",
+          "amount": 20,
+          "oncePerTurn": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Mur de Cristal",
+        "cost": 2,
+        "damage": 0,
+        "effectText": "Au prochain tour adverse, lorsqu'une attaque cible ce chevalier, lancez une pièce. Pile : −40 dégâts à cette attaque. Face : 0 dégât ; l'actif adverse subit 30 dégâts.",
+        "effects": [
+          {
+            "type": "pending_mur_crystal",
+            "reduceOnPile": 40,
+            "counterDamage": 30
+          }
+        ]
+      },
+      {
+        "name": "Spirale Stellaire",
+        "cost": 3,
+        "damage": 90,
+        "effects": []
+      },
+      {
+        "name": "Mort d'une étoile",
+        "cost": 4,
+        "damage": 180,
+        "effectText": "Défaussez 2 cartes énergie. L'adversaire échange son chevalier actif avec un chevalier de son banc.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 2
+          },
+          {
+            "type": "swap_opponent_active",
+            "chooser": "defender"
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "belier",
+    "zodiacRank": 1
+  },
+  {
+    "id": "aldebaran_taureau",
+    "name": "Aldébaran du Taureau",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 160,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "image": "aldebaran-du-taureau.jpg",
+    "talent": {
+      "name": "Garde",
+      "effect": "Si ce chevalier n'a pas attaqué lors du tour précédent, réduisez de 40 les dégâts de chaque attaque reçue.",
+      "effects": [
+        {
+          "type": "reduce_damage_if_did_not_attack_last_turn",
+          "amount": 40
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Écrasement",
+        "cost": 1,
+        "damage": 30,
+        "effects": []
+      },
+      {
+        "name": "Corne du Taureau",
+        "cost": 4,
+        "damage": 160,
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 3
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "taureau",
+    "zodiacRank": 0
+  },
+  {
+    "id": "masque-de-mort-du-cancer",
+    "name": "Masque de Mort du Cancer",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 140,
+    "type": "chevalier-or",
+    "retreat": 0,
+    "image": "masque-de-mort-du-cancer.jpg",
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Voyage vers l'au-delà",
+        "cost": 2,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "coin_flip"
+          },
+          {
+            "type": "coin_flip_ko_no_prize",
+            "onHeads": true
+          }
+        ]
+      },
+      {
+        "name": "Cercles d'Hadès",
+        "cost": 3,
+        "damage": 90,
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "opponent_active",
+            "count": 2
+          },
+          {
+            "type": "cant_use_attack_next_turn",
+            "attackName": "Cercles d'Hadès"
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "cancer",
+    "zodiacRank": 0
+  },
+  {
+    "id": "saga",
+    "name": "Saga",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 70,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "image": "saga.jpg",
+    "talent": {
+      "name": "Savoir du Grand Pope",
+      "effect": "Une fois par tour, défaussez une carte et piochez une carte.",
+      "effects": [
+        {
+          "type": "discard_draw",
+          "discard": 1,
+          "draw": 1
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Gardien du Sanctuaire",
+        "cost": 1,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "recover_from_discard",
+            "filter": {
+              "or": [
+                {
+                  "cardType": "supporter"
+                },
+                {
+                  "cardType": "objet"
+                },
+                {
+                  "cardType": "stade"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Illusion projetée",
+        "cost": 2,
+        "damage": 0,
+        "effectText": "Défaussez 1 Énergie. Au prochain tour adverse, l'actif adverse ne peut pas attaquer s'il ne défausse pas 2 Énergies au préalable.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 1
+          },
+          {
+            "type": "attack_blocked_unless_discard_energy",
+            "target": "opponent_active",
+            "energyCost": 2
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "gemeaux",
+    "zodiacRank": 0
+  },
+  {
+    "id": "saga-des-gemeaux",
+    "name": "Saga des Gémeaux",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 200,
+    "type": "chevalier-or",
+    "retreat": 4,
+    "image": "saga-des-gemeaux.jpg",
+    "talent": {
+      "name": "Double Personnalité",
+      "effect": "Une fois par tour, échangez ce chevalier avec Saga Méchant sur votre banc.",
+      "effects": [
+        {
+          "type": "swap_with_card_id",
+          "cardId": "saga-mechant"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Une autre dimension",
+        "cost": 2,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "swap_opponent_active",
+            "chooser": "attacker"
+          }
+        ]
+      },
+      {
+        "name": "Explosion Galactique",
+        "cost": 4,
+        "damage": 120,
+        "effects": [
+          {
+            "type": "bonus_damage_per_energy",
+            "amountPerEnergy": 10
+          },
+          {
+            "type": "bench_damage",
+            "target": "opponent_bench_all",
+            "damage": 30
+          },
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 2
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "gemeaux",
+    "zodiacRank": 3
+  },
+  {
+    "id": "shakka",
+    "name": "Shakka",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 70,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "image": "shakka.jpg",
+    "talent": {
+      "name": "Méditation Parfaite",
+      "effect": "Tant que Shakka est sur votre banc, les attaques infligent −30 dégâts aux chevaliers de votre banc.",
+      "effects": [
+        {
+          "type": "bench_reduce_damage",
+          "amount": 30,
+          "target": "self_bench"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Discussion avec Budha",
+        "cost": 1,
+        "damage": 0,
+        "effectText": "Retournez face visible toutes vos cartes Récompense.",
+        "effects": [
+          {
+            "type": "flip_all_prizes_face_up"
+          }
+        ]
+      },
+      {
+        "name": "Contrôle mentale",
+        "cost": 2,
+        "damage": 40,
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "opponent_active",
+            "count": 1
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "vierge",
+    "zodiacRank": 0
+  },
+  {
+    "id": "shaka-de-la-vierge",
+    "name": "Shaka de la Vierge",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 190,
+    "type": "chevalier-or",
+    "retreat": 4,
+    "image": "shaka-de-la-vierge.jpg",
+    "talent": {
+      "name": "Proche des dieux",
+      "effect": "Une fois par tour, déplacez une Énergie d'un de vos Chevaliers vers un autre.",
+      "effects": [
+        {
+          "type": "transfer_energy_once_per_turn"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "OM",
+        "cost": 2,
+        "damage": 60,
+        "effects": [
+          {
+            "type": "disable_chosen_attack_next_turn"
+          }
+        ]
+      },
+      {
+        "name": "Trésors du Ciel",
+        "cost": 4,
+        "damage": 160,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "paralyzed"
+          },
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 2
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "vierge",
+    "zodiacRank": 1
+  },
+  {
+    "id": "shion_belier",
+    "name": "Shion du Bélier",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 160,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "image": "20260530_233419.jpg",
+    "talent": {
+      "name": "Psychokinésie",
+      "effect": "Une fois par tour, défaussez 1 Énergie attachée à ce chevalier. Dans ce cas, l'adversaire défausse 1 Énergie attachée à son chevalier actif (non annulable).",
+      "effects": [
+        {
+          "type": "discard_energy_opponent_energy",
+          "oncePerTurn": true,
+          "selfCount": 1,
+          "opponentCount": 1
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Mur de Cristal",
+        "cost": 2,
+        "damage": 0,
+        "effectText": "Au prochain tour adverse, lorsqu'une attaque cible ce chevalier, lancez une pièce. Pile : −40 dégâts. Face : 0 dégât ; l'actif adverse subit 30 dégâts.",
+        "effects": [
+          {
+            "type": "pending_mur_crystal",
+            "reduceOnPile": 40,
+            "counterDamage": 30
+          }
+        ]
+      },
+      {
+        "name": "Spirale Stellaire",
+        "cost": 4,
+        "damage": 130,
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 1
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "belier",
+    "zodiacRank": 2
+  },
+  {
+    "id": "avenir_belier",
+    "name": "Avenir du Bélier",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 150,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "image": "20260530_233424.jpg",
+    "talent": {
+      "name": "Connais le futur",
+      "effect": "Une fois par tour, regardez les 3 cartes du dessus de votre pioche.",
+      "effects": [
+        {
+          "type": "look_top_deck",
+          "count": 3,
+          "oncePerTurn": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Spirale Stellaire",
+        "cost": 2,
+        "damage": 60,
+        "effects": []
+      },
+      {
+        "name": "Mort d'une étoile",
+        "cost": 3,
+        "damage": 130,
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 1
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "belier",
+    "zodiacRank": 3
+  },
+  {
+    "id": "manigoldo_cancer",
+    "name": "Manigoldo du Cancer",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 160,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "image": "20260530_233429.jpg",
+    "talent": {
+      "name": "Maître des morts",
+      "effect": "Au début de votre tour, si vous avez plus de Récompenses que l'adversaire, piochez 1 carte. Si ce chevalier a 50 PV ou moins, attachez-lui 1 Énergie de votre défausse.",
+      "effects": [
+        {
+          "type": "turn_start_manigoldo",
+          "hpThreshold": 50
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Vagues de Praesepè",
+        "cost": 2,
+        "damage": 60,
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "opponent_active",
+            "count": 1
+          }
+        ]
+      },
+      {
+        "name": "Ruine sépulcrale",
+        "cost": 3,
+        "damage": 90,
+        "effectText": "Défaussez 2 Énergies. Lancez une pièce pour chaque Chevalier dans votre défausse : face = 10 dégâts sur chaque chevalier de banc adverse.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 2
+          },
+          {
+            "type": "coin_flip_per_discarded_knight_bench_damage",
+            "damagePerHeads": 10,
+            "target": "opponent_bench_all"
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "cancer",
+    "zodiacRank": 1
+  },
+  {
+    "id": "aspros_gemeaux",
+    "name": "Aspros des Gémeaux",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 250,
+    "type": "chevalier-or",
+    "retreat": 4,
+    "image": "20260530_233435.jpg",
+    "talent": {
+      "name": "Frère jumeau",
+      "effect": "Ce chevalier ne peut pas être votre chevalier actif tant que Deuteros n'est pas attaché à lui comme Outil (non annulable).",
+      "effects": [
+        {
+          "type": "requires_attached_tool_to_active",
+          "toolCardId": "deuteros"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Rayon diabolique",
+        "cost": 2,
+        "damage": 60,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "confused"
+          }
+        ]
+      },
+      {
+        "name": "Explosion Galactique",
+        "cost": 4,
+        "damage": 180,
+        "effectText": "Défaussez 1 Énergie. Vous pouvez défausser d'autres Énergies : +30 dégâts par Énergie défaussée ainsi.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 1
+          },
+          {
+            "type": "optional_discard_energy_bonus",
+            "maxDiscard": 5,
+            "amountPerEnergy": 30
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "gemeaux",
+    "zodiacRank": 4
+  },
+  {
+    "id": "deuteros",
+    "name": "Deuteros",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 130,
+    "type": "chevalier-or",
+    "retreat": 2,
+    "image": "20260530_233443.jpg",
+    "talent": {
+      "name": "Frère jumeau",
+      "effect": "Lorsque ce chevalier entre en jeu, infligez 60 dégâts à un chevalier adverse. Une fois par tour, si ce chevalier est sur votre banc, soignez 10 dégâts à un chevalier de votre banc (non annulable).",
+      "effects": [
+        {
+          "type": "on_play_damage",
+          "damage": 60
+        },
+        {
+          "type": "bench_heal_once_per_turn",
+          "amount": 10,
+          "oncePerTurn": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Explosion Galactique",
+        "cost": 3,
+        "damage": 120,
+        "effects": [
+          {
+            "type": "optional_discard_energy_bonus",
+            "maxDiscard": 3,
+            "amountPerEnergy": 10
+          },
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 1
+          }
+        ]
+      },
+      {
+        "name": "Explosion Galactique de l'Âme",
+        "cost": 4,
+        "damage": 0,
+        "effectText": "Si Aspros des Gémeaux est sur votre banc, ce chevalier devient un Outil attaché à Aspros (sans Récompense si mis K.O.). Choisissez ensuite un chevalier de banc comme actif. Terminez votre tour.",
+        "effects": [
+          {
+            "type": "attach_self_as_tool_on_bench_knight",
+            "targetCardId": "aspros_gemeaux",
+            "noPrizeOnTransition": true,
+            "endTurn": true
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "gemeaux",
+    "zodiacRank": 5
+  },
+  {
+    "id": "regulus_lion",
+    "name": "Régulus du Lion",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 150,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "image": "20260530_233452.jpg",
+    "talent": {
+      "name": "Apprends vite",
+      "effect": "Une fois par tour, si ce chevalier est actif, défaussez 1 Énergie attachée à lui pour copier une attaque d'un chevalier de votre banc (hors Corps à corps) pour ce tour.",
+      "effects": [
+        {
+          "type": "copy_bench_attack_turn",
+          "oncePerTurn": true,
+          "excludeAttackName": "Corps à corps",
+          "discardEnergy": 1
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Plasma Foudroyant",
+        "cost": 3,
+        "damage": 80,
+        "effectText": "Répartissez 30 dégâts entre les chevaliers de banc adverse.",
+        "effects": [
+          {
+            "type": "distribute_damage_opponent_bench",
+            "totalDamage": 30
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "lion",
+    "zodiacRank": 1
+  },
+  {
+    "id": "ilias_lion",
+    "name": "Ilias du Lion",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 260,
+    "type": "chevalier-or",
+    "retreat": 4,
+    "image": "20260530_233503.jpg",
+    "talent": {
+      "name": "Maladie Mortelle",
+      "effect": "À la fin de chaque tour, chaque chevalier en jeu subit 30 dégâts.",
+      "effects": [
+        {
+          "type": "end_turn_damage_all_knights",
+          "amount": 30
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Couronne Flamboyante",
+        "cost": 3,
+        "damage": 170,
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 1
+          },
+          {
+            "type": "bench_damage",
+            "target": "opponent_bench_all",
+            "damage": 30
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "lion",
+    "zodiacRank": 2
+  },
+  {
+    "id": "asmita_vierge",
+    "name": "Asmita de la Vierge",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 150,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "image": "20260530_233507.jpg",
+    "talent": {
+      "name": "Retour au Sanctuaire",
+      "effect": "Une fois par tour, si ce chevalier est sur votre banc depuis le début de votre tour, renvoyez-le en main (défaussez ses Énergies et Outils), récupérez 1 Outil ou Objet de votre défausse en main. Vous ne pouvez pas le remettre en jeu ce tour.",
+      "effects": [
+        {
+          "type": "bench_return_to_hand",
+          "oncePerTurn": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Ohm",
+        "cost": 1,
+        "damage": 40,
+        "effectText": "Au prochain tour, ce chevalier subit 30 dégâts de moins par attaque reçue.",
+        "effects": [
+          {
+            "type": "reduce_damage_taken_next_turn",
+            "amount": 30,
+            "target": "self"
+          }
+        ]
+      },
+      {
+        "name": "Châtiment du Ciel",
+        "cost": 4,
+        "damage": 150,
+        "effects": [
+          {
+            "type": "discard_energy",
+            "target": "self",
+            "count": 2
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "vierge",
+    "zodiacRank": 2
+  },
+  {
+    "id": "albafica_poissons",
+    "name": "Albafica des Poissons",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 150,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "image": "20260530_233511.jpg",
+    "talent": {
+      "name": "Sang empoisonné",
+      "effect": "Sur le banc : à la fin de votre tour, les autres chevaliers alliés sur le banc subissent 10 dégâts. Actif : à la fin de chaque tour, l'actif adverse subit 10 dégâts.",
+      "effects": [
+        {
+          "type": "bench_allies_damage_end_turn",
+          "amount": 10,
+          "whenOnBench": true
+        },
+        {
+          "type": "burn_opponent_active_end_turn",
+          "amount": 10,
+          "whenActive": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Roses Démoniaques",
+        "cost": 2,
+        "damage": 50,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "poisoned"
+          }
+        ]
+      },
+      {
+        "name": "Épines Pourpres",
+        "cost": 3,
+        "damage": 90,
+        "effectText": "Défaussez toutes vos Énergies : +30 dégâts par Énergie défaussée.",
+        "effects": [
+          {
+            "type": "discard_all_energy",
+            "target": "self"
+          },
+          {
+            "type": "bonus_damage_per_discarded_energy_count",
+            "amountPerEnergy": 30
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "poissons",
+    "zodiacRank": 0
+  },
+  {
+    "id": "aphrodite_poissons",
+    "name": "Aphrodite du Poisson",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 140,
+    "type": "chevalier-or",
+    "retreat": 3,
+    "image": "aphrodite_poisson.jpg",
+    "talent": {
+      "name": "Empoisonneur",
+      "effect": "Défaussez une énergie attachée à Aphrodite. Le chevalier actif adverse est empoisonné.",
+      "effects": [
+        {
+          "type": "discard_energy_poison_opponent",
+          "oncePerTurn": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Roses Démoniaques",
+        "cost": 1,
+        "damage": 30,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "poisoned"
+          }
+        ]
+      },
+      {
+        "name": "Roses Piranha",
+        "cost": 2,
+        "damage": 0,
+        "effectText": "Inflige 50 dégâts à l'un des chevaliers adverses de votre choix (actif ou banc).",
+        "effects": [
+          {
+            "type": "damage_opponent_any",
+            "damage": 50
+          }
+        ]
+      },
+      {
+        "name": "Rose Sanguinaire",
+        "cost": 4,
+        "damage": 120,
+        "effectText": "Soignez 40 PV sur Aphrodite. Rose Sanguinaire ne peut pas être utilisée au prochain tour.",
+        "effects": [
+          {
+            "type": "heal_self",
+            "amount": 40
+          },
+          {
+            "type": "cant_use_attack_next_turn",
+            "target": "self",
+            "attackName": "Rose Sanguinaire"
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "poissons",
+    "zodiacRank": 0
+  },
+  {
+    "id": "krest_verseau",
+    "name": "Krest du Verseau",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 130,
+    "type": "chevalier-or",
+    "retreat": 2,
+    "image": "20260530_233529.jpg",
+    "talent": {
+      "name": "Image mentale",
+      "effect": "Si ce chevalier est sur votre banc, vous pouvez utiliser l'une de ses attaques ; votre tour se termine ensuite. Au prochain tour adverse, si l'adversaire attaque (hors Corps à corps), lancez une pièce : face = les dégâts frappent Krest sur le banc au lieu de l'actif.",
+      "effects": [
+        {
+          "type": "bench_can_attack_end_turn",
+          "oncePerTurn": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Poussière de diamant",
+        "cost": 2,
+        "damage": 60,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "frozen"
+          }
+        ]
+      },
+      {
+        "name": "Exécution de l'Aurore",
+        "cost": 3,
+        "damage": 120,
+        "effects": [
+          {
+            "type": "optional_discard_energy_bonus",
+            "maxDiscard": 3,
+            "amountPerEnergy": 10
+          }
+        ]
+      }
+    ],
+    "zodiacSign": "verseau",
+    "zodiacRank": 0
+  }
+]

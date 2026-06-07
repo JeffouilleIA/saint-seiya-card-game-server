@@ -1,0 +1,526 @@
+[
+  {
+    "id": "fenril_alioth",
+    "name": "Fenril d'Alioth",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 80,
+    "type": "guerrier-divin-asgard",
+    "knightType": "GuerrierDivinAsgard",
+    "rewardCards": 2,
+    "tags": [
+      "GuerrierDivinAsgard"
+    ],
+    "retreat": 3,
+    "talent": {
+      "name": "Attaque éclair",
+      "effect": "Lorsque vous posez cette carte, vous pouvez faire 30 dégâts à un chevalier adverse.",
+      "effects": [
+        {
+          "type": "on_play_damage",
+          "damage": 30,
+          "target": "opponent_any"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 1,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Griffe du loup du nord",
+        "cost": 2,
+        "damage": 30,
+        "effectText": "Au prochain tour, l'adversaire qui subit cette attaque fera 30 dégâts de moins.",
+        "effects": [
+          {
+            "type": "reduce_damage_dealt_next_turn",
+            "target": "opponent_active",
+            "amount": 30
+          }
+        ]
+      },
+      {
+        "name": "Meute de loups des steppes",
+        "cost": 3,
+        "damage": 50,
+        "effects": [
+          {
+            "type": "bench_damage",
+            "target": "opponent_bench_all",
+            "damage": 20
+          }
+        ]
+      }
+    ],
+    "image": "fenril_alioth.jpg"
+  },
+  {
+    "id": "thor_phecda",
+    "name": "Thor de Phecda",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 100,
+    "type": "guerrier-divin-asgard",
+    "knightType": "GuerrierDivinAsgard",
+    "rewardCards": 2,
+    "tags": [
+      "GuerrierDivinAsgard"
+    ],
+    "retreat": 3,
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Haches de Miornil",
+        "cost": 2,
+        "damage": 30,
+        "effects": [
+          {
+            "type": "bench_damage",
+            "target": "opponent_bench_one",
+            "damage": 30
+          }
+        ]
+      },
+      {
+        "name": "Titanic Hercule",
+        "cost": 3,
+        "damage": 80,
+        "effectText": "Si la carte stade Terres glacées est en jeu, cette attaque fait 50 dégâts supplémentaires.",
+        "effects": [
+          {
+            "type": "bonus_damage_if_stadium",
+            "stadiumId": "stadium_terres_glacees",
+            "bonusDamage": 50
+          }
+        ]
+      }
+    ],
+    "image": "thor_phecda.jpg"
+  },
+  {
+    "id": "hagen_merak",
+    "name": "Hagen de Merak",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 90,
+    "type": "guerrier-divin-asgard",
+    "knightType": "GuerrierDivinAsgard",
+    "rewardCards": 2,
+    "tags": [
+      "GuerrierDivinAsgard"
+    ],
+    "retreat": 4,
+    "talent": {
+      "name": "Chaud et froid",
+      "effect": "Au début de votre tour, si ce chevalier est gelé ou paralysé, enlevez l'état spécial et récupérez une carte énergie de la pile de défausse.",
+      "effects": [
+        {
+          "type": "turn_start_thaw_recover_energy"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      },
+      {
+        "name": "Fureur du Volcan",
+        "cost": 3,
+        "damage": 50,
+        "effectText": "Si le chevalier adverse est gelé ou paralysé, l'attaque fait 50 dégâts supplémentaires. Enlevez l'état spécial de l'adversaire.",
+        "effects": [
+          {
+            "type": "bonus_damage_if_opponent_status",
+            "statuses": [
+              "frozen",
+              "paralyzed"
+            ],
+            "bonusDamage": 50
+          },
+          {
+            "type": "clear_status",
+            "target": "opponent_active",
+            "statuses": [
+              "frozen",
+              "paralyzed"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Vent du Nord",
+        "cost": 3,
+        "damage": 70,
+        "effects": [
+          {
+            "type": "coin_flip"
+          },
+          {
+            "type": "status_on_heads",
+            "target": "opponent_active",
+            "status": "frozen"
+          },
+          {
+            "type": "status_on_tails",
+            "target": "opponent_active",
+            "status": "paralyzed"
+          }
+        ]
+      }
+    ],
+    "image": "hagen_merak.jpg"
+  },
+  {
+    "id": "mime_veneta",
+    "name": "Mime de Veneta",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 80,
+    "type": "guerrier-divin-asgard",
+    "knightType": "GuerrierDivinAsgard",
+    "rewardCards": 2,
+    "tags": [
+      "GuerrierDivinAsgard"
+    ],
+    "retreat": 3,
+    "talent": {
+      "name": "Musique étourdissante",
+      "effect": "Tant que ce chevalier est sur le banc et qu'il a au moins une carte énergie, aucun chevalier n'a de talent, sauf les Divinités.",
+      "effects": [
+        {
+          "type": "bench_silence_talents",
+          "exceptKnightTypes": [
+            "Divinite"
+          ]
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Rayons de lumière",
+        "cost": 1,
+        "damage": 30,
+        "effects": []
+      },
+      {
+        "name": "Illusion musicale",
+        "cost": 2,
+        "damage": 0,
+        "effectText": "Défaussez une carte énergie. Au prochain tour, ce chevalier ne peut pas subir de dégâts.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "count": 1,
+            "target": "self"
+          },
+          {
+            "type": "immune_damage_next_turn",
+            "target": "self"
+          }
+        ]
+      },
+      {
+        "name": "Requiem",
+        "cost": 3,
+        "damage": 60,
+        "effectText": "Si le chevalier actif adverse n'a pas de carte énergie, cette attaque fait 40 dégâts supplémentaires et il est paralysé.",
+        "effects": [
+          {
+            "type": "bonus_damage_if_no_energy",
+            "target": "opponent_active",
+            "bonusDamage": 40
+          },
+          {
+            "type": "paralyze_if_no_energy",
+            "target": "opponent_active"
+          }
+        ]
+      }
+    ],
+    "image": "mime_veneta.jpg"
+  },
+  {
+    "id": "alberic_megrez",
+    "name": "Albéric de Megrez",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 70,
+    "type": "guerrier-divin-asgard",
+    "knightType": "GuerrierDivinAsgard",
+    "rewardCards": 2,
+    "tags": [
+      "GuerrierDivinAsgard"
+    ],
+    "retreat": 0,
+    "talent": {
+      "name": "Conspirateur",
+      "effect": "Si votre adversaire a joué une carte supporter au tour précédent, vous pouvez placer une carte énergie de votre main sur un de vos chevaliers de banc.",
+      "effects": [
+        {
+          "type": "attach_energy_if_opponent_played_supporter"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Épée Flamboyante",
+        "cost": 1,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Cercueil de l'Améthyste",
+        "cost": 2,
+        "damage": 20,
+        "effects": [
+          {
+            "type": "discard_energy",
+            "count": 1,
+            "target": "self"
+          },
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "paralyzed"
+          }
+        ]
+      },
+      {
+        "name": "Esprit de la nature",
+        "cost": 4,
+        "damage": 80,
+        "effectText": "Le chevalier adverse défausse une carte énergie. Ne peut pas être utilisé au prochain tour.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "count": 1,
+            "target": "opponent_active"
+          },
+          {
+            "type": "cant_use_attack_next_turn",
+            "target": "self",
+            "attackName": "Esprit de la nature"
+          }
+        ]
+      }
+    ],
+    "image": "alberic_megrez.jpg"
+  },
+  {
+    "id": "syd_mizar",
+    "name": "Syd de Mizar",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 90,
+    "type": "guerrier-divin-asgard",
+    "knightType": "GuerrierDivinAsgard",
+    "rewardCards": 2,
+    "tags": [
+      "GuerrierDivinAsgard"
+    ],
+    "retreat": 3,
+    "talent": {
+      "name": "Un frère protecteur",
+      "effect": "Si ce chevalier a 40 PV ou moins et que Bud est sur votre banc, vous pouvez échanger ces deux chevaliers et transférer les cartes énergie vers Bud.",
+      "effects": [
+        {
+          "type": "swap_with_card_id",
+          "cardId": "bud_alcor",
+          "hpThreshold": 40,
+          "transferEnergyTo": "bud_alcor"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Griffes du Tigre Viking",
+        "cost": 2,
+        "damage": 20,
+        "effectText": "Fait 20 dégâts par carte énergie attachée. Le chevalier adverse est gelé.",
+        "effects": [
+          {
+            "type": "bonus_damage_per_energy",
+            "target": "self",
+            "amountPerEnergy": 20
+          },
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "frozen"
+          }
+        ]
+      },
+      {
+        "name": "Orbe bleue",
+        "cost": 3,
+        "damage": 80,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "frozen"
+          },
+          {
+            "type": "discard_energy",
+            "count": 1,
+            "target": "self"
+          }
+        ]
+      }
+    ],
+    "image": "syd_mizar.jpg"
+  },
+  {
+    "id": "bud_alcor",
+    "name": "Bud d'Alcor",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 90,
+    "type": "guerrier-divin-asgard",
+    "knightType": "GuerrierDivinAsgard",
+    "rewardCards": 2,
+    "tags": [
+      "GuerrierDivinAsgard"
+    ],
+    "retreat": 3,
+    "talent": {
+      "name": "Attaque dans l'ombre",
+      "effect": "Si ce chevalier est sur votre banc et qu'il a au moins 2 cartes énergie, les dégâts infligés par votre chevalier actif au chevalier actif adverse augmentent de 20.",
+      "effects": [
+        {
+          "type": "bench_bonus_active_attack_damage",
+          "minEnergy": 2,
+          "amount": 20
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Griffes du Tigre Viking",
+        "cost": 1,
+        "damage": 40,
+        "effectText": "Défaussez toutes les cartes énergie de ce chevalier. L'attaque fait 40 dégâts par carte énergie défaussée.",
+        "effects": [
+          {
+            "type": "bonus_damage_per_discarded_energy",
+            "baseDamage": 40
+          }
+        ]
+      }
+    ],
+    "image": "bud_alcor.jpg"
+  },
+  {
+    "id": "siegfried_dubhe",
+    "name": "Siegfried de Dubhe",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 100,
+    "type": "guerrier-divin-asgard",
+    "knightType": "GuerrierDivinAsgard",
+    "rewardCards": 2,
+    "tags": [
+      "GuerrierDivinAsgard"
+    ],
+    "retreat": 3,
+    "talent": {
+      "name": "Armure de cristal",
+      "effect": "Lorsque ce Chevalier subit une attaque, lancez une pièce. Face : les dégâts sont réduits de 60. Pile : bloquez les dégâts de cette attaque.",
+      "effects": [
+        {
+          "type": "when_attacked_coin_flip",
+          "reduceOnHeads": 60,
+          "blockOnTails": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 1,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Dragon de glace",
+        "cost": 2,
+        "damage": 50,
+        "effects": []
+      },
+      {
+        "name": "Souffle du dragon",
+        "cost": 3,
+        "damage": 80,
+        "effects": []
+      }
+    ],
+    "image": "siegfried_dubhe.jpg"
+  },
+  {
+    "id": "hilda_polaris",
+    "name": "Hilda de Polaris",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 90,
+    "type": "guerrier-divin-asgard",
+    "knightType": "GuerrierDivinAsgard",
+    "rewardCards": 2,
+    "tags": [
+      "GuerrierDivinAsgard"
+    ],
+    "retreat": 3,
+    "talent": {
+      "name": "Appel des guerriers",
+      "effect": "Une fois par tour, cherchez un Guerrier Divin d'Asgard dans votre deck et ajoutez-le à votre main.",
+      "effects": [
+        {
+          "type": "search_deck",
+          "count": 1,
+          "filter": {
+            "knightType": "GuerrierDivinAsgard"
+          },
+          "oncePerTurn": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 1,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "Lance nordique",
+        "cost": 2,
+        "damage": 40,
+        "effects": []
+      },
+      {
+        "name": "Bénédiction d'Odin",
+        "cost": 3,
+        "damage": 60,
+        "effectText": "Récupérez une Énergie de votre défausse et attachez-la à ce Chevalier, ou attachez un Outil de votre défausse sous ce Chevalier.",
+        "effects": [
+          {
+            "type": "recover_energy_discard_attach"
+          }
+        ]
+      }
+    ],
+    "image": "hilda_polaris.jpg"
+  }
+]

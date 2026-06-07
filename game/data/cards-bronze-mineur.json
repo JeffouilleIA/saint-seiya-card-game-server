@@ -1,0 +1,257 @@
+[
+  {
+    "id": "bronze_docrates",
+    "name": "Docrates",
+    "stage": "base",
+    "type": "chevalier-bronze",
+    "bronzeCategory": "autre",
+    "bronzeMineur": false,
+    "hp": 110,
+    "retreat": 3,
+    "image": "20260523_122556.jpg",
+    "talent": {
+      "name": "Armée des Ombres",
+      "effects": [
+        {
+          "type": "search_deck",
+          "count": 1,
+          "filter": { "cardId": "bronze_homme_docrates" },
+          "destination": "hand"
+        }
+      ]
+    },
+    "attacks": [
+      { "name": "Corps à corps", "cost": 0, "damage": 10, "effects": [] },
+      {
+        "name": "Météores d'Hercule",
+        "cost": 4,
+        "damage": 60,
+        "effects": [
+          { "type": "bench_damage", "damage": 30, "target": "opponent_bench_all" },
+          { "type": "discard_energy", "count": 2, "target": "self" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bronze_homme_docrates",
+    "name": "Homme de Docrates",
+    "stage": "base",
+    "type": "chevalier-bronze",
+    "bronzeCategory": "autre",
+    "bronzeMineur": false,
+    "hp": 10,
+    "retreat": 1,
+    "image": "20260523_122618.jpg",
+    "talent": {
+      "name": "Sans valeur",
+      "effects": [{ "type": "zero_prize_on_knockout" }]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": [
+          { "type": "coin_flip" },
+          { "type": "attack_miss_on_tails" }
+        ]
+      },
+      {
+        "name": "Tremblement de terre",
+        "cost": 1,
+        "damage": 0,
+        "effects": [
+          {
+            "type": "multi_coin_flip_per_card_id",
+            "cardId": "bronze_homme_docrates",
+            "side": "own"
+          },
+          { "type": "bonus_damage_per_heads", "amountPerHeads": 10 }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bronze_june",
+    "name": "June du Caméléon",
+    "stage": "base",
+    "type": "chevalier-bronze",
+    "bronzeCategory": "autre",
+    "bronzeMineur": false,
+    "hp": 50,
+    "retreat": 1,
+    "image": "20260523_122612.jpg",
+    "talent": null,
+    "attacks": [
+      { "name": "Corps à corps", "cost": 0, "damage": 10, "effects": [] },
+      {
+        "name": "Fouet",
+        "cost": 2,
+        "damage": 20,
+        "effects": [
+          { "type": "coin_flip" },
+          { "type": "status_on_heads", "target": "opponent_active", "status": "paralyzed" }
+        ]
+      },
+      {
+        "name": "Chaîne d'amitié",
+        "cost": 2,
+        "damage": 30,
+        "effects": [
+          {
+            "type": "bonus_damage_if_bench_knight_damaged",
+            "nameContains": "Shun",
+            "bonusDamage": 40
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bronze_ban",
+    "name": "Ban du Lionnet",
+    "stage": "base",
+    "type": "chevalier-bronze",
+    "bronzeCategory": "mineur",
+    "bronzeMineur": true,
+    "hp": 50,
+    "retreat": 1,
+    "image": "20260523_122604.jpg",
+    "talent": null,
+    "attacks": [
+      { "name": "Corps à corps", "cost": 0, "damage": 10, "effects": [] },
+      {
+        "name": "Coup de pied acrobate",
+        "cost": 2,
+        "damage": 20,
+        "effects": [
+          {
+            "type": "bonus_damage_if_bench_card_ids",
+            "cardIds": ["bronze_jabu", "bronze_nachi", "bronze_geki", "bronze_ichi"],
+            "bonusDamage": 20
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bronze_nachi",
+    "name": "Nachi du Loup",
+    "stage": "base",
+    "type": "chevalier-bronze",
+    "bronzeCategory": "mineur",
+    "bronzeMineur": true,
+    "hp": 50,
+    "retreat": 1,
+    "image": "20260523_122545.jpg",
+    "talent": null,
+    "attacks": [
+      { "name": "Corps à corps", "cost": 0, "damage": 10, "effects": [] },
+      {
+        "name": "Griffes du loup",
+        "cost": 2,
+        "damage": 20,
+        "effects": [
+          {
+            "type": "bonus_damage_if_bronze_mineur_on_bench",
+            "bonusDamage": 30
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bronze_jabu",
+    "name": "Jabu de la Licorne",
+    "stage": "base",
+    "type": "chevalier-bronze",
+    "bronzeCategory": "mineur",
+    "bronzeMineur": true,
+    "hp": 50,
+    "retreat": 2,
+    "image": "20260523_122537.jpg",
+    "talent": null,
+    "attacks": [
+      { "name": "Corps à corps", "cost": 0, "damage": 10, "effects": [] },
+      {
+        "name": "Télékinésie",
+        "cost": 1,
+        "damage": 20,
+        "effects": [
+          { "type": "cant_retreat_next_turn", "target": "opponent_active" }
+        ]
+      },
+      {
+        "name": "Galop de la Licorne",
+        "cost": 2,
+        "damage": 30,
+        "description": "+10 dégâts par Bronze mineur sur votre banc.",
+        "effects": [
+          { "type": "bonus_damage_per_bronze_mineur_on_bench", "amountPerBench": 10 }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bronze_geki",
+    "name": "Geki de l'Ours",
+    "stage": "base",
+    "type": "chevalier-bronze",
+    "bronzeCategory": "mineur",
+    "bronzeMineur": true,
+    "hp": 50,
+    "retreat": 2,
+    "image": "20260523_122525.jpg",
+    "talent": null,
+    "attacks": [
+      { "name": "Corps à corps", "cost": 0, "damage": 10, "effects": [] },
+      {
+        "name": "Étranglement de l'Ours",
+        "cost": 2,
+        "damage": 30,
+        "effects": [
+          { "type": "cant_retreat_next_turn", "target": "opponent_active" },
+          { "type": "coin_flip" },
+          {
+            "type": "discard_energy_on_heads",
+            "count": 1,
+            "target": "opponent_active"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bronze_ichi",
+    "name": "Ichi de l'Hydre",
+    "stage": "base",
+    "type": "chevalier-bronze",
+    "bronzeCategory": "mineur",
+    "bronzeMineur": true,
+    "hp": 40,
+    "retreat": 1,
+    "image": "20260523_122516.jpg",
+    "talent": null,
+    "attacks": [
+      { "name": "Corps à corps", "cost": 0, "damage": 10, "effects": [] },
+      {
+        "name": "Griffes empoisonnées",
+        "cost": 1,
+        "damage": 10,
+        "effects": [
+          { "type": "coin_flip" },
+          { "type": "status_on_heads", "target": "opponent_active", "status": "poisoned" }
+        ]
+      },
+      {
+        "name": "Combo griffes",
+        "cost": 2,
+        "damage": 20,
+        "effects": [
+          { "type": "bonus_damage_if_opponent_poisoned", "bonusDamage": 20 }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,24 @@
+﻿# Dependencies
+node_modules/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+credentials.json
+*.pem
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temp / probe / scratch
+_probe_result.txt
+_tmp_search.js
+*.log
+*.tmp
+
+# Editor
+.vscode/
+.idea/

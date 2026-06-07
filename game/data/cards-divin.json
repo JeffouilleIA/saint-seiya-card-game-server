@@ -1,0 +1,730 @@
+[
+  {
+    "id": "ikki_armure_divine",
+    "name": "Ikki Armure Divine",
+    "stage": "chevalier-divin",
+    "evolvesFrom": "Ikki Cosmo Ardent",
+    "evolutionRequiresTool": "tool_sang_athena",
+    "hp": 260,
+    "type": "chevalier-divin",
+    "knightType": "ChevalierDivin",
+    "rewardCards": 4,
+    "tags": [
+      "ChevalierDivin"
+    ],
+    "retreat": 3,
+    "talent": {
+      "name": "Phoenix incandescent",
+      "effect": "Une fois par tour, si ce chevalier a moins de 100 PV, vous pouvez chercher une carte énergie dans votre deck et lui attacher.",
+      "effects": [
+        {
+          "type": "search_deck_energy",
+          "count": 1,
+          "attachTo": "self",
+          "hpBelow": 100,
+          "oncePerTurn": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Le vol du Phénix",
+        "cost": 1,
+        "damage": 50,
+        "effects": [
+          {
+            "type": "recover_energy_discard_attach"
+          }
+        ]
+      },
+      {
+        "name": "L'Oiseau Vengeur",
+        "cost": 2,
+        "damage": 80,
+        "effectText": "Si un de vos chevaliers a été mis KO par une attaque de l'adversaire au tour précédent, cette attaque fait 80 dégâts de plus.",
+        "effects": [
+          {
+            "type": "bonus_damage_if_own_ko_last_turn",
+            "bonusDamage": 80
+          }
+        ]
+      },
+      {
+        "name": "Phoenix enflammé",
+        "cost": 4,
+        "damage": 80,
+        "effects": [
+          {
+            "type": "bonus_damage_per_energy",
+            "target": "self",
+            "amountPerEnergy": 30
+          },
+          {
+            "type": "discard_energy",
+            "count": 2,
+            "target": "self"
+          }
+        ]
+      }
+    ],
+    "image": "ikki_armure_divine.jpg"
+  },
+  {
+    "id": "shun_armure_divine",
+    "name": "Shun Armure Divine",
+    "stage": "chevalier-divin",
+    "evolvesFrom": "Shun Cosmo Ardent",
+    "evolutionRequiresTool": "tool_sang_athena",
+    "hp": 210,
+    "type": "chevalier-divin",
+    "knightType": "ChevalierDivin",
+    "rewardCards": 4,
+    "tags": [
+      "ChevalierDivin"
+    ],
+    "retreat": 3,
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Chaînes transdimensionnelles",
+        "cost": 2,
+        "damage": 40,
+        "effectText": "Inflige 40 dégâts à n'importe quel chevalier adverse, qu'il soit actif ou sur le banc.",
+        "effects": [
+          {
+            "type": "damage_opponent_any",
+            "damage": 40
+          }
+        ]
+      },
+      {
+        "name": "Chaînes Nébulaires",
+        "cost": 3,
+        "damage": 100,
+        "effectText": "Soigne 30 dégâts à tous vos chevaliers en jeu, y compris le chevalier actif et les chevaliers de banc.",
+        "effects": [
+          {
+            "type": "heal_all_friendly",
+            "amount": 30
+          }
+        ]
+      },
+      {
+        "name": "Tempête Ultime",
+        "cost": 5,
+        "damage": 150,
+        "effectText": "Votre adversaire ne peut jouer aucune carte de sa main pendant son prochain tour. Défaussez 2 cartes Énergie attachées à ce chevalier. Cette attaque ne peut pas être utilisée au prochain tour.",
+        "effects": [
+          {
+            "type": "cant_use_card_next_turn"
+          },
+          {
+            "type": "cant_use_attack_next_turn",
+            "target": "self",
+            "attackName": "Tempête Ultime"
+          },
+          {
+            "type": "discard_energy",
+            "count": 2,
+            "target": "self"
+          }
+        ]
+      }
+    ],
+    "image": "shun_armure_divine.jpg"
+  },
+  {
+    "id": "hyoga_armure_divine",
+    "name": "Hyoga Armure Divine",
+    "stage": "chevalier-divin",
+    "evolvesFrom": "Hyoga Cosmo Ardent",
+    "evolutionRequiresTool": "tool_sang_athena",
+    "hp": 220,
+    "type": "chevalier-divin",
+    "knightType": "ChevalierDivin",
+    "rewardCards": 4,
+    "tags": [
+      "ChevalierDivin"
+    ],
+    "retreat": 3,
+    "talent": {
+      "name": "Armure Divine",
+      "effect": "Lorsque vous posez cette carte, soignez 80 dégâts à ce chevalier.",
+      "effects": [
+        {
+          "type": "on_enter_heal_self",
+          "amount": 80
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Poussière de Diamant",
+        "cost": 3,
+        "damage": 80,
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "frozen"
+          },
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "paralyzed"
+          }
+        ]
+      },
+      {
+        "name": "Tonnerre de l'Aube Divin",
+        "cost": 4,
+        "damage": 150,
+        "effectText": "Défaussez 2 cartes énergie. Si le chevalier adverse a 2 cartes énergie ou moins, cette attaque fait 100 dégâts de plus.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "count": 2,
+            "target": "self"
+          },
+          {
+            "type": "bonus_damage_if_opponent_energy_at_most",
+            "maxEnergy": 2,
+            "bonusDamage": 100
+          }
+        ]
+      }
+    ],
+    "image": "hyoga_armure_divine.jpg"
+  },
+  {
+    "id": "shiryu_armure_divine",
+    "name": "Shiryu Armure Divine",
+    "stage": "chevalier-divin",
+    "evolvesFrom": "Shiryu Cosmo Ardent",
+    "evolutionRequiresTool": "tool_sang_athena",
+    "hp": 230,
+    "type": "chevalier-divin",
+    "knightType": "ChevalierDivin",
+    "rewardCards": 4,
+    "tags": [
+      "ChevalierDivin"
+    ],
+    "retreat": 3,
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 30,
+        "effects": []
+      },
+      {
+        "name": "Colère du Dragon",
+        "cost": 2,
+        "damage": 70,
+        "effectText": "Cherchez une carte Énergie dans votre deck et attachez-la à ce chevalier. Mélangez ensuite votre deck.",
+        "effects": [
+          {
+            "type": "search_deck_energy",
+            "count": 1,
+            "attachTo": "self",
+            "shuffleDeck": true
+          }
+        ]
+      },
+      {
+        "name": "Envol du dragon furieux",
+        "cost": 4,
+        "damage": 150,
+        "effectText": "Le chevalier actif adverse défausse toutes ses cartes Énergie. Défaussez 2 cartes Énergie attachées à ce chevalier. Cette attaque ne peut pas être utilisée lors de votre prochain tour.",
+        "effects": [
+          {
+            "type": "discard_all_energy",
+            "target": "opponent_active"
+          },
+          {
+            "type": "discard_energy",
+            "count": 2,
+            "target": "self"
+          },
+          {
+            "type": "cant_use_attack_next_turn",
+            "target": "self",
+            "attackName": "Envol du dragon furieux"
+          }
+        ]
+      }
+    ],
+    "image": "shiryu_armure_divine.jpg"
+  },
+  {
+    "id": "seiya_armure_divine",
+    "name": "Seiya Armure Divine",
+    "stage": "chevalier-divin",
+    "evolvesFrom": null,
+    "hp": 230,
+    "type": "chevalier-divin",
+    "knightType": "ChevalierDivin",
+    "rewardCards": 4,
+    "tags": [
+      "ChevalierDivin"
+    ],
+    "retreat": 4,
+    "talent": {
+      "name": "Protecteur",
+      "effect": "Si Athéna ou Athéna Armure Divine est en jeu, tous les dégâts qu'elle reçoit sont redirigés vers ce chevalier.",
+      "effects": [
+        {
+          "type": "redirect_damage_from_athena_to_self"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Comète de Pégase",
+        "cost": 3,
+        "damage": 100,
+        "effects": []
+      },
+      {
+        "name": "Combo de Pégase",
+        "cost": 4,
+        "damage": 180,
+        "effectText": "Défaussez 3 cartes énergie. Si le chevalier actif adverse est une Divinité, cette attaque fait 100 dégâts supplémentaires.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "count": 3,
+            "target": "self"
+          },
+          {
+            "type": "bonus_damage_vs_divinity",
+            "bonusDamage": 100
+          }
+        ]
+      }
+    ],
+    "image": "seiya_armure_divine.jpg"
+  },
+  {
+    "id": "athena",
+    "name": "Athéna",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 180,
+    "type": "divinite",
+    "knightType": "Divinite",
+    "rewardCards": 5,
+    "tags": [
+      "Divinite"
+    ],
+    "faction": "Athena",
+    "retreat": 3,
+    "talent": {
+      "name": "Athéna et ses chevaliers",
+      "effect": "Les attaques de vos Chevaliers de Bronze, d'Argent et d'Or infligent 30 dégâts supplémentaires. Une fois par tour, si ce chevalier a au moins 2 Énergies, vous pouvez les défausser toutes : infligez 110 dégâts au chevalier actif adverse, votre tour se termine et l'adversaire prend 2 Récompenses.",
+      "effects": [
+        {
+          "type": "ally_attack_bonus_by_raw_types",
+          "rawTypes": [
+            "chevalier-bronze",
+            "chevalier-argent",
+            "chevalier-or"
+          ],
+          "amount": 30
+        },
+        {
+          "type": "athena_sacrifice",
+          "minEnergy": 2,
+          "damage": 110,
+          "opponentPrizes": 2,
+          "oncePerTurn": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Sacrifice Divin",
+        "cost": 1,
+        "damage": 0,
+        "effectText": "Cherchez jusqu'à 2 cartes Sang d'Athéna dans votre deck et ajoutez-les à votre main. Ce chevalier s'inflige 40 dégâts.",
+        "effects": [
+          {
+            "type": "search_deck",
+            "filter": {
+              "cardId": "tool_sang_athena"
+            },
+            "count": 2
+          },
+          {
+            "type": "self_damage",
+            "damage": 40
+          }
+        ]
+      },
+      {
+        "name": "Sceptre de la victoire",
+        "cost": 2,
+        "damage": 70,
+        "effectText": "Piochez 3 cartes.",
+        "effects": [
+          {
+            "type": "draw",
+            "count": 3
+          }
+        ]
+      },
+      {
+        "name": "Urne sacrée d'Athena",
+        "cost": 4,
+        "damage": 50,
+        "effectText": "Si le chevalier actif adverse est une Divinité, cette attaque inflige 150 dégâts supplémentaires.",
+        "effects": [
+          {
+            "type": "bonus_damage_vs_divinity",
+            "bonusDamage": 150
+          }
+        ]
+      }
+    ],
+    "image": "athena.jpg"
+  },
+  {
+    "id": "athena-armure-divine",
+    "name": "Athéna Armure Divine",
+    "stage": "evolution",
+    "evolvesFrom": "Athéna",
+    "evolutionRequiresTool": "tool_sang_athena",
+    "hp": 280,
+    "type": "divinite",
+    "knightType": "Divinite",
+    "rewardCards": 5,
+    "tags": [
+      "Divinite"
+    ],
+    "faction": "Athena",
+    "retreat": 3,
+    "talent": {
+      "name": "Porteuse d'espoir",
+      "effect": "Lorsque vous posez cette carte, récupérez jusqu'à 3 cartes Énergie de votre défausse et attachez-les à vos autres Chevaliers (jusqu'à 3 Énergies ce tour).",
+      "effects": [
+        {
+          "type": "on_enter_energy_discard_attach_allies",
+          "count": 3
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Bouclier d'Athena",
+        "cost": 2,
+        "damage": 80,
+        "effectText": "Lancez une pièce. Si face, ce chevalier ne reçoit aucun dégât au prochain tour.",
+        "effects": [
+          {
+            "type": "coin_flip"
+          },
+          {
+            "type": "immune_damage_next_turn",
+            "onHeads": true
+          }
+        ]
+      },
+      {
+        "name": "Lancer de Sceptre",
+        "cost": 4,
+        "damage": 230,
+        "effectText": "Défaussez 3 cartes énergie.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "count": 3,
+            "target": "self"
+          }
+        ]
+      }
+    ],
+    "image": "athena-armure-divine.jpg"
+  },
+  {
+    "id": "thanatos",
+    "name": "Thanatos",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 230,
+    "type": "divinite",
+    "knightType": "Divinite",
+    "rewardCards": 5,
+    "tags": [
+      "Divinite"
+    ],
+    "retreat": 3,
+    "talent": {
+      "name": "Mort",
+      "effect": "Une fois par tour, infligez 20 dégâts à un chevalier de banc adverse.",
+      "effects": [
+        {
+          "type": "bench_damage_once_per_turn",
+          "damage": 20,
+          "target": "opponent_bench_one",
+          "oncePerTurn": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Boules d'énergie",
+        "cost": 3,
+        "damage": 90,
+        "effects": []
+      },
+      {
+        "name": "Terrible providence",
+        "cost": 5,
+        "damage": 0,
+        "effectText": "Défaussez 3 cartes énergie. Placez 150 dégâts comme vous le voulez entre les chevaliers de banc ou le chevalier actif adverse.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "count": 3,
+            "target": "self"
+          },
+          {
+            "type": "distribute_damage_opponent_knights",
+            "totalDamage": 150
+          }
+        ]
+      }
+    ],
+    "image": "thanatos.jpg"
+  },
+  {
+    "id": "hypnos",
+    "name": "Hypnos",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 230,
+    "type": "divinite",
+    "knightType": "Divinite",
+    "rewardCards": 5,
+    "tags": [
+      "Divinite"
+    ],
+    "retreat": 3,
+    "talent": {
+      "name": "Sommeil",
+      "effect": "Une fois par tour, défaussez une carte Énergie attachée à ce chevalier. Dans ce cas, le chevalier actif adverse est Confus. Vous ne pouvez pas utiliser le bonus de Somnolence le même tour.",
+      "effects": [
+        {
+          "type": "discard_energy_confuse_opponent",
+          "oncePerTurn": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Boules d'énergie",
+        "cost": 3,
+        "damage": 90,
+        "effects": []
+      },
+      {
+        "name": "Somnolence éternelle",
+        "cost": 4,
+        "damage": 130,
+        "effectText": "Si le chevalier adverse est confus, cette attaque fait 100 dégâts supplémentaires. (Sans effet si le talent Sommeil a été utilisé ce tour.)",
+        "effects": [
+          {
+            "type": "bonus_damage_if_opponent_status",
+            "statuses": [
+              "confused"
+            ],
+            "bonusDamage": 100,
+            "blockedIfHypnosTalentUsed": true
+          }
+        ]
+      }
+    ],
+    "image": "hypnos.jpg"
+  },
+  {
+    "id": "hades-corps-humain",
+    "name": "Hadès corps humain",
+    "stage": "evolution",
+    "evolvesFrom": [
+      "Shun d'Andromède",
+      "Shun cosmo ardent",
+      "tout chevalier portant le Pendentif d'Hadès"
+    ],
+    "evolutionRequiresTool": "tool_pendentif_hades",
+    "hp": 200,
+    "type": "divinite",
+    "knightType": "Divinite",
+    "rewardCards": 5,
+    "tags": [
+      "Divinite"
+    ],
+    "retreat": 3,
+    "talent": {
+      "name": "Maître des enfers",
+      "effect": "Au début de votre tour, récupérez un Chevalier ou Supporter de votre défausse sur votre main (pas Stade ni Objet).",
+      "effects": [
+        {
+          "type": "turn_start_recover_discard",
+          "filter": {
+            "or": [
+              {
+                "cardType": "chevalier"
+              },
+              {
+                "cardType": "supporter"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Volonté divine",
+        "cost": 3,
+        "damage": 80,
+        "effectText": "Défaussez toutes les cartes outils attachées au chevalier actif adverse. Piochez 3 cartes.",
+        "effects": [
+          {
+            "type": "detach_opponent_active_tool"
+          },
+          {
+            "type": "draw",
+            "count": 3
+          }
+        ]
+      },
+      {
+        "name": "Renvoi d'attaque",
+        "cost": 3,
+        "damage": 0,
+        "effectText": "Rejouez la dernière attaque utilisée par l'adversaire au tour précédent (sauf si c'était une Divinité).",
+        "effects": [
+          {
+            "type": "replay_opponent_last_attack"
+          }
+        ]
+      }
+    ],
+    "image": "hades-corps-humain.jpg"
+  },
+  {
+    "id": "hades-vrai-corps",
+    "name": "Hadès vrai corps",
+    "stage": "evolution",
+    "evolvesFrom": "Hadès corps humain",
+    "hp": 330,
+    "type": "divinite",
+    "knightType": "Divinite",
+    "rewardCards": 5,
+    "tags": [
+      "Divinite"
+    ],
+    "retreat": 4,
+    "talent": {
+      "name": "Seigneur des enfers",
+      "effect": "Lorsque vous posez cette carte, infligez 30 dégâts à tous les autres chevaliers en jeu. Ce chevalier est immunisé aux états spéciaux et ne peut pas être soigné.",
+      "effects": [
+        {
+          "type": "on_play_damage_all_except_self",
+          "damage": 30
+        },
+        {
+          "type": "immune_all_status"
+        },
+        {
+          "type": "immune_all_heal"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Épée d'Hadès",
+        "cost": 3,
+        "damage": 160,
+        "effects": []
+      },
+      {
+        "name": "Ultime Éclipse",
+        "cost": 4,
+        "damage": 180,
+        "effectText": "Défaussez 3 cartes énergie. Fait 50 dégâts à tous les chevaliers de banc adverses.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "count": 3,
+            "target": "self"
+          },
+          {
+            "type": "bench_damage",
+            "damage": 50,
+            "target": "opponent_bench_all"
+          }
+        ]
+      }
+    ],
+    "image": "hades-vrai-corps.jpg"
+  },
+  {
+    "id": "god_poseidon",
+    "name": "Poséidon",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 280,
+    "type": "divinite",
+    "knightType": "Divinite",
+    "rewardCards": 5,
+    "tags": [
+      "Divinite"
+    ],
+    "retreat": 3,
+    "talent": null,
+    "attacks": [
+      {
+        "name": "Aura agressive",
+        "cost": 2,
+        "damage": 50,
+        "effectText": "Cette attaque inflige 40 dégâts supplémentaires si le chevalier actif adverse possède une carte Objet attachée.",
+        "effects": [
+          {
+            "type": "bonus_damage_if_opponent_has_tool",
+            "bonusDamage": 40
+          }
+        ]
+      },
+      {
+        "name": "Trident royal",
+        "cost": 3,
+        "damage": 130,
+        "effectText": "Le chevalier actif adverse est paralysé.",
+        "effects": [
+          {
+            "type": "status",
+            "target": "opponent_active",
+            "status": "paralyzed"
+          }
+        ]
+      },
+      {
+        "name": "Colère du dieu des mers",
+        "cost": 4,
+        "damage": 40,
+        "effectText": "Cette attaque inflige 10 dégâts supplémentaires pour chaque marqueur de dégâts déjà placé sur le chevalier actif adverse.",
+        "effects": [
+          {
+            "type": "bonus_damage_per_damage_marker",
+            "target": "opponent_active",
+            "amountPerMarker": 10
+          }
+        ]
+      }
+    ],
+    "image": "20260524_222634.jpg"
+  }
+]

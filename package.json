@@ -1,0 +1,19 @@
+{
+  "name": "saint-seiya-card-game-server",
+  "version": "1.0.0",
+  "description": "Chevalier TCG — serveur web (local + Railway)",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "node scripts/sync-game.mjs",
+    "sync-game": "node scripts/sync-game.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  }
+}

@@ -1,0 +1,1065 @@
+[
+  {
+    "id": "entrainement",
+    "name": "Entraînement",
+    "category": "supporter",
+    "image": "20260521_233931.jpg",
+    "effectText": "Cherchez une carte Énergie dans votre deck et ajoutez-la à un de vos Chevaliers",
+    "effects": [
+      {
+        "type": "search_deck_energy",
+        "count": 1,
+        "attachTo": "chosen_own_knight"
+      }
+    ]
+  },
+  {
+    "id": "armure-du-sagittaire",
+    "name": "Armure du Sagittaire",
+    "category": "objet",
+    "image": "20260521_233958.jpg",
+    "effectText": "Échangez votre chevalier actif contre un chevalier de banc",
+    "effects": [
+      {
+        "type": "switch_active_with_bench",
+        "target": "chosen_own_bench"
+      }
+    ]
+  },
+  {
+    "id": "bouclier-d-athena",
+    "name": "Bouclier d'Athena",
+    "category": "objet",
+    "image": "20260521_233947.jpg",
+    "effectText": "Soignez 60 dégâts et tous les effets spéciaux d'un Chevalier. Défaussez toutes les cartes Énergies.",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 60,
+        "target": "chosen_knight"
+      },
+      {
+        "type": "clear_all_special_status",
+        "target": "chosen_knight"
+      },
+      {
+        "type": "discard_all_energy",
+        "target": "chosen_knight"
+      }
+    ]
+  },
+  {
+    "id": "energie-etoile",
+    "name": "Etoile",
+    "category": "energie",
+    "image": "20260521_233900.jpg",
+    "energyType": "etoile",
+    "effects": [
+      {
+        "type": "provide_energy",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "supporter_vieux_maitre",
+    "name": "Vieux Maître",
+    "category": "supporter",
+    "image": "20260523_091143.jpg",
+    "effectText": "Piochez 2 cartes. Les attaques de vos Chevaliers infligent +20 dégâts ce tour.",
+    "effects": [
+      {
+        "type": "draw",
+        "count": 2
+      },
+      {
+        "type": "bonus_attack_damage_this_turn",
+        "amount": 20
+      }
+    ]
+  },
+  {
+    "id": "supporter_enfant_divin",
+    "name": "Enfant Divin",
+    "category": "supporter",
+    "image": "20260523_091124.jpg",
+    "effectText": "Piochez jusqu'à avoir 7 cartes en main.",
+    "effects": [
+      {
+        "type": "draw_until_hand_size",
+        "size": 7
+      }
+    ]
+  },
+  {
+    "id": "supporter_athena",
+    "name": "Athéna",
+    "category": "supporter",
+    "image": "20260523_091115.jpg",
+    "effectText": "Remettez jusqu'à 6 Énergies ou Chevaliers de votre défausse dans votre deck, OU cherchez un Supporter, Stade ou Objet dans votre deck et ajoutez-le à votre main.",
+    "effects": [
+      {
+        "type": "athena_choice",
+        "recycleMax": 6
+      }
+    ]
+  },
+  {
+    "id": "supporter_tatsumi",
+    "name": "Tatsumi",
+    "category": "supporter",
+    "image": "20260523_091033.jpg",
+    "effectText": "Défaussez votre main, puis piochez 6 cartes (8 si c'est votre premier tour).",
+    "effects": [
+      {
+        "type": "discard_hand_draw",
+        "count": 6,
+        "countFirstTurn": 8
+      }
+    ]
+  },
+  {
+    "id": "objet_harpe_de_pandore",
+    "name": "Harpe de Pandore",
+    "category": "objet",
+    "image": "20260523_091024.jpg",
+    "effectText": "Déplacez une Énergie d'un de vos Chevaliers vers un autre.",
+    "effects": [
+      {
+        "type": "move_energy_between_knights"
+      }
+    ]
+  },
+  {
+    "id": "supporter_hades",
+    "name": "Hadès",
+    "category": "supporter",
+    "image": "20260523_090944.jpg",
+    "effectText": "Échangez le Chevalier actif adverse avec un de son banc, puis échangez votre Chevalier actif avec un de votre banc.",
+    "effects": [
+      {
+        "type": "swap_opponent_active",
+        "chooser": "attacker"
+      },
+      {
+        "type": "switch_active_with_bench"
+      }
+    ]
+  },
+  {
+    "id": "supporter_sunrei",
+    "name": "Sunrei",
+    "category": "supporter",
+    "image": "20260523_174927.jpg",
+    "effectText": "Si les points de vie de votre Chevalier actif tombent à 0 au tour suivant, il remonte immédiatement à 10 PV. Tous les effets qui lui sont appliqués disparaissent. Votre Chevalier n'est pas mis K.O. et l'adversaire ne prend aucune carte récompense.",
+    "effects": [
+      {
+        "type": "survie",
+        "duree": "jusqu_a_la_fin_du_tour_adverse",
+        "healOnKO": 10,
+        "removeStatus": true,
+        "preventKO": true,
+        "preventPrizeCard": true
+      }
+    ]
+  },
+  {
+    "id": "supporter_guilty",
+    "name": "Guilty",
+    "category": "supporter",
+    "image": "20260523_175133.jpg",
+    "effectText": "Vous pouvez défausser jusqu'à 3 Chevaliers Noirs de votre main ou de votre banc. Pour chaque Chevalier Noir défaussé, cherchez une carte Énergie dans votre deck et attachez-la à un Chevalier Noir ou à Phénix Méchant.",
+    "effects": [
+      {
+        "type": "acceleration_energie",
+        "maxDefausse": 3,
+        "cibleDefausse": ["Chevalier Noir"],
+        "source": ["main", "banc"],
+        "parCarteDefaussee": {
+          "chercherDeck": { "type": "energie", "quantite": 1 },
+          "attacherA": ["Chevalier Noir", "Phénix Méchant"]
+        }
+      }
+    ]
+  },
+  {
+    "id": "objet_chien_de_police",
+    "name": "Chien de Police",
+    "category": "objet",
+    "image": "20260523_090926.jpg",
+    "effectText": "Lancez 2 pièces. Pour chaque face, cherchez un Chevalier dans votre deck et ajoutez-le à votre main.",
+    "effects": [
+      {
+        "type": "coin_flip_search_knight",
+        "flips": 2
+      }
+    ]
+  },
+  {
+    "id": "objet_mission_gigas",
+    "name": "Mission de Gigas",
+    "category": "objet",
+    "image": "20260523_123625.jpg",
+    "effectText": "Cherchez un Chevalier d'Argent et une Énergie dans votre deck. Vous pouvez attacher immédiatement cette énergie au Chevalier d'Argent trouvé.",
+    "effects": [
+      {
+        "type": "search_deck",
+        "filter": {
+          "type": "chevalier-argent"
+        },
+        "destination": "hand"
+      },
+      {
+        "type": "search_deck_energy",
+        "count": 1,
+        "attachTo": "own_active_or_bench"
+      }
+    ]
+  },
+  {
+    "id": "objet_entrainement_bronzes",
+    "name": "Entraînement des Chevaliers Mineurs",
+    "category": "objet",
+    "image": "20260523_123618.jpg",
+    "effectText": "Cherchez jusqu'à 2 cartes Énergie dans votre deck et attachez-les à un Bronze mineur ou à June.",
+    "effects": [
+      {
+        "type": "search_deck_energy",
+        "count": 2,
+        "attachTo": "chosen_own_knight",
+        "attachFilter": "bronze_mineur_or_june"
+      }
+    ]
+  },
+  {
+    "id": "stadium_elysion",
+    "name": "Elysion",
+    "category": "stade",
+    "type": "stadium",
+    "effectText": "En fin de tour, inflige 10 dégâts à chaque Chevalier actif (sauf Divinités, Chevaliers Divins, et ceux portant le Sang d'Athéna ou le Pendentif d'Hadès).",
+    "effect": {
+      "endTurnDamage": 10,
+      "target": "active_knights",
+      "ignoreTypes": [
+        "Divinite",
+        "ChevalierDivin"
+      ],
+      "ignoreTools": [
+        "SangAthena",
+        "PendentifHades"
+      ]
+    },
+    "effects": [
+      {
+        "type": "stadium_end_turn_damage",
+        "endTurnDamage": 10,
+        "target": "active_knights",
+        "ignoreTypes": [
+          "Divinite",
+          "ChevalierDivin"
+        ],
+        "ignoreTools": [
+          "SangAthena",
+          "PendentifHades"
+        ]
+      }
+    ],
+    "animation": {
+      "duration": 1000,
+      "effect": "elysion_judgement",
+      "steps": [
+        "heavenly_light",
+        "white_particles_fall",
+        "gold_wave_crosses_field",
+        "damage_flash"
+      ]
+    },
+    "image": "stade-elysion.jpg"
+  },
+  {
+    "id": "entrainement-de-dokho",
+    "name": "Entraînement de Dokho",
+    "category": "supporter",
+    "effectText": "Cherchez 2 cartes Énergie dans votre deck. Attachez-en 1 à l'un de vos Chevaliers et ajoutez l'autre à votre main.",
+    "effects": [
+      {
+        "type": "search_deck_energy_split",
+        "count": 2,
+        "attachTo": "chosen_own_knight",
+        "remainderTo": "hand"
+      }
+    ],
+    "image": "entrainement-de-dokho.jpg"
+  },
+  {
+    "id": "sanctuaire",
+    "name": "Sanctuaire",
+    "category": "stade",
+    "image": "sanctuaire.jpg",
+    "effectText": "Aucun échange de Chevalier actif. Les effets d'échange (supporters, attaques) sont annulés. Aucune retraite.",
+    "effects": [
+      {
+        "type": "block_active_swap"
+      },
+      {
+        "type": "block_swap_effects"
+      },
+      {
+        "type": "block_retreat"
+      }
+    ]
+  },
+  {
+    "id": "collier-des-108-perles",
+    "name": "Collier des 108 Perles",
+    "category": "stade",
+    "effectText": "Les cartes ne peuvent pas être récupérées depuis la défausse.",
+    "effects": [
+      {
+        "type": "block_recover_from_discard"
+      }
+    ],
+    "image": "collier-des-108-perles.jpg"
+  },
+  {
+    "id": "puit-des-ames",
+    "name": "Puits des Âmes",
+    "category": "stade",
+    "effectText": "Lors d'un KO, l'adversaire prend 1 Récompense de moins, sauf si le Chevalier mis KO vaut 0 ou 1 Récompense (Bronze mineur, etc.).",
+    "effects": [
+      {
+        "type": "knockout_prize_minus_one",
+        "amount": 1,
+        "unlessPrizeValueAtMost": 1
+      }
+    ],
+    "image": "puit-des-ames.jpg"
+  },
+  {
+    "id": "chateau-d-hades",
+    "name": "Château d'Hadès",
+    "category": "stade",
+    "effectText": "Toutes les attaques coûtent 1 Énergie de plus (sauf Spectres, Juges, Divinités, Sang d'Athéna — exceptions à préciser).",
+    "effects": [
+      {
+        "type": "attack_cost_plus",
+        "amount": 1,
+        "exceptTags": [
+          "spectre",
+          "juge",
+          "divinite",
+          "sang-athena"
+        ]
+      }
+    ],
+    "image": "chateau-d-hades.jpg"
+  },
+  {
+    "id": "les-cinq-pics",
+    "name": "Les Cinq Pics",
+    "category": "stade",
+    "effectText": "Chaque joueur peut attacher au maximum 2 Énergies par tour.",
+    "effects": [
+      {
+        "type": "max_energy_attach_per_turn",
+        "max": 2
+      }
+    ],
+    "image": "les-cinq-pics.jpg"
+  },
+  {
+    "id": "septieme-sens",
+    "name": "7e Sens",
+    "category": "outil",
+    "toolType": "sens",
+    "effectText": "Les attaques de ce Chevalier coûtent 1 Énergie de moins.",
+    "effects": [],
+    "passiveEffects": [
+      {
+        "type": "reduce_attack_cost",
+        "amount": 1
+      }
+    ],
+    "image": "septieme-sens.jpg"
+  },
+  {
+    "id": "huitieme-sens",
+    "name": "8e Sens",
+    "category": "outil",
+    "toolType": "sens",
+    "effectText": "Si ce Chevalier est mis KO, remettez cet Outil dans votre main et transférez jusqu'à 2 Énergies vers vos autres Chevaliers.",
+    "effects": [],
+    "passiveEffects": [
+      {
+        "type": "return_tool_to_hand_on_ko",
+        "maxEnergyTransfer": 2
+      }
+    ],
+    "image": "huitieme-sens.jpg"
+  },
+  {
+    "id": "dernier-souffle",
+    "name": "Dernier Souffle",
+    "category": "outil",
+    "toolType": "souffle",
+    "effectText": "Si ce Chevalier a 30 PV ou moins et avait au moins 60 PV max, les dégâts de ses attaques sont doublés.",
+    "effects": [],
+    "passiveEffects": [
+      {
+        "type": "double_damage_at_low_hp",
+        "hpThreshold": 30,
+        "minMaxHp": 60,
+        "multiplier": 2
+      }
+    ],
+    "image": "dernier-souffle.jpg"
+  },
+  {
+    "id": "armes-de-la-balance",
+    "name": "Armes de la Balance",
+    "category": "outil",
+    "toolType": "arme",
+    "effectText": "Les attaques de ce Chevalier infligent +20 dégâts (y compris corps à corps).",
+    "effects": [],
+    "passiveEffects": [
+      {
+        "type": "bonus_attack_damage",
+        "amount": 20
+      }
+    ],
+    "image": "armes-de-la-balance.jpg"
+  },
+  {
+    "id": "objet_tournoi_galactique",
+    "name": "Tournoi Galactique",
+    "category": "objet",
+    "image": "objet_tournoi_galactique.jpg",
+    "effectText": "Cherchez 2 Chevaliers de Bronze dans votre deck (Bronze mineur, ou Seiya, Ikki, Shiryu, Hyôga et Shun de base) et ajoutez-les à votre main.",
+    "effects": [
+      {
+        "type": "search_deck",
+        "count": 2,
+        "filter": {
+          "tournoiGalactique": true
+        },
+        "destination": "hand"
+      }
+    ]
+  },
+  {
+    "id": "poseidon",
+    "name": "Poséidon",
+    "category": "supporter",
+    "effectText": "Redistribuez les Énergies attachées à vos Chevaliers comme vous le souhaitez (comme la Harpe de Pandore, sans limite).",
+    "effects": [
+      {
+        "type": "redistribute_energy"
+      }
+    ],
+    "image": "poseidon.jpg"
+  },
+  {
+    "id": "athena-exclamation",
+    "name": "Exclamation d'Athéna",
+    "category": "supporter",
+    "effectText": "Votre Chevalier d'Or actif et jusqu'à 2 Chevaliers d'Or sur votre banc défaussent 1 Énergie chacun. À la fin de votre tour, infligez 250 dégâts au Chevalier actif adverse.",
+    "effects": [
+      {
+        "type": "athena_exclamation",
+        "endTurnDamage": 250,
+        "maxBenchGold": 2
+      }
+    ],
+    "image": "athena-exclamation.jpg"
+  },
+  {
+    "id": "esprit-d-aioros",
+    "name": "Esprit d'Aioros",
+    "category": "outil",
+    "toolType": "esprit",
+    "effectText": "Depuis votre défausse, attachez cette carte sous Seiya de Pégase. Seiya gagne +40 PV max et +30 dégâts aux attaques.",
+    "effects": [
+      {
+        "type": "attach_from_discard",
+        "targetCardId": "seiya-de-pegase"
+      }
+    ],
+    "passiveEffects": [
+      {
+        "type": "bonus_max_hp",
+        "amount": 40
+      },
+      {
+        "type": "bonus_attack_damage",
+        "amount": 30
+      }
+    ],
+    "image": "esprit-d-aioros.jpg"
+  },
+  {
+    "id": "les_12_maisons",
+    "name": "Les 12 maisons",
+    "category": "objet",
+    "image": "les_12_maisons.jpg",
+    "effectText": "Cherchez un chevalier d'or dans votre deck et ajoutez-le à votre main.",
+    "effects": [
+      {
+        "type": "search_deck",
+        "count": 1,
+        "filter": {
+          "type": "chevalier-or"
+        }
+      }
+    ]
+  },
+  {
+    "id": "centre_recherche_fondation",
+    "name": "Centre de recherche de la fondation",
+    "category": "objet",
+    "image": "CentreRecherche.jpg",
+    "effectText": "Cherchez un Chevalier de Bronze de base, Noir ou d'Argent dans votre deck.",
+    "effects": [
+      {
+        "type": "search_deck",
+        "count": 1,
+        "filter": {
+          "or": [
+            {
+              "bronzeBase": true
+            },
+            {
+              "type": "chevalier-noir"
+            },
+            {
+              "type": "chevalier-argent"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "tool_sang_athena",
+    "name": "Sang d'Athena",
+    "category": "outil",
+    "toolType": "sang",
+    "aliases": [
+      "SangAthena"
+    ],
+    "restrictions": {
+      "faction": "Athena"
+    },
+    "effectText": "Soigne tous les effets spéciaux de ce Chevalier. Ce Chevalier gagne +40 PV max.",
+    "attachEffects": [
+      {
+        "type": "heal_all_status",
+        "target": "self"
+      }
+    ],
+    "passiveEffects": [
+      {
+        "type": "bonus_max_hp",
+        "amount": 40
+      }
+    ],
+    "tags": [
+      "sang-athena"
+    ],
+    "animation": {
+      "duration": 3000,
+      "effect": "athena_blood",
+      "steps": [
+        "blood_drop_falls",
+        "golden_explosion",
+        "light_wings_appear",
+        "hp_increase_effect",
+        "golden_aura_persistent"
+      ]
+    },
+    "image": "SangAthena.jpg"
+  },
+  {
+    "id": "tool_apprentice_training",
+    "name": "Entraînement d'apprenti",
+    "category": "objet",
+    "effectText": "Attachez 1 carte Énergie de votre main à l'un de vos Chevaliers.",
+    "effects": [
+      {
+        "type": "attach_energy_from_hand",
+        "count": 1,
+        "target": "chosen_own_knight"
+      }
+    ],
+    "image": "tool_apprentice_training.jpg"
+  },
+  {
+    "id": "tool_healing_volcano",
+    "name": "Volcan de guérison",
+    "category": "objet",
+    "effectText": "Soignez tous les PV, retirez tous les effets spéciaux et défaussez toutes les Énergies du Chevalier choisi.",
+    "effects": [
+      {
+        "type": "heal_full",
+        "target": "chosen_knight"
+      },
+      {
+        "type": "clear_all_special_status",
+        "target": "chosen_knight"
+      },
+      {
+        "type": "discard_all_energy",
+        "target": "chosen_knight"
+      }
+    ],
+    "image": "tool_healing_volcano.jpg"
+  },
+  {
+    "id": "support_princess_flamme",
+    "name": "Princesse Flamme",
+    "category": "supporter",
+    "effectText": "Cherchez 2 cartes Supporter, Outil ou Stade dans votre deck et ajoutez-les à votre main.",
+    "effects": [
+      {
+        "type": "search_deck",
+        "count": 2,
+        "filter": {
+          "or": [
+            {
+              "cardType": "supporter"
+            },
+            {
+              "cardType": "outil"
+            },
+            {
+              "cardType": "stade"
+            }
+          ]
+        },
+        "destination": "hand"
+      }
+    ],
+    "image": "support_princess_flamme.jpg"
+  },
+  {
+    "id": "tool_black_knight_training",
+    "name": "Entraînement du Chevalier Noir",
+    "category": "objet",
+    "effectText": "Cherchez 2 cartes Énergie dans votre deck et attachez-les à un Chevalier Noir.",
+    "effects": [
+      {
+        "type": "search_deck_energy",
+        "count": 2,
+        "attachTo": "chosen_own_knight",
+        "attachFilter": "chevalier-noir"
+      }
+    ],
+    "image": "tool_black_knight_training.jpg"
+  },
+  {
+    "id": "support_lord_odin",
+    "name": "Seigneur Odin",
+    "category": "supporter",
+    "effectText": "Piochez 2 cartes pour chaque Récompense que vous menez sur l'adversaire.",
+    "effects": [
+      {
+        "type": "draw_per_prize_lead",
+        "perLead": 2
+      }
+    ],
+    "image": "support_lord_odin.jpg"
+  },
+  {
+    "id": "support_jango",
+    "name": "Jango",
+    "category": "supporter",
+    "effectText": "Cherchez 2 Chevaliers Noirs dans votre deck et ajoutez-les à votre main.",
+    "effects": [
+      {
+        "type": "search_deck",
+        "count": 2,
+        "filter": {
+          "type": "chevalier-noir"
+        },
+        "destination": "hand"
+      }
+    ],
+    "image": "support_jango.jpg"
+  },
+  {
+    "id": "stadium_dead_queen_island",
+    "name": "Île de la Reine Morte",
+    "category": "stade",
+    "type": "stadium",
+    "effectText": "Les attaques des Chevaliers Noirs coûtent 1 Énergie de moins.",
+    "effects": [
+      {
+        "type": "attack_cost_minus",
+        "amount": 1,
+        "forTypes": [
+          "chevalier-noir"
+        ]
+      }
+    ],
+    "image": "stadium_dead_queen_island.jpg"
+  },
+  {
+    "id": "objet_sceau_athena",
+    "name": "Sceau d'Athéna",
+    "category": "objet",
+    "effectText": "Défaussez jusqu'à 2 Outils en jeu (les vôtres ou ceux de l'adversaire).",
+    "effects": [
+      {
+        "type": "destruction_outil",
+        "maxCibles": 2
+      }
+    ],
+    "image": "20260530_233224.jpg"
+  },
+  {
+    "id": "objet_palais_hades",
+    "name": "Palais d'Hadès",
+    "category": "objet",
+    "effectText": "Cherchez 1 Juge dans votre deck et ajoutez-le à votre main.",
+    "effects": [
+      {
+        "type": "search_deck",
+        "count": 1,
+        "filter": {
+          "tag": "juge"
+        },
+        "destination": "hand"
+      }
+    ],
+    "image": "20260530_233241.jpg"
+  },
+  {
+    "id": "objet_reveille_spectres",
+    "name": "Réveille des Spectres",
+    "category": "objet",
+    "effectText": "Lancez une pièce. Face : cherchez 1 Juge et ajoutez-le à votre main. Pile : cherchez jusqu'à 2 Spectres et ajoutez-les à votre main.",
+    "effects": [
+      {
+        "type": "coin_flip_search_tag",
+        "onHeads": {
+          "filter": {
+            "tag": "juge"
+          },
+          "count": 1
+        },
+        "onTails": {
+          "filter": {
+            "tag": "spectre"
+          },
+          "count": 2
+        }
+      }
+    ],
+    "image": "20260530_233250.jpg"
+  },
+  {
+    "id": "supporter_cerbere",
+    "name": "Cerbère",
+    "category": "supporter",
+    "effectText": "Votre prochaine attaque inflige 30 dégâts supplémentaires à jusqu'à 3 chevaliers de banc adverses.",
+    "effects": [
+      {
+        "type": "bonus_degats_banc",
+        "bonus": 30,
+        "ciblesMax": 3,
+        "duree": "prochaine_attaque"
+      }
+    ],
+    "image": "20260530_233306.jpg"
+  },
+  {
+    "id": "supporter_yoma_mephistofeles",
+    "name": "Yoma de Mephistofélès",
+    "category": "supporter",
+    "effectText": "Chaque joueur défausse sa main. Votre adversaire pioche 8 cartes, vous piochez 5 cartes.",
+    "effects": [
+      {
+        "type": "renouvellement_main",
+        "opponentDraw": 8,
+        "playerDraw": 5
+      }
+    ],
+    "image": "20260530_233313.jpg"
+  },
+  {
+    "id": "tool_saphir_odin",
+    "name": "Saphir d'Odin",
+    "category": "outil",
+    "toolType": "saphir",
+    "aliases": [
+      "SaphirOdin"
+    ],
+    "restrictions": {
+      "knightTypes": [
+        "GuerrierDivinAsgard"
+      ],
+      "excludeCardIds": [
+        "hilda_polaris"
+      ]
+    },
+    "effectText": "Guerrier Divin d'Asgard (sauf Hilda) : +70 PV max, +40 dégâts aux attaques (sauf Corps à Corps). Si ce Chevalier met K.O. un adversaire, prenez 1 Récompense de plus.",
+    "passiveEffects": [
+      {
+        "type": "bonus_max_hp",
+        "amount": 70
+      },
+      {
+        "type": "bonus_attack_damage",
+        "amount": 40,
+        "excludeMelee": true
+      },
+      {
+        "type": "bonus_prize_on_knockout",
+        "amount": 1
+      }
+    ],
+    "image": "20260530_233343.jpg"
+  },
+  {
+    "id": "tool_pendentif_hades",
+    "name": "Pendentif d'Hadès",
+    "category": "outil",
+    "toolType": "pendentif",
+    "aliases": [
+      "PendentifHades"
+    ],
+    "tags": [
+      "pendentif-hades"
+    ],
+    "restrictions": {
+      "forbiddenKnightTypes": [
+        "Spectre",
+        "GuerrierDivinAsgard",
+        "ChevalierDivin",
+        "Divinite"
+      ],
+      "forbiddenTags": [
+        "spectre",
+        "juge",
+        "divinite"
+      ]
+    },
+    "effectText": "Permet l'évolution en Hadès Corps Humain. Ce Chevalier perd 50 PV max (permanent).",
+    "passiveEffects": [
+      {
+        "type": "malus_max_hp",
+        "amount": 50
+      }
+    ],
+    "image": "20260530_233349.jpg"
+  },
+  {
+    "id": "tool_anneau_nibelungen",
+    "name": "Anneau des Nibelungen",
+    "category": "outil",
+    "toolType": "anneau",
+    "blocksEvolution": true,
+    "effectText": "Ce Chevalier gagne l'attaque Rayon de l'Anneau (coût 1, 40 dégâts, récupère 1 Énergie de la défausse). Tant que cet Outil est attaché, ce Chevalier ne peut pas évoluer.",
+    "bonusAttacks": [
+      {
+        "name": "Rayon de l'Anneau",
+        "cost": 1,
+        "damage": 40,
+        "effects": [
+          {
+            "type": "recover_energy_from_discard",
+            "count": 1,
+            "attachTo": "self"
+          }
+        ]
+      }
+    ],
+    "image": "20260530_233356.jpg"
+  },
+  {
+    "id": "tool_epee_balmung",
+    "name": "Épée de Balmung",
+    "category": "outil",
+    "toolType": "epee",
+    "effectText": "Ce Chevalier gagne l'attaque Épée de Balmung (coût 1, 40 dégâts). Vous pouvez défausser jusqu'à 2 Saphir d'Odin de votre main : +60 dégâts par carte.",
+    "bonusAttacks": [
+      {
+        "name": "Épée de Balmung",
+        "cost": 1,
+        "damage": 40,
+        "effects": [
+          {
+            "type": "optional_discard_named_cards",
+            "cardIds": [
+              "tool_saphir_odin"
+            ],
+            "aliases": [
+              "SaphirOdin"
+            ],
+            "maxDiscard": 2,
+            "amountPerCard": 60
+          }
+        ]
+      }
+    ],
+    "image": "20260530_233405.jpg"
+  },
+  {
+    "id": "supporter_kiki",
+    "name": "Kiki",
+    "category": "supporter",
+    "effectText": "Piochez 3 cartes.",
+    "effects": [
+      {
+        "type": "draw",
+        "count": 3
+      }
+    ],
+    "image": "20260531_215754.jpg"
+  },
+  {
+    "id": "supporter_grand_pape",
+    "name": "Grand Pape",
+    "category": "supporter",
+    "effectText": "Cherchez jusqu'à 2 Chevaliers d'Argent et 1 carte Objet dans votre deck. Révélez-les et ajoutez-les à votre main. Mélangez ensuite votre deck.",
+    "effects": [
+      {
+        "type": "search_deck",
+        "count": 2,
+        "filter": {
+          "type": "chevalier-argent"
+        },
+        "optional": true
+      },
+      {
+        "type": "search_deck",
+        "count": 1,
+        "filter": {
+          "cardType": "objet"
+        },
+        "optional": true
+      },
+      {
+        "type": "shuffle_deck"
+      }
+    ],
+    "image": "20260531_215800.jpg"
+  },
+  {
+    "id": "supporter_pandore",
+    "name": "Pandore",
+    "category": "supporter",
+    "effectText": "Regardez les 6 premières cartes de votre deck. Ajoutez-en 1 à votre main puis défaussez les 5 autres.",
+    "effects": [
+      {
+        "type": "look_top_pick_one",
+        "count": 6
+      }
+    ],
+    "image": "20260531_215804.jpg"
+  },
+  {
+    "id": "supporter_sacrifice",
+    "name": "Sacrifice",
+    "category": "supporter",
+    "effectText": "Défaussez un de vos chevaliers actif ou de banc ainsi que toutes les cartes qui lui sont attachées. Si c'était votre chevalier actif, votre adversaire prend une récompense de moins que normalement au prochain KO de votre actif. Si c'était un chevalier du banc, aucune Récompense n'est liée à ce sacrifice. Continuez votre tour après avoir choisi un nouveau chevalier actif si besoin.",
+    "effects": [
+      {
+        "type": "voluntary_sacrifice_knight",
+        "forbiddenKnightTypes": [
+          "ChevalierDivin",
+          "Divinite"
+        ],
+        "forbiddenTags": [
+          "ChevalierDivin",
+          "Divinite",
+          "divinite"
+        ]
+      }
+    ],
+    "image": "20260531_215819.jpg"
+  },
+  {
+    "id": "supporter_chevaliers_acier",
+    "name": "Chevaliers d'Acier",
+    "category": "supporter",
+    "effectText": "Cherchez jusqu'à 3 cartes Énergie dans votre deck et ajoutez-les à votre main. Mélangez ensuite votre deck.",
+    "effects": [
+      {
+        "type": "search_deck",
+        "count": 3,
+        "filter": {
+          "cardType": "energie"
+        },
+        "upTo": true
+      },
+      {
+        "type": "shuffle_deck"
+      }
+    ],
+    "image": "20260531_215834.jpg"
+  },
+  {
+    "id": "don-de-vie",
+    "name": "Don de Vie",
+    "category": "objet",
+    "image": "ShunHyoga.jpg",
+    "effectText": "Choisissez deux chevaliers en jeu. Infligez jusqu'à 40 dégâts au premier chevalier. Soignez ensuite le second chevalier d'un nombre de dégâts égal aux dégâts réellement infligés. Si le premier chevalier est mis K.O. par cet effet, appliquez normalement les règles de K.O. et les cartes récompenses correspondantes sont attribuées à la fin du tour.",
+    "effects": [
+      {
+        "type": "don_de_vie",
+        "maxDamage": 40
+      }
+    ]
+  },
+  {
+    "id": "avion-de-la-fondation",
+    "name": "Avion de la Fondation",
+    "category": "objet",
+    "image": "avion_fondation.jpg",
+    "effectText": "Défaussez un Chevalier de votre main, cherchez un Chevalier dans votre deck, ajoutez-le à votre main, puis mélangez votre deck.",
+    "effects": [
+      {
+        "type": "discard_hand_knight"
+      },
+      {
+        "type": "search_deck",
+        "count": 1,
+        "filter": {
+          "cardType": "chevalier"
+        },
+        "destination": "hand"
+      },
+      {
+        "type": "shuffle_deck"
+      }
+    ]
+  },
+  {
+    "id": "sceptre-d-athena",
+    "name": "Sceptre d'Athéna",
+    "category": "objet",
+    "image": "sceptre_athena.jpg",
+    "effectText": "Choisissez une carte Énergie de votre défausse et attachez-la à l'un de vos Chevaliers.",
+    "effects": [
+      {
+        "type": "attach_energy_from_discard",
+        "count": 1,
+        "target": "chosen_own_knight"
+      }
+    ]
+  },
+  {
+    "id": "hopital",
+    "name": "Hôpital",
+    "category": "objet",
+    "image": "hopital.jpg",
+    "effectText": "Soignez 30 dégâts à l'un de vos Chevaliers.",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 30,
+        "target": "chosen_knight"
+      }
+    ]
+  }
+]

@@ -1,0 +1,455 @@
+{
+  "_meta": {
+    "description": "Généraux de Poséidon — armée marine (3 cartes Récompense au KO) + Julian Solo / Poséidon Dieu des Océans",
+    "rawType": "armee-poseidon",
+    "knightType": "GeneralPoseidon",
+    "rewardCards": 3,
+    "faction": "Poseidon",
+    "tags": {
+      "faction": "poseidon",
+      "general": "general-poseidon",
+      "julianSolo": "julian-solo",
+      "marina": "marina",
+      "famille": "famille-poseidon",
+      "mer": "mer"
+    },
+    "cardIds": {
+      "julianSolo": "julian-solo",
+      "godPoseidon": "poseidon-dieu-oceans"
+    }
+  },
+  "cards": [
+    {
+      "id": "julian-solo",
+      "name": "Julian Solo, Réceptacle de Poséidon",
+      "stage": "base",
+      "evolvesFrom": null,
+      "hp": 40,
+      "type": "divinite",
+      "knightType": "Divinite",
+      "rewardCards": 5,
+      "faction": "Poseidon",
+      "tags": ["Poseidon", "Divinite", "julian-solo", "famille-poseidon", "poseidon"],
+      "retreat": 0,
+      "playRequiresStackFromHand": "poseidon-dieu-oceans",
+      "talent": {
+        "name": "Réceptacle de Poséidon",
+        "effect": "Cette carte ne peut être jouée que si Poséidon, Dieu des Océans est placé sous elle en même temps. Vous ne pouvez pas jouer Julian Solo si une carte de la famille Poséidon est déjà en jeu de votre côté. Lorsque Julian Solo est battu, défaussez Julian Solo, révélez Poséidon, Dieu des Océans placé dessous, retirez tous les dégâts et états spéciaux de Poséidon. L'adversaire ne gagne aucune carte récompense. Cette transformation est définitive.",
+        "effects": [
+          {
+            "type": "julian_receptacle",
+            "underCardId": "poseidon-dieu-oceans",
+            "transformToCardId": "poseidon-dieu-oceans",
+            "noPrizeOnTransform": true
+          }
+        ]
+      },
+      "attacks": [],
+      "image": "Julian.jpg"
+    },
+    {
+      "id": "poseidon-dieu-oceans",
+      "name": "Poséidon, Dieu des Océans",
+      "stage": "base",
+      "evolvesFrom": null,
+      "hp": 240,
+      "type": "divinite",
+      "knightType": "Divinite",
+      "rewardCards": 5,
+      "faction": "Poseidon",
+      "tags": ["Poseidon", "Divinite", "famille-poseidon", "poseidon"],
+      "retreat": 3,
+      "playOnlyWithJulian": true,
+      "talent": {
+        "name": "Dieu des Mers",
+        "effect": "Les Généraux Marinas infligent 20 dégâts supplémentaires. Les talents nécessitant Julian Solo cessent immédiatement de fonctionner.",
+        "effects": [
+          {
+            "type": "marina_attack_bonus_global",
+            "rawType": "armee-poseidon",
+            "amount": 20
+          }
+        ]
+      },
+      "attacks": [
+        {
+          "name": "Trident Royal",
+          "cost": 2,
+          "damage": 110,
+          "effects": []
+        },
+        {
+          "name": "Colère du Dieu des Mers",
+          "cost": 4,
+          "damage": 60,
+          "effectText": "Cette attaque inflige 10 dégâts supplémentaires pour chaque marqueur de dégâts sur le chevalier actif adverse.",
+          "effects": [
+            {
+              "type": "bonus_damage_per_damage_marker",
+              "target": "opponent_active",
+              "amountPerMarker": 10
+            }
+          ]
+        }
+      ],
+      "image": "DieuDesMers.jpg"
+    },
+    {
+      "id": "kanon-dragon-mers",
+      "name": "Kanon du Dragon des Mers",
+      "stage": "base",
+      "evolvesFrom": null,
+      "hp": 130,
+      "type": "armee-poseidon",
+      "knightType": "GeneralPoseidon",
+      "rewardCards": 3,
+      "faction": "Poseidon",
+      "tags": ["Poseidon", "general-poseidon", "marina", "famille-poseidon", "poseidon"],
+      "retreat": 2,
+      "talent": {
+        "name": "Maître du Sanctuaire Sous-Marin",
+        "effect": "Tant que Julian Solo, Réceptacle de Poséidon est en jeu, une fois par tour choisissez : piocher 1 carte, attacher une énergie supplémentaire à un Général Marina ou déplacer une énergie entre deux Généraux Marinas.",
+        "effects": [
+          { "type": "requires_julian_solo_in_play" },
+          { "type": "kanon_submarine_sanctuary_once", "oncePerTurn": true }
+        ]
+      },
+      "attacks": [
+        {
+          "name": "Triangle Doré",
+          "cost": 2,
+          "damage": 60,
+          "effectText": "Échangez le chevalier actif adverse avec un chevalier de son banc.",
+          "effects": [
+            {
+              "type": "swap_opponent_active",
+              "chooser": "attacker"
+            }
+          ]
+        },
+        {
+          "name": "Galaxian Explosion",
+          "cost": 4,
+          "damage": 110,
+          "effectText": "Défaussez 2 cartes énergie attachées à ce chevalier.",
+          "effects": [
+            {
+              "type": "discard_energy",
+              "target": "self",
+              "count": 2
+            }
+          ]
+        }
+      ],
+      "image": "Kanon0.jpg"
+    },
+    {
+      "id": "kasa-lyumnades",
+      "name": "Kasa de Lyumnades",
+      "stage": "base",
+      "evolvesFrom": null,
+      "hp": 130,
+      "type": "armee-poseidon",
+      "knightType": "GeneralPoseidon",
+      "rewardCards": 3,
+      "faction": "Poseidon",
+      "tags": ["Poseidon", "general-poseidon", "marina", "famille-poseidon", "poseidon"],
+      "retreat": 2,
+      "talent": {
+        "name": "Illusion Trompeuse",
+        "effect": "Tant que Julian Solo, Réceptacle de Poséidon ou Kanon du Dragon des Mers est en jeu, lorsque Kasa devient votre chevalier actif, choisissez une attaque d'un chevalier adverse. Kasa peut utiliser cette attaque jusqu'à la fin du tour ; son coût en Énergie est réduit de 1 (minimum 0).",
+        "effects": [
+          { "type": "requires_julian_or_kanon_in_play" },
+          { "type": "copy_opponent_attack_on_active", "reduceCopiedAttackCost": 1 }
+        ]
+      },
+      "attacks": [
+        {
+          "name": "Salamandre de Feu",
+          "cost": 2,
+          "damage": 30,
+          "effects": []
+        },
+        {
+          "name": "Illusion des Profondeurs",
+          "cost": 3,
+          "damage": 70,
+          "effectText": "Défaussez une énergie attachée au chevalier actif adverse. Le chevalier actif adverse est confus.",
+          "effects": [
+            {
+              "type": "discard_energy",
+              "target": "opponent_active",
+              "count": 1
+            },
+            {
+              "type": "status",
+              "target": "opponent_active",
+              "status": "confused"
+            }
+          ]
+        }
+      ],
+      "image": "Kaza.jpg"
+    },
+    {
+      "id": "sorrento-sirene",
+      "name": "Sorrento de la Sirène",
+      "stage": "base",
+      "evolvesFrom": null,
+      "hp": 150,
+      "type": "armee-poseidon",
+      "knightType": "GeneralPoseidon",
+      "rewardCards": 3,
+      "faction": "Poseidon",
+      "tags": ["Poseidon", "general-poseidon", "marina", "famille-poseidon", "poseidon"],
+      "retreat": 1,
+      "talent": {
+        "name": "Flûtiste du Dieu des Mers",
+        "effect": "Si Sorrento est votre chevalier actif, le talent du chevalier actif adverse est annulé. Si Poséidon, Dieu des Océans est en jeu, les attaques du chevalier actif adverse coûtent également 1 énergie supplémentaire. Les attaques dont le coût est de 0 ne sont pas affectées.",
+        "effects": [
+          {
+            "type": "sorrento_flute",
+            "requiresActive": true,
+            "silenceOpponentActiveTalent": true,
+            "requiresPoseidonGodInPlay": true,
+            "opponentAttackCostIncrease": 1
+          }
+        ]
+      },
+      "attacks": [
+        {
+          "name": "Mélodie Envoûtante",
+          "cost": 2,
+          "damage": 50,
+          "effectText": "Le chevalier actif adverse est confus.",
+          "effects": [
+            {
+              "type": "status",
+              "target": "opponent_active",
+              "status": "confused"
+            }
+          ]
+        },
+        {
+          "name": "Dead End Symphony",
+          "cost": 4,
+          "damage": 90,
+          "effectText": "+2 coût attaques actif adverse jusqu'à fin prochain tour adverse (coût 0 exempt)",
+          "effects": [
+            {
+              "type": "opponent_active_attack_cost_plus_until_owner_turn_end",
+              "amount": 2
+            }
+          ]
+        }
+      ],
+      "image": "Sorento.jpg"
+    },
+    {
+      "id": "krishna-chrysaor",
+      "name": "Krishna de Chrysaor",
+      "stage": "base",
+      "evolvesFrom": null,
+      "hp": 180,
+      "type": "armee-poseidon",
+      "knightType": "GeneralPoseidon",
+      "rewardCards": 3,
+      "faction": "Poseidon",
+      "tags": ["Poseidon", "general-poseidon", "marina", "famille-poseidon", "poseidon"],
+      "retreat": 3,
+      "talent": {
+        "name": "Foi Absolue",
+        "effect": "Si Krishna est votre chevalier actif et que Poséidon, Dieu des Océans est en jeu, les dégâts qu'il reçoit sont réduits de 30 et il ne peut pas être affecté par Confus, Paralysé ou Gelé.",
+        "effects": [
+          {
+            "type": "krishna_foi_absolue",
+            "requiresPoseidonGodInPlay": true,
+            "requiresActive": true,
+            "reduceDamage": 30,
+            "immuneStatuses": ["confused", "paralyzed", "frozen"]
+          }
+        ]
+      },
+      "attacks": [
+        {
+          "name": "Lance d'Or",
+          "cost": 2,
+          "damage": 60,
+          "effectText": "Cette attaque ignore tous les effets réduisant ou annulant les dégâts.",
+          "effects": [
+            {
+              "type": "ignore_opponent_damage_mitigation"
+            }
+          ]
+        },
+        {
+          "name": "Maharoshini",
+          "cost": 4,
+          "damage": 100,
+          "effectText": "Défaussez une énergie attachée au chevalier actif adverse. Au prochain tour, ce chevalier ne peut pas recevoir de nouvelle énergie depuis la main de son propriétaire.",
+          "effects": [
+            {
+              "type": "discard_energy",
+              "target": "opponent_active",
+              "count": 1
+            },
+            {
+              "type": "cannot_attach_energy_from_hand_next_turn",
+              "target": "opponent_active"
+            }
+          ]
+        }
+      ],
+      "image": "Chrysaor.jpg"
+    },
+    {
+      "id": "baian-cheval-marin",
+      "name": "Baian du Cheval Marin",
+      "stage": "base",
+      "evolvesFrom": null,
+      "hp": 140,
+      "type": "armee-poseidon",
+      "knightType": "GeneralPoseidon",
+      "rewardCards": 3,
+      "faction": "Poseidon",
+      "tags": ["Poseidon", "general-poseidon", "marina", "famille-poseidon", "poseidon"],
+      "retreat": 1,
+      "talent": {
+        "name": "Mur de Dieu",
+        "effect": "Si Baian est votre chevalier actif, réduisez de 20 les dégâts qu'il reçoit. Si une attaque adverse inflige 40 dégâts ou moins après application des autres effets, cette attaque n'inflige aucun dégât.",
+        "effects": [
+          {
+            "type": "baian_mur_de_dieu",
+            "requiresActive": true,
+            "reduceDamage": 20,
+            "zeroIfAtMost": 40
+          }
+        ]
+      },
+      "attacks": [
+        {
+          "name": "Corps à Corps",
+          "cost": 0,
+          "damage": 20,
+          "effects": []
+        },
+        {
+          "name": "Mur d'Air",
+          "cost": 2,
+          "damage": 0,
+          "effectText": "Jusqu'à votre prochain tour, toutes les attaques adverses infligent 60 dégâts de moins à Baian. Si une attaque est ainsi réduite à 0 dégât, le chevalier attaquant reçoit 20 dégâts.",
+          "effects": [
+            {
+              "type": "baian_mur_air",
+              "reduce": 60,
+              "counterDamage": 20
+            }
+          ]
+        },
+        {
+          "name": "God Breath",
+          "cost": 3,
+          "damage": 90,
+          "effectText": "Votre adversaire échange son chevalier actif avec un chevalier de son banc de son choix.",
+          "effects": [
+            {
+              "type": "swap_opponent_active",
+              "chooser": "defender"
+            }
+          ]
+        }
+      ],
+      "image": "Baian.jpg"
+    },
+    {
+      "id": "io-scylla",
+      "name": "Io de Scylla",
+      "stage": "base",
+      "evolvesFrom": null,
+      "hp": 160,
+      "type": "armee-poseidon",
+      "knightType": "GeneralPoseidon",
+      "rewardCards": 3,
+      "faction": "Poseidon",
+      "tags": ["Poseidon", "general-poseidon", "marina", "famille-poseidon", "poseidon"],
+      "retreat": 2,
+      "talent": null,
+      "attacks": [
+        {
+          "name": "Projection Animale",
+          "cost": 2,
+          "damage": 50,
+          "effectText": "Choisissez un animal différent du précédent : Aigle (+50 dégâts et Io reçoit 30 dégâts), Loup (+30 dégâts), Abeille (Confus), Serpent (Empoisonné), Ours (Paralysé), Chauve-Souris (soigne 30 PV à Io).",
+          "effects": [
+            {
+              "type": "io_projection_animale"
+            }
+          ]
+        },
+        {
+          "name": "Big Tornado",
+          "cost": 4,
+          "damage": 100,
+          "effectText": "Défaussez 2 énergies. Choisissez : le chevalier actif adverse devient Confus ou Empoisonné.",
+          "effects": [
+            {
+              "type": "discard_energy",
+              "target": "self",
+              "count": 2
+            },
+            {
+              "type": "io_big_tornado_status"
+            }
+          ]
+        }
+      ],
+      "image": "Io.jpg"
+    },
+    {
+      "id": "isaac-kraken",
+      "name": "Isaac du Kraken",
+      "stage": "base",
+      "evolvesFrom": null,
+      "hp": 160,
+      "type": "armee-poseidon",
+      "knightType": "GeneralPoseidon",
+      "rewardCards": 3,
+      "faction": "Poseidon",
+      "tags": ["Poseidon", "general-poseidon", "marina", "famille-poseidon", "poseidon"],
+      "retreat": 2,
+      "talent": {
+        "name": "Glace des Abysses",
+        "effect": "Lorsque vous jouez Isaac depuis votre main, infligez 20 dégâts à un chevalier de banc adverse.",
+        "effects": [
+          {
+            "type": "on_play_bench_damage",
+            "damage": 20,
+            "target": "opponent_bench_one"
+          }
+        ]
+      },
+      "attacks": [
+        {
+          "name": "Aurora Borealis",
+          "cost": 2,
+          "damage": 70,
+          "effects": []
+        },
+        {
+          "name": "Prison de Glace",
+          "cost": 4,
+          "damage": 100,
+          "effectText": "Si le chevalier actif adverse a déjà subi des dégâts, il est paralysé.",
+          "effects": [
+            {
+              "type": "status_if_opponent_damaged",
+              "target": "opponent_active",
+              "status": "paralyzed"
+            }
+          ]
+        }
+      ],
+      "image": "Isaac.jpg"
+    }
+  ]
+}
