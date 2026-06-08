@@ -1,0 +1,2073 @@
+/* Couche d'effets d'attaque thématiques (style anime) */
+.attack-fx-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 250;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.attack-fx-layer.show {
+  opacity: 1;
+}
+
+.fx-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* MP4 overlays (direct children of #attack-fx-layer after hoist in playThemedAttackFx) */
+.attack-fx-layer > video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.fx-from-player .fx-scene {
+  --fx-origin-y: 72%;
+}
+
+.fx-from-opponent .fx-scene {
+  --fx-origin-y: 28%;
+}
+
+/* --- Impacts génériques --- */
+.fx-impact-flash,
+.fx-punch-flash,
+.fx-heavy-impact {
+  position: absolute;
+  left: 50%;
+  top: var(--fx-origin-y, 50%);
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 220, 100, 0.4) 40%, transparent 70%);
+  animation: fx-flash-pop 0.6s ease-out forwards;
+}
+
+.fx-kick-arc {
+  position: absolute;
+  left: 42%;
+  top: calc(var(--fx-origin-y, 50%) - 40px);
+  width: 140px;
+  height: 80px;
+  border: 4px solid rgba(200, 230, 255, 0.9);
+  border-radius: 0 80% 0 0;
+  border-bottom: none;
+  border-left: none;
+  animation: fx-kick-sweep 0.65s ease-out forwards;
+}
+
+@keyframes fx-kick-sweep {
+  from {
+    transform: scale(0.3) rotate(-20deg);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.2) rotate(5deg);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-flash-pop {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* Marine — météores */
+.fx-eagle-glyph {
+  position: absolute;
+  left: 50%;
+  top: 35%;
+  width: 180px;
+  height: 100px;
+  margin-left: -90px;
+  background: radial-gradient(ellipse, rgba(100, 180, 255, 0.25) 0%, transparent 70%);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  opacity: 0.6;
+  animation: fx-eagle-fade 0.9s ease forwards;
+}
+
+.fx-meteor-streak {
+  position: absolute;
+  width: 8px;
+  height: 40px;
+  background: linear-gradient(180deg, #fff9c4, #ff9800, transparent);
+  border-radius: 4px;
+  animation: fx-meteor-fall 0.92s ease-in forwards;
+  animation-delay: calc(var(--i) * 0.08s);
+  left: calc(15% + var(--i) * 11%);
+  top: -20%;
+  transform: rotate(35deg);
+  box-shadow: 0 0 12px rgba(255, 200, 80, 0.8);
+}
+
+@keyframes fx-meteor-fall {
+  to {
+    top: 55%;
+    opacity: 0;
+  }
+}
+
+@keyframes fx-eagle-fade {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  30% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Griffes aigle */
+.fx-claw {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 6px;
+  height: 200px;
+  background: linear-gradient(180deg, rgba(120, 200, 255, 0.9), transparent);
+  transform-origin: top center;
+  animation: fx-claw-slash 0.72s ease-out forwards;
+  box-shadow: 0 0 20px rgba(80, 160, 255, 0.8);
+}
+
+.fx-claw-1 {
+  transform: rotate(-25deg);
+  margin-left: -80px;
+}
+.fx-claw-2 {
+  transform: rotate(0deg);
+  margin-left: -3px;
+  animation-delay: 0.07s;
+}
+.fx-claw-3 {
+  transform: rotate(25deg);
+  margin-left: 74px;
+  animation-delay: 0.13s;
+}
+
+@keyframes fx-claw-slash {
+  0% {
+    transform: scaleY(0) rotate(var(--r, 0deg));
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(1) rotate(var(--r, 0deg));
+    opacity: 0;
+  }
+}
+
+/* Corbeaux */
+.fx-crow {
+  position: absolute;
+  width: 24px;
+  height: 12px;
+  background: #1a1a22;
+  border-radius: 50% 50% 40% 40%;
+  animation: fx-crow-fly 1.12s ease-in-out forwards;
+  animation-delay: calc(var(--i) * 0.05s);
+  left: calc(var(--i) * 8%);
+  top: 20%;
+  box-shadow: -8px 0 0 -2px #333;
+}
+
+@keyframes fx-crow-fly {
+  0% {
+    transform: translateX(-20vw) translateY(0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(40vw) translateY(30vh);
+    opacity: 0;
+  }
+}
+
+.fx-swap-flash {
+  position: absolute;
+  inset: 0;
+  background: rgba(40, 20, 60, 0.35);
+  animation: fx-flash-pop 0.52s ease;
+}
+
+.fx-feather {
+  position: absolute;
+  width: 14px;
+  height: 28px;
+  background: linear-gradient(180deg, #222, #444);
+  border-radius: 50% 50% 40% 40%;
+  animation: fx-feather-fall 0.9s ease-in forwards;
+  animation-delay: calc(var(--i) * 0.07s);
+  left: calc(10% + var(--i) * 8%);
+  top: -10%;
+  transform: rotate(calc(var(--i) * 30deg));
+}
+
+@keyframes fx-feather-fall {
+  to {
+    top: 60%;
+    transform: rotate(180deg) translateX(20px);
+    opacity: 0;
+  }
+}
+
+/* Chaînes Dante */
+.fx-chain {
+  position: absolute;
+  top: 30%;
+  height: 55%;
+  width: 12px;
+  background: repeating-linear-gradient(180deg, #555 0 8px, #888 8px 16px);
+  animation: fx-chain-wrap 0.92s ease-out forwards;
+}
+
+.fx-chain-l {
+  left: 18%;
+  transform: rotate(15deg);
+}
+.fx-chain-r {
+  right: 18%;
+  transform: rotate(-15deg);
+}
+.fx-chain-m {
+  left: 50%;
+  margin-left: -6px;
+  opacity: 0.5;
+}
+
+@keyframes fx-chain-wrap {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 0.8;
+  }
+}
+
+.fx-orb {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #aaa, #333);
+  box-shadow: inset -4px -4px 8px #222, 0 0 12px rgba(255, 80, 40, 0.5);
+  animation: fx-orb-spin-hit 1.05s ease-out forwards;
+}
+
+.fx-orb-1 {
+  left: 35%;
+  top: 40%;
+}
+.fx-orb-2 {
+  left: 50%;
+  top: 35%;
+  animation-delay: 0.13s;
+}
+.fx-orb-3 {
+  left: 58%;
+  top: 45%;
+  animation-delay: 0.2s;
+}
+
+@keyframes fx-orb-spin-hit {
+  0% {
+    transform: rotate(0deg) translateX(-80px);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(720deg) translateX(0);
+    opacity: 0;
+  }
+}
+
+/* Araignée */
+.fx-web-net,
+.fx-web-cage {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: 220px;
+  height: 220px;
+  margin: -110px 0 0 -110px;
+  background:
+    radial-gradient(circle, transparent 40%, rgba(140, 80, 200, 0.15) 41%),
+    repeating-conic-gradient(from 0deg, rgba(180, 120, 255, 0.5) 0deg 10deg, transparent 10deg 20deg);
+  border-radius: 50%;
+  animation: fx-web-pulse 1.12s ease forwards;
+}
+
+.fx-heal-stream {
+  position: absolute;
+  left: 48%;
+  top: 50%;
+  width: 60px;
+  height: 100px;
+  background: linear-gradient(0deg, transparent, rgba(93, 206, 138, 0.8), transparent);
+  animation: fx-heal-up 0.92s ease forwards;
+}
+
+@keyframes fx-web-pulse {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-heal-up {
+  to {
+    transform: translateY(-80px);
+    opacity: 0;
+  }
+}
+
+.fx-energy-vanish {
+  position: absolute;
+  left: 52%;
+  top: 48%;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe566, transparent);
+  animation: fx-vanish 0.8s ease forwards;
+}
+
+@keyframes fx-vanish {
+  to {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* Feu Babel */
+.fx-fireball {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fff9c4, #ff5722, #bf360c);
+  opacity: 0.25;
+  animation: fx-fireball-fly 0.85s ease-out forwards;
+  box-shadow: 0 0 24px rgba(255, 100, 40, 0.8);
+}
+
+.fx-fireball.lit {
+  opacity: 1;
+}
+
+.fx-fireball-1 {
+  left: 38%;
+  top: 55%;
+}
+.fx-fireball-2 {
+  left: 52%;
+  top: 52%;
+  animation-delay: 0.16s;
+}
+
+@keyframes fx-fireball-fly {
+  0% {
+    transform: translateY(40px) scale(0.5);
+  }
+  100% {
+    transform: translateY(-120px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+.fx-fire-tornado {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  width: 160px;
+  height: 280px;
+  margin-left: -80px;
+  background: conic-gradient(from 0deg, transparent, #ff9800, #ff5722, #ffeb3b, transparent);
+  border-radius: 40%;
+  animation: fx-tornado-spin 1.12s linear forwards;
+  opacity: 0.85;
+  filter: blur(2px);
+}
+
+.fx-orange-veil {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 120, 40, 0.15);
+  animation: fx-flash-pop 1.05s ease;
+}
+
+@keyframes fx-tornado-spin {
+  from {
+    transform: rotate(0deg) scale(0.3);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  to {
+    transform: rotate(540deg) scale(1);
+    opacity: 0;
+  }
+}
+
+.fx-flame-punch {
+  position: absolute;
+  left: 48%;
+  top: 48%;
+  width: 100px;
+  height: 100px;
+  margin: -50px 0 0 -50px;
+  background: radial-gradient(circle, rgba(255, 200, 80, 0.9), rgba(255, 80, 0, 0.3), transparent);
+  animation: fx-flash-pop 0.65s ease;
+}
+
+/* Flèches Tremy */
+.fx-arrow,
+.fx-arrow-trail {
+  position: absolute;
+  left: 20%;
+  top: 45%;
+  width: 200px;
+  height: 6px;
+  background: linear-gradient(90deg, transparent, #f8bbd0, #e91e63, #fff);
+  animation: fx-arrow-shot 0.6s ease-out forwards;
+  box-shadow: 0 0 16px rgba(233, 30, 99, 0.8);
+}
+
+.fx-arrow-trail {
+  opacity: 0.4;
+  filter: blur(4px);
+  animation-delay: 0.07s;
+}
+
+@keyframes fx-arrow-shot {
+  from {
+    transform: translateX(-30%) scaleX(0.2);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(80%) scaleX(1);
+    opacity: 0;
+  }
+}
+
+.fx-arrow-drop {
+  position: absolute;
+  width: 4px;
+  height: 50px;
+  background: linear-gradient(180deg, #f48fb1, transparent);
+  left: calc(12% + var(--i) * 10%);
+  top: -10%;
+  animation: fx-arrow-drop 0.72s ease-in forwards;
+  animation-delay: calc(var(--i) * 0.09s);
+}
+
+@keyframes fx-arrow-drop {
+  to {
+    top: 50%;
+    opacity: 0;
+  }
+}
+
+/* Baleine */
+.fx-vortex {
+  position: absolute;
+  left: 50%;
+  top: 35%;
+  width: 200px;
+  height: 200px;
+  margin-left: -100px;
+  border: 8px solid rgba(33, 150, 243, 0.4);
+  border-radius: 45% 55% 50% 50%;
+  animation: fx-vortex-spin 0.9s ease-out forwards;
+}
+
+.fx-wave {
+  position: absolute;
+  bottom: 25%;
+  left: 10%;
+  right: 10%;
+  height: 40px;
+  background: linear-gradient(180deg, transparent, rgba(33, 150, 243, 0.5));
+  animation: fx-wave-rise 0.92s ease forwards;
+}
+
+@keyframes fx-vortex-spin {
+  from {
+    transform: rotate(0deg) scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(720deg) scale(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-wave-rise {
+  to {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+}
+
+.fx-giant-shadow {
+  position: absolute;
+  left: 50%;
+  top: 20%;
+  width: 280px;
+  height: 80px;
+  margin-left: -140px;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.5), transparent);
+  animation: fx-shadow-grow 0.65s ease forwards;
+}
+
+.fx-shockwave {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 4px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  animation: fx-shock-expand 0.92s ease-out forwards;
+}
+
+@keyframes fx-shadow-grow {
+  to {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-shock-expand {
+  to {
+    transform: scale(12);
+    opacity: 0;
+  }
+}
+
+.fx-screen-shake {
+  position: absolute;
+  inset: 0;
+  animation: fx-shake 0.52s ease;
+}
+
+@keyframes fx-shake {
+  0%,
+  100% {
+    transform: translate(0);
+  }
+  25% {
+    transform: translate(-8px, 4px);
+  }
+  75% {
+    transform: translate(8px, -4px);
+  }
+}
+
+/* Lotus Agora */
+.fx-fist {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #e1bee7, #7b1fa2);
+  left: calc(40% + var(--i) * 5%);
+  top: calc(38% + (var(--i) % 3) * 8%);
+  animation: fx-fist-pop 0.52s ease forwards;
+  animation-delay: calc(var(--i) * 0.07s);
+  box-shadow: 0 0 12px rgba(156, 39, 176, 0.8);
+}
+
+@keyframes fx-fist-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.fx-lotus-spin,
+.fx-lotus-bloom {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 140px;
+  height: 140px;
+  margin: -70px 0 0 -70px;
+  background: radial-gradient(circle, #f3e5f5 0%, #9c27b0 40%, transparent 70%);
+  border-radius: 50%;
+  animation: fx-lotus-open 1.12s ease forwards;
+}
+
+.fx-lotus-spin {
+  animation: fx-lotus-spin-anim 1.12s ease forwards;
+}
+
+@keyframes fx-lotus-spin-anim {
+  from {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1.2) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-lotus-open {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+.fx-gold-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 45%, rgba(255, 215, 0, 0.45), transparent 55%);
+  animation: fx-flash-pop 0.65s ease;
+}
+
+/* Cobra */
+.fx-lightning-claw {
+  position: absolute;
+  left: 45%;
+  top: 40%;
+  width: 100px;
+  height: 8px;
+  background: linear-gradient(90deg, #76ff03, #cddc39, #76ff03);
+  box-shadow: 0 0 20px #76ff03;
+  animation: fx-zap-slash 0.6s ease forwards;
+}
+
+.fx-lc-2 {
+  transform: rotate(35deg);
+  animation-delay: 0.1s;
+}
+
+@keyframes fx-zap-slash {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1.5);
+    opacity: 0;
+  }
+}
+
+.fx-snake {
+  position: absolute;
+  left: 42%;
+  top: 35%;
+  width: 120px;
+  height: 160px;
+  background: linear-gradient(180deg, transparent 20%, rgba(76, 175, 80, 0.7) 40%, transparent 80%);
+  clip-path: polygon(30% 0%, 70% 0%, 90% 100%, 10% 100%);
+  animation: fx-snake-strike 0.8s ease-out forwards;
+}
+
+@keyframes fx-snake-strike {
+  from {
+    transform: translateY(-40px) scaleY(0.3);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(20px) scaleY(1);
+    opacity: 0;
+  }
+}
+
+/* Lézard */
+.fx-air-vortex {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: 180px;
+  height: 180px;
+  margin: -90px 0 0 -90px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent, rgba(200, 240, 255, 0.6), transparent);
+  animation: fx-tornado-spin 1s linear forwards;
+}
+
+.fx-afterimage {
+  position: absolute;
+  left: 46%;
+  top: 50%;
+  width: 80px;
+  height: 110px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  animation: fx-ghost-slide 0.72s ease forwards;
+}
+
+@keyframes fx-ghost-slide {
+  from {
+    transform: translateX(0);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateX(-60px);
+    opacity: 0;
+  }
+}
+
+/* Astérion */
+.fx-mind-wave {
+  position: absolute;
+  left: 48%;
+  top: 42%;
+  width: 100px;
+  height: 100px;
+  margin: -50px 0 0 -50px;
+  border: 3px solid rgba(186, 104, 200, 0.8);
+  border-radius: 50%;
+  animation: fx-mind-pulse 1.05s ease-out forwards;
+}
+
+.fx-hand-ghost {
+  position: absolute;
+  right: 20%;
+  top: 30%;
+  width: 120px;
+  height: 80px;
+  background: rgba(100, 80, 180, 0.2);
+  border: 2px dashed rgba(200, 150, 255, 0.5);
+  border-radius: 8px;
+  animation: fx-hand-show 0.92s ease forwards;
+}
+
+@keyframes fx-mind-pulse {
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-hand-show {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.fx-clone {
+  position: absolute;
+  width: 50px;
+  height: 70px;
+  background: rgba(0, 200, 200, 0.25);
+  border: 2px solid rgba(0, 255, 255, 0.4);
+  border-radius: 6px;
+  animation: fx-clone-strike 0.85s ease forwards;
+}
+
+.fx-clone-1 {
+  left: 35%;
+  top: 42%;
+}
+.fx-clone-2 {
+  left: 48%;
+  top: 38%;
+  animation-delay: 0.13s;
+}
+.fx-clone-3 {
+  left: 58%;
+  top: 44%;
+  animation-delay: 0.2s;
+}
+
+@keyframes fx-clone-strike {
+  50% {
+    opacity: 0.9;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.fx-shield-ghost {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 100px;
+  height: 120px;
+  margin-left: -50px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  animation: fx-shield-pulse 1.05s ease forwards;
+}
+
+@keyframes fx-shield-pulse {
+  to {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* Orphée */
+.fx-note {
+  position: absolute;
+  font-size: 28px;
+  color: #64b5f6;
+  text-shadow: 0 0 12px #2196f3;
+  animation: fx-note-float 1.05s ease-out forwards;
+  animation-delay: calc(var(--i) * 0.1s);
+  left: calc(35% + var(--i) * 6%);
+  top: 45%;
+}
+
+@keyframes fx-note-float {
+  to {
+    transform: translateY(-80px) translateX(30px);
+    opacity: 0;
+  }
+}
+
+.fx-staff-line {
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  top: 48%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #90caf9, #fff, #90caf9, transparent);
+  animation: fx-staff-sweep 0.92s ease forwards;
+}
+
+.fx-energy-drop {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  width: 30px;
+  height: 30px;
+  margin-left: -15px;
+  background: radial-gradient(circle, #ffe566, transparent);
+  animation: fx-drop-down 0.85s ease forwards;
+}
+
+@keyframes fx-staff-sweep {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-drop-down {
+  to {
+    transform: translateY(120px);
+    opacity: 0;
+  }
+}
+
+.fx-sound-ring {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  border: 3px solid rgba(100, 181, 246, 0.8);
+  border-radius: 50%;
+  animation: fx-ring-expand 0.9s ease-out forwards;
+}
+
+.fx-ring-2 {
+  animation-delay: 0.2s;
+}
+.fx-ring-3 {
+  animation-delay: 0.3s;
+}
+
+@keyframes fx-ring-expand {
+  to {
+    transform: scale(5);
+    opacity: 0;
+  }
+}
+
+/* Hakurai */
+.fx-soul {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50% 50% 50% 0;
+  background: rgba(100, 200, 255, 0.7);
+  left: calc(20% + var(--i) * 12%);
+  bottom: 15%;
+  animation: fx-soul-rise 1.12s ease-out forwards;
+  animation-delay: calc(var(--i) * 0.09s);
+  box-shadow: 0 0 10px rgba(100, 200, 255, 0.8);
+}
+
+@keyframes fx-soul-rise {
+  to {
+    transform: translateY(-50vh) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+.fx-scroll {
+  position: absolute;
+  width: 24px;
+  height: 32px;
+  background: linear-gradient(180deg, #fff8e1, #ffe082);
+  border-radius: 2px;
+  left: calc(38% + var(--i) * 5%);
+  top: 50%;
+  animation: fx-scroll-to-hand 0.92s ease forwards;
+  animation-delay: calc(var(--i) * 0.08s);
+}
+
+@keyframes fx-scroll-to-hand {
+  to {
+    transform: translateY(-100px) rotate(20deg);
+    opacity: 0;
+  }
+}
+
+/* Capela / Kiki */
+.fx-disk {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 4px solid #ff9800;
+  background: radial-gradient(circle, #fff3e0, #ff9800);
+  left: calc(40% + var(--i, 0) * 8%);
+  top: 42%;
+  animation: fx-disk-throw 0.72s ease-out forwards;
+  animation-delay: calc(var(--i, 0) * 0.13s);
+}
+
+@keyframes fx-disk-throw {
+  to {
+    transform: translateX(120px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.fx-stone {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #795548;
+  border-radius: 30%;
+  animation: fx-stone-toss 0.65s ease-out forwards;
+  animation-delay: calc(var(--i) * 0.07s);
+  left: calc(42% + var(--i) * 4%);
+  top: 52%;
+}
+
+@keyframes fx-stone-toss {
+  to {
+    transform: translate(80px, -60px);
+    opacity: 0;
+  }
+}
+
+.fx-sparkle-burst {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 100px;
+  height: 100px;
+  margin: -50px 0 0 -50px;
+  background: radial-gradient(circle, rgba(255, 255, 200, 0.9), transparent 70%);
+  animation: fx-flash-pop 0.8s ease;
+}
+
+/* Statuts visuels sur défenseur */
+.defender-paralyzed-fx .card {
+  box-shadow: 0 0 24px rgba(80, 80, 120, 0.9);
+  outline: 3px solid #5a5a8a;
+}
+
+.defender-poison-fx .card {
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+  animation: fx-poison-pulse 1s ease infinite;
+}
+
+.defender-frozen-fx .card {
+  filter: hue-rotate(180deg) brightness(1.2);
+  box-shadow: 0 0 24px rgba(100, 181, 246, 0.9);
+}
+
+@keyframes fx-poison-pulse {
+  50% {
+    filter: brightness(1.15) hue-rotate(80deg);
+  }
+}
+
+/* Teinte globale par type d'attaque */
+#game[data-attack-fx='fire-tornado']::before,
+#game[data-attack-fx='fire-balls']::before {
+  background: radial-gradient(circle at 50% 45%, rgba(255, 120, 40, 0.35), transparent 60%) !important;
+}
+
+#game[data-attack-fx='whale-typhoon']::before,
+#game[data-attack-fx='whale-crush']::before {
+  background: radial-gradient(circle at 50% 50%, rgba(33, 150, 243, 0.3), transparent 55%) !important;
+}
+
+#game[data-attack-fx='music-wave']::before {
+  background: radial-gradient(circle at 50% 45%, rgba(100, 181, 246, 0.35), transparent 55%) !important;
+}
+
+#game[data-attack-fx='pegasus-meteors']::before {
+  background: radial-gradient(circle at 50% 35%, rgba(33, 150, 243, 0.28), transparent 58%) !important;
+}
+
+/* Attacker card only — cosmo shimmer for full FX */
+#game[data-attack-fx='pegasus-meteors'].battle-attack .pegasus-attacker-shimmer .card {
+  animation: fx-pegasus-attacker-shimmer 1.15s ease-in-out infinite;
+  z-index: 2;
+}
+
+@keyframes fx-pegasus-attacker-shimmer {
+  0%,
+  100% {
+    filter: brightness(1.05) saturate(1.05);
+    box-shadow:
+      0 0 12px rgba(144, 202, 249, 0.45),
+      0 0 24px rgba(33, 150, 243, 0.25);
+  }
+  50% {
+    filter: brightness(1.35) saturate(1.2);
+    box-shadow:
+      0 0 22px rgba(255, 255, 255, 0.75),
+      0 0 40px rgba(100, 181, 246, 0.85),
+      0 0 56px rgba(33, 150, 243, 0.55);
+  }
+}
+
+#game[data-attack-fx='dragon-wrath']::before {
+  background: radial-gradient(circle at 50% 40%, rgba(0, 200, 90, 0.32), transparent 55%) !important;
+}
+
+/* Seiya — Météores de Pégase */
+.fx-pegasus-field {
+  --pegasus-ball: 36px;
+  --pegasus-meteor-start: 3s;
+  --pegasus-stagger: 0.0603s;
+  --pegasus-fall: 0.08s;
+  --pegasus-burst-delay: 0.268s;
+  --pegasus-burst: 0.509s;
+  --pegasus-veil: 1.273s;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fx-pegasus-meteor {
+  position: absolute;
+  left: var(--x, 50%);
+  top: var(--y, 30%);
+  width: var(--pegasus-ball);
+  height: var(--pegasus-ball);
+  margin: calc(var(--pegasus-ball) / -2) 0 0 calc(var(--pegasus-ball) / -2);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 28%, #fff 0%, #e3f2fd 18%, #42a5f5 48%, #1565c0 78%, #0d47a1);
+  box-shadow:
+    0 0 22px rgba(144, 202, 249, 1),
+    0 0 44px rgba(33, 150, 243, 0.85),
+    0 0 64px rgba(13, 71, 161, 0.45);
+  animation: fx-pegasus-ball-fall var(--pegasus-fall) ease-in forwards;
+  animation-delay: calc(var(--pegasus-meteor-start, 3s) + var(--i, 0) * var(--pegasus-stagger));
+  opacity: 0;
+  z-index: 2;
+}
+
+.fx-pegasus-burst {
+  position: absolute;
+  left: var(--x, 50%);
+  top: var(--y, 30%);
+  width: 92px;
+  height: 92px;
+  margin: -46px 0 0 -46px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(187, 222, 251, 0.92) 18%,
+    rgba(66, 165, 245, 0.65) 42%,
+    transparent 72%
+  );
+  animation: fx-pegasus-burst-pop var(--pegasus-burst) ease-out forwards;
+  animation-delay: calc(
+    var(--pegasus-meteor-start, 3s) + var(--i, 0) * var(--pegasus-stagger) + var(--pegasus-burst-delay)
+  );
+  opacity: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.fx-pegasus-burst::before {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  border: 3px solid rgba(227, 242, 253, 0.95);
+  box-shadow: 0 0 18px rgba(100, 181, 246, 0.9);
+  animation: fx-pegasus-burst-ring var(--pegasus-burst) ease-out forwards;
+}
+
+.fx-pegasus-burst::after {
+  content: '';
+  position: absolute;
+  inset: 22%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(144, 202, 249, 0.5) 55%, transparent 75%);
+  animation: fx-pegasus-burst-flash 0.22s ease-out forwards;
+}
+
+.fx-pegasus-spark {
+  position: absolute;
+  left: var(--x, 50%);
+  top: var(--y, 30%);
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, #90caf9 55%, #1976d2);
+  box-shadow: 0 0 10px rgba(144, 202, 249, 0.95);
+  animation: fx-pegasus-spark-fly calc(var(--pegasus-burst) * 0.9) ease-out forwards;
+  animation-delay: calc(
+    var(--pegasus-meteor-start, 3s) + var(--i, 0) * var(--pegasus-stagger) + var(--pegasus-burst-delay)
+  );
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.fx-pegasus-veil {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 38%, rgba(66, 165, 245, 0.22), transparent 62%);
+  animation: fx-pegasus-veil-fade var(--pegasus-veil, 1.273s) ease forwards;
+  animation-delay: var(--pegasus-meteor-start, 3s);
+  z-index: 1;
+}
+
+@keyframes fx-pegasus-ball-fall {
+  0% {
+    transform: translateY(-52px) scale(0.4);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(10px) scale(1.08);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-pegasus-burst-pop {
+  0% {
+    transform: scale(0.08);
+    opacity: 0;
+    filter: brightness(2.2);
+  }
+  12% {
+    opacity: 1;
+    filter: brightness(2.8);
+  }
+  45% {
+    opacity: 0.95;
+    filter: brightness(1.4);
+  }
+  100% {
+    transform: scale(1.65);
+    opacity: 0;
+    filter: brightness(1);
+  }
+}
+
+@keyframes fx-pegasus-burst-ring {
+  0% {
+    transform: scale(0.2);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-pegasus-burst-flash {
+  0% {
+    transform: scale(0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-pegasus-spark-fly {
+  0% {
+    transform: translate(0, 0) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx, 24px), var(--dy, -12px)) scale(0.15);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-pegasus-veil-fade {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Shiryu — Colère / Fureur du Dragon */
+.fx-dragon-silhouette {
+  position: absolute;
+  left: -28%;
+  top: 18%;
+  width: 72%;
+  height: 32%;
+  opacity: 0;
+  filter: drop-shadow(0 0 22px rgba(0, 255, 120, 0.85));
+  animation: fx-dragon-fly 1.35s cubic-bezier(0.35, 0.05, 0.2, 1) forwards;
+  background:
+    radial-gradient(ellipse 22% 38% at 18% 52%, rgba(0, 220, 110, 0.95), transparent 70%),
+    radial-gradient(ellipse 28% 42% at 38% 48%, rgba(0, 180, 90, 0.9), transparent 72%),
+    radial-gradient(ellipse 35% 55% at 58% 50%, rgba(0, 255, 130, 0.85), transparent 75%),
+    radial-gradient(ellipse 18% 30% at 78% 42%, rgba(120, 255, 180, 0.9), transparent 70%),
+    conic-gradient(from 200deg at 72% 45%, transparent 0deg, rgba(0, 200, 100, 0.7) 40deg, transparent 80deg);
+  clip-path: polygon(0% 58%, 12% 42%, 28% 38%, 45% 35%, 62% 32%, 78% 36%, 92% 48%, 100% 55%, 88% 62%, 70% 68%, 48% 72%, 28% 70%, 12% 66%);
+}
+
+.fx-dragon-green-veil {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 42%, rgba(0, 255, 120, 0.22), transparent 68%);
+  animation: fx-dragon-veil-pulse 1.25s ease-out forwards;
+}
+
+.fx-dragon-flash {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 255, 100, 0.12);
+  animation: fx-dragon-flash-beat 0.55s ease-out 2;
+}
+
+@keyframes fx-dragon-fly {
+  0% {
+    transform: translateX(-12%) translateY(8px) scale(0.55);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.95;
+  }
+  55% {
+    transform: translateX(58%) translateY(-6px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(135%) translateY(4px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-dragon-veil-pulse {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fx-dragon-flash-beat {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Argol — Bouclier de la Méduse */
+#game[data-attack-fx='medusa-shield']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 240;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 48%, rgba(40, 20, 80, 0.35), rgba(0, 0, 0, 0.55) 72%);
+  animation: fx-medusa-board-dim var(--medusa-total, 2.55s) ease-in forwards;
+}
+
+.fx-medusa-veil {
+  --medusa-reveal: 2.5s;
+  --medusa-eye-start: 1.85s;
+  --medusa-eye-flash: 0.65s;
+  --medusa-white-start: 2.1s;
+  --medusa-white-flash: 0.35s;
+  --medusa-total: 2.55s;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(120, 60, 180, 0.2), transparent 58%),
+    radial-gradient(ellipse at 50% 55%, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.72) 85%);
+  animation: fx-medusa-veil-in var(--medusa-reveal) ease-out forwards;
+}
+
+.fx-medusa-shield-wrap {
+  --medusa-reveal: 2.5s;
+  --medusa-eye-start: 1.85s;
+  --medusa-eye-flash: 0.65s;
+  --medusa-white-start: 2.1s;
+  --medusa-white-flash: 0.35s;
+  --medusa-total: 2.55s;
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: min(95vw, 1560px);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  z-index: 310;
+  pointer-events: none;
+}
+
+.fx-medusa-shield-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transform: scale(0.88);
+  filter: drop-shadow(0 0 28px rgba(80, 40, 140, 0.35));
+  animation: fx-medusa-shield-reveal var(--medusa-reveal) ease-in forwards;
+}
+
+.fx-medusa-whiteout {
+  position: absolute;
+  inset: 0;
+  z-index: 300;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  animation: fx-medusa-whiteout var(--medusa-white-flash, 0.35s) ease-out forwards;
+  animation-delay: var(--medusa-white-start, 2.1s);
+}
+
+.fx-medusa-eye {
+  position: absolute;
+  width: 11%;
+  height: 7%;
+  top: 50%;
+  z-index: 2;
+  border-radius: 50%;
+  opacity: 0;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 240, 0.95) 35%,
+    rgba(200, 255, 255, 0.5) 55%,
+    transparent 72%
+  );
+  box-shadow:
+    0 0 18px rgba(255, 255, 255, 0.95),
+    0 0 42px rgba(255, 255, 255, 0.75),
+    0 0 80px rgba(255, 255, 255, 0.45);
+  animation: fx-medusa-eye-glow var(--medusa-eye-flash) ease-in-out forwards;
+  animation-delay: var(--medusa-eye-start);
+}
+
+.fx-medusa-eye-l {
+  left: 39%;
+  --medusa-eye-tilt: 12deg;
+}
+
+.fx-medusa-eye-r {
+  left: 61%;
+  --medusa-eye-tilt: -12deg;
+}
+
+.fx-medusa-eye-burst {
+  position: absolute;
+  inset: -8%;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.35) 18%,
+    transparent 52%
+  );
+  mix-blend-mode: screen;
+  animation: fx-medusa-eye-burst var(--medusa-eye-flash) ease-out forwards;
+  animation-delay: var(--medusa-eye-start);
+}
+
+@keyframes fx-medusa-board-dim {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fx-medusa-veil-in {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes fx-medusa-shield-reveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.88);
+    filter: blur(8px) drop-shadow(0 0 12px rgba(60, 30, 100, 0.15));
+  }
+  22% {
+    opacity: 0.12;
+    transform: scale(0.92);
+    filter: blur(6px) drop-shadow(0 0 16px rgba(70, 35, 110, 0.22));
+  }
+  45% {
+    opacity: 0.32;
+    transform: scale(0.96);
+    filter: blur(4px) drop-shadow(0 0 22px rgba(85, 45, 130, 0.3));
+  }
+  68% {
+    opacity: 0.58;
+    transform: scale(0.99);
+    filter: blur(2px) drop-shadow(0 0 28px rgba(95, 55, 145, 0.38));
+  }
+  88% {
+    opacity: 0.82;
+    transform: scale(1.01);
+    filter: blur(0.5px) drop-shadow(0 0 34px rgba(110, 65, 165, 0.44));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.02);
+    filter: blur(0) drop-shadow(0 0 40px rgba(140, 80, 200, 0.5));
+  }
+}
+
+@keyframes fx-medusa-whiteout {
+  0% {
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  62% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fx-medusa-eye-glow {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--medusa-eye-tilt, 0deg)) scale(0.4);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--medusa-eye-tilt, 0deg)) scale(1.35);
+  }
+  45% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--medusa-eye-tilt, 0deg)) scale(1.1);
+  }
+  78% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--medusa-eye-tilt, 0deg)) scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--medusa-eye-tilt, 0deg)) scale(1.45);
+  }
+}
+
+@keyframes fx-medusa-eye-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+/* ===== MP4 semi-transparent attack overlays ===== */
+
+.fx-shina-thunder-claw-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  filter: saturate(1.12) contrast(1.06);
+}
+
+.fx-shina-thunder-claw-video.fx-shina-thunder-claw-video-active {
+  animation:
+    fx-shina-thunder-claw-video-in var(--stc-video-fade-in, 0.35s) ease-out forwards,
+    fx-shina-thunder-claw-video-out var(--stc-video-fade, 0.7s) ease-in forwards;
+  animation-delay: 0s, var(--stc-video-fade-at, 5s);
+}
+
+@keyframes fx-shina-thunder-claw-video-in {
+  from { opacity: 0; }
+  to { opacity: var(--stc-video-opacity, 0.35); }
+}
+
+@keyframes fx-shina-thunder-claw-video-out {
+  from { opacity: var(--stc-video-opacity, 0.35); }
+  to { opacity: 0; }
+}
+
+.fx-ichi-combo-griffe-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  filter: saturate(1.12) contrast(1.06) hue-rotate(-8deg);
+}
+
+.fx-ichi-combo-griffe-video.fx-ichi-combo-griffe-video-active {
+  animation:
+    fx-ichi-combo-griffe-video-in var(--icg-video-fade-in, 0.35s) ease-out forwards,
+    fx-ichi-combo-griffe-video-out var(--icg-video-fade, 0.7s) ease-in forwards;
+  animation-delay: 0s, var(--icg-video-fade-at, 5s);
+}
+
+@keyframes fx-ichi-combo-griffe-video-in {
+  from { opacity: 0; }
+  to { opacity: var(--icg-video-opacity, 0.35); }
+}
+
+@keyframes fx-ichi-combo-griffe-video-out {
+  from { opacity: var(--icg-video-opacity, 0.35); }
+  to { opacity: 0; }
+}
+
+.fx-kagaho-ankh-sacrificielle-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  filter: saturate(1.18) contrast(1.1) brightness(0.95);
+}
+
+.fx-kagaho-ankh-sacrificielle-video.fx-kagaho-ankh-sacrificielle-video-active {
+  animation:
+    fx-kagaho-ankh-sacrificielle-video-in var(--kas-video-fade-in, 0.35s) ease-out forwards,
+    fx-kagaho-ankh-sacrificielle-video-out var(--kas-video-fade, 1s) ease-in forwards;
+  animation-delay: 0s, var(--kas-video-fade-at, 5s);
+}
+
+@keyframes fx-kagaho-ankh-sacrificielle-video-in {
+  from { opacity: 0; }
+  to { opacity: var(--kas-video-opacity, 0.3); }
+}
+
+@keyframes fx-kagaho-ankh-sacrificielle-video-out {
+  from { opacity: var(--kas-video-opacity, 0.3); }
+  to { opacity: 0; }
+}
+
+.fx-misty-tourbillon-lezard-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  filter: saturate(1.12) contrast(1.06);
+}
+
+.fx-misty-tourbillon-lezard-video.fx-misty-tourbillon-lezard-video-active {
+  animation:
+    fx-misty-tourbillon-lezard-video-in var(--mtl-video-fade-in, 0.35s) ease-out forwards,
+    fx-misty-tourbillon-lezard-video-out var(--mtl-video-fade, 0.7s) ease-in forwards;
+  animation-delay: 0s, var(--mtl-video-fade-at, 5s);
+}
+
+@keyframes fx-misty-tourbillon-lezard-video-in {
+  from { opacity: 0; }
+  to { opacity: var(--mtl-video-opacity, 0.35); }
+}
+
+@keyframes fx-misty-tourbillon-lezard-video-out {
+  from { opacity: var(--mtl-video-opacity, 0.35); }
+  to { opacity: 0; }
+}
+
+.fx-poseidon-trident-royal-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  filter: saturate(1.12) contrast(1.06);
+}
+
+.fx-poseidon-trident-royal-video.fx-poseidon-trident-royal-video-active {
+  animation:
+    fx-poseidon-trident-royal-video-in var(--ptr-video-fade-in, 0.35s) ease-out forwards,
+    fx-poseidon-trident-royal-video-out var(--ptr-video-fade, 0.7s) ease-in forwards;
+  animation-delay: 0s, var(--ptr-video-fade-at, 5s);
+}
+
+@keyframes fx-poseidon-trident-royal-video-in {
+  from { opacity: 0; }
+  to { opacity: var(--ptr-video-opacity, 0.35); }
+}
+
+@keyframes fx-poseidon-trident-royal-video-out {
+  from { opacity: var(--ptr-video-opacity, 0.35); }
+  to { opacity: 0; }
+}
+
+.fx-andromede-chaine-serpent-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  filter: saturate(1.12) contrast(1.06);
+}
+
+.fx-andromede-chaine-serpent-video.fx-andromede-chaine-serpent-video-active {
+  animation:
+    fx-andromede-chaine-serpent-video-in var(--acs-video-fade-in, 0.35s) ease-out forwards,
+    fx-andromede-chaine-serpent-video-out var(--acs-video-fade, 0.7s) ease-in forwards;
+  animation-delay: 0s, var(--acs-video-fade-at, 5s);
+}
+
+@keyframes fx-andromede-chaine-serpent-video-in {
+  from { opacity: 0; }
+  to { opacity: var(--acs-video-opacity, 0.32); }
+}
+
+@keyframes fx-andromede-chaine-serpent-video-out {
+  from { opacity: var(--acs-video-opacity, 0.32); }
+  to { opacity: 0; }
+}
+
+.fx-shakka-tresor-du-ciel-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  filter: saturate(1.12) contrast(1.06);
+}
+
+.fx-shakka-tresor-du-ciel-video.fx-shakka-tresor-du-ciel-video-active {
+  animation:
+    fx-shakka-tresor-du-ciel-video-in var(--skc-video-fade-in, 0.35s) ease-out forwards,
+    fx-shakka-tresor-du-ciel-video-out var(--skc-video-fade, 0.7s) ease-in forwards;
+  animation-delay: 0s, var(--skc-video-fade-at, 5s);
+}
+
+@keyframes fx-shakka-tresor-du-ciel-video-in {
+  from { opacity: 0; }
+  to { opacity: var(--skc-video-opacity, 0.32); }
+}
+
+@keyframes fx-shakka-tresor-du-ciel-video-out {
+  from { opacity: var(--skc-video-opacity, 0.32); }
+  to { opacity: 0; }
+}
+
+.fx-shura-excalibur-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  filter: saturate(1.12) contrast(1.06) brightness(0.98);
+}
+
+.fx-shura-excalibur-video.fx-shura-excalibur-video-active {
+  animation:
+    fx-shura-excalibur-video-in var(--sxe-video-fade-in, 0.15s) ease-out forwards,
+    fx-shura-excalibur-video-out var(--sxe-video-fade, 0.3s) ease-in forwards;
+  animation-delay: 0s, var(--sxe-video-fade-at, 5s);
+}
+
+@keyframes fx-shura-excalibur-video-in {
+  from { opacity: 0; }
+  to { opacity: var(--sxe-video-opacity, 0.32); }
+}
+
+@keyframes fx-shura-excalibur-video-out {
+  from { opacity: var(--sxe-video-opacity, 0.32); }
+  to { opacity: 0; }
+}
+
+.fx-saga-explosion-galactique-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  filter: saturate(1.12) contrast(1.06) sepia(0.08);
+}
+
+.fx-saga-explosion-galactique-video.fx-saga-explosion-galactique-video-active {
+  animation:
+    fx-saga-explosion-galactique-video-in var(--seg-video-fade-in, 0.35s) ease-out forwards,
+    fx-saga-explosion-galactique-video-out var(--seg-video-fade, 1s) ease-in forwards;
+  animation-delay: 0s, var(--seg-video-fade-at, 5s);
+}
+
+@keyframes fx-saga-explosion-galactique-video-in {
+  from { opacity: 0; }
+  to { opacity: var(--seg-video-opacity, 0.32); }
+}
+
+@keyframes fx-saga-explosion-galactique-video-out {
+  from { opacity: var(--seg-video-opacity, 0.32); }
+  to { opacity: 0; }
+}
+
+.fx-docrates-meteores-hercule-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  filter: saturate(1.12) contrast(1.06);
+}
+
+.fx-docrates-meteores-hercule-video.fx-docrates-meteores-hercule-video-active {
+  animation:
+    fx-docrates-meteores-hercule-video-in var(--dm-video-fade-in, 0.35s) ease-out forwards,
+    fx-docrates-meteores-hercule-video-out var(--dm-video-fade, 0.7s) ease-in forwards;
+  animation-delay: 0s, var(--dm-video-fade-at, 5s);
+}
+
+@keyframes fx-docrates-meteores-hercule-video-in {
+  from { opacity: 0; }
+  to { opacity: var(--dm-video-opacity, 0.48); }
+}
+
+@keyframes fx-docrates-meteores-hercule-video-out {
+  from { opacity: var(--dm-video-opacity, 0.48); }
+  to { opacity: 0; }
+}
+
+/* Mu — Spirale Stellaire (SpiraleStellaire.mp4 overlay) */
+.fx-mu-spiral-stellaire-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  filter: saturate(1.12) contrast(1.06);
+}
+
+.fx-mu-spiral-stellaire-video.fx-mu-spiral-stellaire-video-active {
+  animation: fx-mu-spiral-stellaire-video-in var(--mss-video-fade-in, 0.35s) ease-out forwards;
+}
+
+.fx-mu-spiral-stellaire-video.fx-mu-spiral-stellaire-video-fading-out {
+  opacity: 0;
+  transition: opacity var(--mss-video-fade, 1.6s) ease-out;
+}
+
+@keyframes fx-mu-spiral-stellaire-video-in {
+  from { opacity: 0; }
+  to { opacity: var(--mss-video-opacity, 0.48); }
+}
+
+/* Aldébaran — Corne du Taureau (CorneTaureau.mp4 overlay) */
+.fx-shura-greathorn-video {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.fx-shura-greathorn-video.fx-greathorn-video-active {
+  animation:
+    fx-greathorn-video-in 0.4s ease-out forwards,
+    fx-greathorn-video-out 0.8s ease-in forwards;
+  animation-delay: 0s, var(--gh-video-fade-at, 8s);
+}
+
+@keyframes fx-greathorn-video-in {
+  from { opacity: 0; }
+  to { opacity: 0.45; }
+}
+
+@keyframes fx-greathorn-video-out {
+  from { opacity: 0.45; }
+  to { opacity: 0; }
+}
+
+.fx-greathorn-impact-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 220, 120, 0.55), transparent 62%);
+  opacity: 0;
+  animation: fx-greathorn-impact-flash 0.45s ease-out forwards;
+  animation-delay: var(--gh-impact-at, 4s);
+}
+
+@keyframes fx-greathorn-impact-flash {
+  0% { opacity: 0; transform: scale(0.6); }
+  35% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0; transform: scale(1.4); }
+}
+
+/* Phoenix — Hoyoku Tensho (BattementDailes.mp4 overlay) */
+.fx-phoenix-hoyoku-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  filter: saturate(1.1) contrast(1.05);
+}
+
+.fx-phoenix-hoyoku-video.fx-phoenix-hoyoku-video-active {
+  animation:
+    fx-phoenix-hoyoku-video-in var(--phoenix-video-fade-in, 4.2s) ease-out forwards,
+    fx-phoenix-hoyoku-video-out var(--phoenix-video-fade, 1.5s) ease-in forwards;
+  animation-delay: var(--phoenix-video-fade-in-start, 0s), var(--phoenix-video-fade-at, 14s);
+}
+
+@keyframes fx-phoenix-hoyoku-video-in {
+  from { opacity: 0; }
+  to { opacity: var(--phoenix-video-opacity, 0.5); }
+}
+
+@keyframes fx-phoenix-hoyoku-video-out {
+  from { opacity: var(--phoenix-video-opacity, 0.5); }
+  to { opacity: 0; }
+}
+
+/* Kagaho flame whirls field */
+.fx-kagaho-ankh-sacrificielle-field {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.fx-kagaho-ankh-flame-whirls {
+  position: absolute;
+  inset: 0;
+}
+
+.fx-kagaho-ankh-flame-whirl {
+  position: absolute;
+  left: var(--kas-whirl-sx, 50%);
+  top: var(--kas-whirl-sy, 50%);
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 120, 40, 0.9), rgba(255, 60, 0, 0.2) 70%, transparent 72%);
+  opacity: 0;
+  transform: rotate(var(--kas-whirl-rot0, 0deg)) scale(var(--kas-whirl-scale, 1));
+  animation: fx-kagaho-ankh-flame-whirl var(--kas-whirl-flight, 2.4s) ease-in forwards;
+  animation-delay: var(--kas-whirl-delay, 0.4s);
+}
+
+@keyframes fx-kagaho-ankh-flame-whirl {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(var(--kas-whirl-rot0, 0deg)) scale(calc(var(--kas-whirl-scale, 1) * 0.5));
+  }
+  12% { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translate(var(--kas-whirl-dx, 0), var(--kas-whirl-dy, 0)) rotate(var(--kas-whirl-rot1, 720deg)) scale(var(--kas-whirl-scale, 1));
+  }
+}

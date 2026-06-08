@@ -2190,6 +2190,10 @@ export class GameUI {
     const layer = this.els.attackFxLayer;
     if (!layer) return Promise.resolve();
     layer.innerHTML = this.buildAttackFxHtml(fxId, opts);
+    // Hoist MP4 overlays to #attack-fx-layer so inset:0 covers the full board (not inline at bottom).
+    for (const video of layer.querySelectorAll('.fx-scene > video')) {
+      layer.insertBefore(video, layer.firstChild);
+    }
     layer.className = `attack-fx-layer show fx-${fxId} ${opts.isPlayer ? 'fx-from-player' : 'fx-from-opponent'}`;
     layer.setAttribute('aria-hidden', 'false');
     if (fxId === 'aldebaran-great-horn') this._initGreatHornFx(layer, opts);
