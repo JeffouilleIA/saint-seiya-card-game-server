@@ -875,8 +875,8 @@
   {
     "id": "shaka-de-la-vierge",
     "name": "Shaka de la Vierge",
-    "stage": "base",
-    "evolvesFrom": null,
+    "stage": "evolution",
+    "evolvesFrom": "Shakka",
     "hp": 190,
     "type": "chevalier-or",
     "retreat": 4,
