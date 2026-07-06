@@ -1200,6 +1200,9 @@ export class GameEngine {
       p.active.modifiers.cantRetreat = false;
     }
     for (const knight of [p.active, ...p.bench].filter(Boolean)) {
+      if ((knight.modifiers.talentSilencedTurns ?? 0) > 0) {
+        knight.modifiers.talentSilencedTurns -= 1;
+      }
       knight.talentUsed = false;
       knight.modifiers.talentOnceThisTurn = false;
       knight.modifiers.bonusAttackDamageThisTurn = 0;
@@ -2241,6 +2244,7 @@ export class GameEngine {
       pending.type === 'pickOwnBenchActive' ||
       pending.type === 'revealOpponentHand' ||
       pending.type === 'pickDamageOpponentKnight' ||
+      pending.type === 'pickSilenceOpponentKnight' ||
       pending.type === 'pickBenchForDeckEnergy' ||
       pending.type === 'pickKnightForDiscardEnergyAttach' ||
       pending.type === 'recoverDiscard' ||
@@ -3261,7 +3265,10 @@ export class GameEngine {
       }
       if (eff.type === 'discard_hand_silence_opponent_talent') {
         if (eff.oncePerTurn && knight.modifiers.talentOnceThisTurn) continue;
-        if (player.hand.length) return true;
+        if (!player.hand.length) continue;
+        const opp = this.state.players[1 - playerIndex];
+        const hasOppTalent = [opp.active, ...opp.bench].some((k) => getCardDef(k?.cardId)?.talent);
+        if (hasOppTalent) return true;
         continue;
       }
       if (eff.type === 'turn_start_heal_other_friendly') {
@@ -4058,18 +4065,34 @@ export class GameEngine {
     if (!card) return false;
     p.hand.splice(handIndex, 1);
     p.discard.push(card);
-    const opp = this.state.players[1 - playerIndex];
-    opp.modifiers.activeTalentSilencedTurns = pending.turns || 2;
-    const knight = resolveFieldKnight(p, { instanceId: pending.knightInstanceId });
-    if (knight) {
-      knight.modifiers.talentOnceThisTurn = true;
-      knight.talentUsed = true;
-    }
+    const fromTalent = { knightInstanceId: pending.knightInstanceId };
+    const turns = pending.turns || 2;
     this.state.pending = null;
-    this.feedback(
-      `Envoie de Fairy : talent de l'actif adverse annulé ${pending.turns || 2} tour(s).`,
-      'status',
+    return this.effects.startPickSilenceOpponentKnight(playerIndex, turns, fromTalent);
+  }
+
+  resolvePickSilenceOpponentKnight(playerIndex, instanceId) {
+    const pending = this.state.pending;
+    if (
+      !pending ||
+      pending.type !== 'pickSilenceOpponentKnight' ||
+      pending.playerIndex !== playerIndex
+    ) {
+      return false;
+    }
+    const opp = this.state.players[pending.opponentIndex ?? 1 - playerIndex];
+    const opt = pending.options?.find((o) => o.instanceId === instanceId);
+    if (!opt) return false;
+    const knight = opt.target === 'active' ? opp.active : opp.bench[opt.target];
+    if (!knight) return false;
+    const ok = this.effects.applyKnightTalentSilence(
+      knight,
+      pending.turns || 2,
+      playerIndex,
+      pending.fromTalent,
     );
+    if (!ok) return false;
+    this.state.pending = null;
     this.emit();
     return true;
   }
@@ -4169,6 +4192,7 @@ export class GameEngine {
       'pickBenchForEnergyRecover',
       'pickKnightForDiscardEnergyAttach',
       'pickDamageOpponentKnight',
+      'pickSilenceOpponentKnight',
       'pickRecoverFromDiscard',
       'lookTopDeck',
       'moveEnergy',
@@ -4195,6 +4219,7 @@ export class GameEngine {
       (pending.type === 'pickOpponentBenchActive' ||
         pending.type === 'pickOwnBenchActive' ||
         pending.type === 'pickDamageOpponentKnight' ||
+        pending.type === 'pickSilenceOpponentKnight' ||
         pending.type === 'pickBenchForDeckEnergy' ||
         pending.type === 'pickKnightForDiscardEnergyAttach' ||
         pending.type === 'recoverDiscard' ||
@@ -4770,6 +4795,7 @@ export class GameEngine {
       this.state.pending?.type === 'pickOpponentBenchActive' ||
       this.state.pending?.type === 'pickOwnBenchActive' ||
       this.state.pending?.type === 'pickDamageOpponentKnight' ||
+      this.state.pending?.type === 'pickSilenceOpponentKnight' ||
       this.state.pending?.type === 'pickBenchForDeckEnergy' ||
       this.state.pending?.type === 'pickKnightForDiscardEnergyAttach' ||
       this.state.pending?.type === 'recoverDiscard'
@@ -4946,6 +4972,7 @@ export class GameEngine {
       'pickOwnBenchActive',
       'revealOpponentHand',
       'pickDamageOpponentKnight',
+      'pickSilenceOpponentKnight',
       'pickBenchForDeckEnergy',
       'pickKnightForDiscardEnergyAttach',
       'recoverDiscard',
@@ -6719,6 +6746,14 @@ export class GameEngine {
       case 'discardHandSilenceOpponentTalent': {
         if (pending.playerIndex !== playerIndex) return false;
         return this.resolveDiscardHandSilenceOpponentTalent(playerIndex, 0);
+      }
+
+      case 'pickSilenceOpponentKnight': {
+        if (pending.playerIndex !== playerIndex) return false;
+        const best =
+          pending.options?.find((o) => o.target === 'active') || pending.options?.[0];
+        if (!best) return this.cancelPending(playerIndex);
+        return this.resolvePickSilenceOpponentKnight(playerIndex, best.instanceId);
       }
 
       case 'pickHealAllyNextTurn': {

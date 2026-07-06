@@ -1,4 +1,4 @@
-﻿import {
+import {
   formatEvolvesFrom,
   getCardDef,
   getEvolutionRequiredToolName,
@@ -137,7 +137,9 @@ export class GameUI {
         'pickHealAlly',
         'pickBenchForDeckEnergy',
         'pickBenchForEnergyRecover',
+        'pickKnightForDiscardEnergyAttach',
         'pickDamageOpponentKnight',
+        'pickSilenceOpponentKnight',
         'pickRecoverFromDiscard',
         'lookTopDeck',
         'lookTopPickOne',
@@ -155,6 +157,7 @@ export class GameUI {
         'pickMeleeBonusAlly',
         'accelerationEnergieDiscard',
         'accelerationEnergieAttach',
+        'missionGigasPlaceKnight',
         'pickCopyBenchAttack',
         'pickCopyOpponentAttack',
         'pickKanonSanctuary',
@@ -654,12 +657,24 @@ export class GameUI {
     card.closest('.hand-card')?.classList.remove('hand-card-mega-zoom');
 
     const anchor = this._megaZoomAnchor;
-    if (anchor?.parent?.isConnected) {
+    const canRestore = !opts.discard && anchor?.parent?.isConnected;
+    if (canRestore) {
       anchor.parent.insertBefore(card, anchor.next);
+    } else if (card.isConnected) {
+      card.remove();
     }
     anchor?.placeholder?.remove();
     this._megaZoomAnchor = null;
     this._megaZoomActiveCard = null;
+  }
+
+  /** Drop mega-zoom nodes before board/hand re-render (avoids fixed cards stuck on screen). */
+  resetCardMegaZoomForRender() {
+    this.clearCardMegaZoom({ discard: true });
+    const host = this.els.game;
+    if (!host) return;
+    host.querySelectorAll('.card-mega-zoom-placeholder').forEach((node) => node.remove());
+    host.querySelector('#card-mega-zoom-layer')?.querySelectorAll('.card').forEach((node) => node.remove());
   }
 
   updateSoundButton(muted = this.audio?.isMuted()) {
@@ -1983,6 +1998,7 @@ export class GameUI {
         clearTimeout(this._ichiComboGriffeVideoTimer);
         clearTimeout(this._ichiComboGriffeImpactTimer);
         clearTimeout(this._ichiComboGriffeShakeTimer);
+        clearTimeout(this._phoenixVideoTimer);
         clearTimeout(this._muSpiralStellaireVideoTimer);
         clearTimeout(this._muSpiralStellaireVideoFadeTimer);
         clearTimeout(this._muSpiralStellaireImpactTimer);
@@ -2199,6 +2215,7 @@ export class GameUI {
     if (fxId === 'aldebaran-great-horn') this._initGreatHornFx(layer, opts);
     if (fxId === 'shina-thunder-claw') this._initShinaThunderClawFx(layer, opts);
     if (fxId === 'ichi-combo-griffe') this._initIchiComboGriffeFx(layer, opts);
+    if (fxId === 'phoenix-hoyoku-tensho') this._initPhoenixHoyokuFx(layer, opts);
     if (fxId === 'mu-spiral-stellaire') this._initMuSpiralStellaireFx(layer, opts);
     if (fxId === 'kagaho-ankh-sacrificielle') this._initKagahoAnkhSacrificielleFx(layer, opts);
     if (fxId === 'misty-tourbillon-lezard') this._initMistyTourbillonLezardFx(layer, opts);
@@ -3850,6 +3867,38 @@ export class GameUI {
     }, totalMs);
   }
 
+  /** Phénix — Hoyoku Tensho / Battement d'ailes: vidéo semi-transparente (BattementDailes.mp4). */
+  _initPhoenixHoyokuFx(layer) {
+    const pt = getFxTiming('phoenix-hoyoku-tensho');
+    const concentrationMs = pt.concentrationMs ?? 5000;
+    const stormMs = pt.stormMs ?? pt.burstMs ?? 10000;
+    const fadeOutMs = Math.max(1000, pt.fadeOutMs ?? 1500);
+    const totalMs = pt.durationMs ?? concentrationMs + stormMs + fadeOutMs;
+    const videoFadeInMs = Math.max(2200, pt.videoFadeInMs ?? 4200);
+    const videoStartDelayMs = Math.max(0, pt.videoStartDelayMs ?? 0);
+    const videoInitialInvisibleMs = Math.max(0, pt.videoInitialInvisibleMs ?? 0);
+    const videoFadeOutAdvanceMs = Math.max(0, pt.videoFadeOutAdvanceMs ?? 3000);
+    const fadeAtMs = Math.max(0, totalMs - fadeOutMs);
+    const videoFadeInStartMs = Math.max(videoInitialInvisibleMs, videoStartDelayMs);
+    const videoFadeAtMs = Math.max(videoFadeInStartMs, fadeAtMs - videoFadeOutAdvanceMs);
+
+    const video = layer.querySelector('.fx-phoenix-hoyoku-video');
+    if (!video) return;
+    video.style.setProperty('--phoenix-video-fade-in-start', `${videoFadeInStartMs / 1000}s`);
+    video.style.setProperty('--phoenix-video-fade-in', `${videoFadeInMs / 1000}s`);
+    video.style.setProperty('--phoenix-video-fade-at', `${videoFadeAtMs / 1000}s`);
+    video.style.setProperty('--phoenix-video-fade', `${fadeOutMs / 1000}s`);
+    clearTimeout(this._phoenixVideoTimer);
+    video.classList.add('fx-phoenix-hoyoku-video-active');
+    this._phoenixVideoTimer = setTimeout(() => {
+      try {
+        video.pause();
+      } catch {
+        /* ignore */
+      }
+    }, totalMs);
+  }
+
   /** Kagaho — Ankh Sacrificielle: vidéo semi-transparente + tourbillons de flamme vers le défenseur. */
   _initKagahoAnkhSacrificielleFx(layer, { attackerSlot = null, defenderSlot = null } = {}) {
     const t = getFxTiming('kagaho-ankh-sacrificielle');
@@ -5389,6 +5438,7 @@ export class GameUI {
         const concentrationMs = pt.concentrationMs ?? 5000;
         const stormMs = pt.stormMs ?? pt.burstMs ?? 10000;
         const fadeOutMs = Math.max(1000, pt.fadeOutMs ?? 1500);
+        const videoPath = pt.videoPath ?? './assets/audio/attacks/BattementDailes.mp4';
         const videoStartDelayMs = Math.max(0, pt.videoStartDelayMs ?? 0);
         const videoInitialInvisibleMs = Math.max(0, pt.videoInitialInvisibleMs ?? 0);
         const videoFadeInMs = Math.max(2200, pt.videoFadeInMs ?? 4200);
@@ -5418,7 +5468,7 @@ export class GameUI {
           `--phoenix-video-fade-at:${videoFadeAtMs / 1000}s`,
         ].join(';');
         push(
-          `<video class="fx-phoenix-hoyoku-video" style="${style}" playsinline preload="auto" data-start-sec="0" data-delay-play-ms="${videoStartDelayMs}" src="./assets/audio/attacks/BattementDailes.mp4" aria-hidden="true"></video>`,
+          `<video class="fx-phoenix-hoyoku-video" style="${style}" playsinline preload="auto" data-start-sec="0" data-delay-play-ms="${videoStartDelayMs}" src="${videoPath}" aria-hidden="true"></video>`,
         );
         push(`<div class="fx-phoenix-burst" style="${style}" aria-hidden="true">`);
         for (let i = 0; i < particleCount; i++) {
@@ -5747,7 +5797,9 @@ export class GameUI {
       'pickHealAlly',
       'pickBenchForDeckEnergy',
       'pickBenchForEnergyRecover',
+      'pickKnightForDiscardEnergyAttach',
       'pickDamageOpponentKnight',
+      'pickSilenceOpponentKnight',
       'pickRecoverFromDiscard',
       'lookTopDeck',
       'moveEnergy',
@@ -5785,6 +5837,8 @@ export class GameUI {
   }
 
   render(state) {
+    this.resetCardMegaZoomForRender();
+
     const attackTest = this.isAttackTestMode();
     this.els.game?.classList.toggle('attack-test-mode', attackTest);
     this.els.attackTestBar?.classList.toggle('hidden', !attackTest);
@@ -5818,6 +5872,9 @@ export class GameUI {
     const pickOppDamage =
       state.pending?.type === 'pickDamageOpponentKnight' &&
       state.pending.playerIndex === acting;
+    const pickOppSilence =
+      state.pending?.type === 'pickSilenceOpponentKnight' &&
+      state.pending.playerIndex === acting;
     const pickOwnBench =
       state.pending?.type === 'pickOwnBenchActive' &&
       state.pending.chooserPlayerIndex === acting;
@@ -5826,6 +5883,9 @@ export class GameUI {
       state.pending.playerIndex === acting;
     const pickBenchEnergyRecover =
       state.pending?.type === 'pickBenchForEnergyRecover' &&
+      state.pending.playerIndex === acting;
+    const pickKnightDiscardEnergyAttach =
+      state.pending?.type === 'pickKnightForDiscardEnergyAttach' &&
       state.pending.playerIndex === acting;
     const pickDestructionOutil =
       state.pending?.type === 'destructionOutilDiscard' &&
@@ -5871,6 +5931,7 @@ export class GameUI {
       this.els.oppActive,
       top.active,
       pickOppDamage ||
+        pickOppSilence ||
         pickDestructionOutil ||
         pickDistributeDamage ||
         donDeVieClickable(top.active),
@@ -5890,12 +5951,15 @@ export class GameUI {
         (!pickDonDeVie || donDeVieClickable(bottom.active))) ||
       healNextTurnClickable(bottom.active) ||
       sacrificeClickable(bottom.active) ||
+      (pickKnightDiscardEnergyAttach &&
+        state.pending.options?.some((o) => o.instanceId === bottom.active?.instanceId)) ||
       (!pickDonDeVie &&
         !pickHealAllyNextTurn &&
         !pickVoluntarySacrifice &&
         !pickHuitiemeSensTarget &&
         !pickKanonSanctuaryTarget &&
-        !pickOppOnlyBenchTarget);
+        !pickOppOnlyBenchTarget &&
+        !pickKnightDiscardEnergyAttach);
     this.renderKnight(
       this.els.playerActive,
       bottom.active,
@@ -5912,6 +5976,7 @@ export class GameUI {
       (knight, i) =>
         pickOppBenchOnTop ||
         pickOppDamage ||
+        pickOppSilence ||
         pickCerbereBench ||
         pickDistributeDamage ||
         pickDestructionOutil ||
@@ -5925,6 +5990,7 @@ export class GameUI {
         pickOppBenchOnBottom ||
         pickBenchEnergy ||
         pickBenchEnergyRecover ||
+        pickKnightDiscardEnergyAttach ||
         pickDestructionOutil ||
         huitiemeSensBenchClickable(knight) ||
         pickKanonSanctuaryTarget ||
@@ -6449,6 +6515,24 @@ export class GameUI {
       return;
     }
 
+    if (state.pending?.type === 'missionGigasPlaceKnight' && state.pending.playerIndex === acting) {
+      if (card.instanceId === state.pending.knightInstanceId) {
+        void this.engine.resolveMissionGigasPlaceKnight(acting, index).then((ok) => {
+          if (!ok) {
+            this.showBanner('Impossible de placer ce Chevalier d\'Argent sur le banc.', 'warn');
+          } else {
+            this.els.overlay.classList.add('hidden');
+            this.setMode(null);
+            this.setTargeting(false);
+          }
+          this.render(this.engine.state);
+        });
+      } else {
+        this.showBanner('Mission de Gigas : cliquez sur le Chevalier d\'Argent trouvé.', 'warn');
+      }
+      return;
+    }
+
     if (state.pending?.type === 'discardForTalent' && state.pending.playerIndex === acting) {
       this.engine.resolveDiscardForTalent(acting, index);
       if (!this.engine.state.pending) this.setTargeting(false);
@@ -6568,6 +6652,17 @@ export class GameUI {
     }
 
     if (def.cardType === 'objet' && this.engine.canPlayObjetItem(acting)) {
+      const skipsKnight = this.engine.effects.objetSkipsKnightTarget(def);
+      if (skipsKnight) {
+        this.selectedHandIndex = index;
+        void this.engine.playObjet(acting, index, 'active').then((ok) => {
+          if (!ok) this.showBanner(`Impossible de jouer ${def.name}.`, 'warn');
+          else this.setMode(null);
+          this.setTargeting(false);
+          this.render(this.engine.state);
+        });
+        return;
+      }
       this.selectedHandIndex = index;
       this.setMode('objet');
       this.setTargeting(true);
@@ -6757,6 +6852,21 @@ export class GameUI {
     }
 
     if (
+      state.pending?.type === 'pickKnightForDiscardEnergyAttach' &&
+      state.pending.playerIndex === acting &&
+      fieldData
+    ) {
+      const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
+      if (opt) {
+        const ok = this.engine.resolvePickKnightForDiscardEnergyAttach(acting, fieldData.instanceId);
+        if (ok && !this.engine.state.pending) this.setTargeting(false);
+      } else {
+        this.showBanner('Choisissez un Guerrier Divin d\'Asgard.', 'warn');
+      }
+      return;
+    }
+
+    if (
       state.pending?.type === 'pickBenchForDeckEnergy' &&
       state.pending.playerIndex === acting &&
       fieldData
@@ -6820,6 +6930,7 @@ export class GameUI {
           this.showDistributeDamageModal(this.engine.state.pending, acting);
         } else if (ok) {
           this.setTargeting(false);
+          this.resetPickOverlay();
           this.els.overlay.classList.add('hidden');
         }
       }
@@ -6834,6 +6945,19 @@ export class GameUI {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
         const ok = this.engine.resolvePickDamageOpponentKnight(acting, fieldData.instanceId);
+        if (ok) this.setTargeting(false);
+      }
+      return;
+    }
+
+    if (
+      state.pending?.type === 'pickSilenceOpponentKnight' &&
+      state.pending.playerIndex === acting &&
+      fieldData
+    ) {
+      const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
+      if (opt) {
+        const ok = this.engine.resolvePickSilenceOpponentKnight(acting, fieldData.instanceId);
         if (ok) this.setTargeting(false);
       }
       return;
@@ -7026,6 +7150,7 @@ export class GameUI {
     if (this.tryHumanPromoteActive(index)) return;
     if (this.tryHumanDestructionOutilPick(index)) return;
     if (this.tryHumanCerbereBenchPick(index)) return;
+    if (this.tryHumanDistributeDamagePick(index)) return;
     if (this.tryHumanPickDamageOpponentKnight(index)) return;
     if (this.tryHumanPickOpponentBenchActive(index)) return;
     if (this.tryHumanPickOwnBenchActive(index)) return;
@@ -7120,6 +7245,27 @@ export class GameUI {
     return ok;
   }
 
+  tryHumanDistributeDamagePick(benchIndex) {
+    const state = this.engine.state;
+    const acting = this.getActingPlayer(state);
+    const pending = state.pending;
+    if (pending?.type !== 'distributeDamage' || pending.playerIndex !== acting) {
+      return false;
+    }
+    const opt = pending.options?.find((o) => o.target === benchIndex);
+    if (!opt) return false;
+    const ok = this.engine.resolveDistributeDamageAssign(acting, opt.instanceId);
+    if (ok && this.engine.state.pending?.type === 'distributeDamage') {
+      this.showDistributeDamageModal(this.engine.state.pending, acting);
+    } else if (ok) {
+      this.setMode(null);
+      this.setTargeting(false);
+      this.resetPickOverlay();
+      this.els.overlay.classList.add('hidden');
+    }
+    return ok;
+  }
+
   tryHumanPickBenchForDeckEnergy(benchIndex) {
     const state = this.engine.state;
     const acting = this.getActingPlayer(state);
@@ -7204,7 +7350,8 @@ export class GameUI {
       this.showBanner('Savoir : défaussez une carte de votre main.');
     }
     if (p.type === 'discardEnergyFromHandForTalent' && p.playerIndex === acting) {
-      this.showBanner('Téléportation : défaussez une Énergie de votre main.');
+      const label = p.sourceLabel ? `${p.sourceLabel} : ` : '';
+      this.showBanner(`${label}défaussez une Énergie de votre main.`);
     }
     if (p.type === 'teleportPickSide' && p.playerIndex === acting) {
       this.showTeleportSideModal(p, acting);
@@ -7250,6 +7397,16 @@ export class GameUI {
       this.showBanner('Vieux Maître : choisissez un chevalier Bronze/Argent sur le banc.', 'talent');
       return;
     }
+    if (p.type === 'pickKnightForDiscardEnergyAttach' && p.playerIndex === acting) {
+      this.setMode(null);
+      this.setTargeting(true);
+      const label = p.sourceLabel ? `${p.sourceLabel} : ` : '';
+      this.showBanner(
+        `${label}choisissez un Guerrier Divin d'Asgard pour l'Énergie.`,
+        'energy',
+      );
+      return;
+    }
     if (p.type === 'lookTopDeck' && p.playerIndex === acting) {
       this.setMode(null);
       this.setTargeting(false);
@@ -7269,6 +7426,15 @@ export class GameUI {
       this.showBanner(`${label}choisissez un chevalier adverse (actif ou banc).`, 'attack');
       return;
     }
+    if (p.type === 'pickSilenceOpponentKnight' && p.playerIndex === acting) {
+      this.setMode(null);
+      this.setTargeting(true);
+      this.showBanner(
+        'Envoie de Fairy : choisissez un chevalier adverse dont annuler le talent.',
+        'talent',
+      );
+      return;
+    }
     if (p.type === 'sacrificeBenchForAttack' && p.playerIndex === acting) {
       this.setMode(null);
       this.setTargeting(true);
@@ -7278,7 +7444,8 @@ export class GameUI {
     if (p.type === 'charonSwapBench' && p.playerIndex === acting) {
       this.setMode(null);
       this.setTargeting(true);
-      this.showBanner('Charon : choisissez un Spectre ou Juge sur le banc.', 'talent');
+      const label = p.sourceLabel || 'Charon';
+      this.showBanner(`${label} : choisissez un chevalier sur le banc.`, 'talent');
       return;
     }
     if (p.type === 'transferEnergyToHades' && p.playerIndex === acting) {
@@ -7294,7 +7461,8 @@ export class GameUI {
     if (p.type === 'recoverDiscard' && p.playerIndex === acting) {
       this.setMode(null);
       this.setTargeting(false);
-      this.showBanner('Gardien : choisissez un chevalier en défausse (ou Annuler).', 'attack');
+      this.showRecoverDiscardModal(p, acting);
+      return;
     }
     if (p.type === 'attachEnergyFromHand' && p.playerIndex === acting) {
       this.setMode(null);
@@ -7472,6 +7640,32 @@ export class GameUI {
       this.showBanner('Guilty : choisissez un Chevalier Noir ou Phénix Méchant pour l\'Énergie.', 'energy');
       return;
     }
+    if (p.type === 'missionGigasPlaceKnight' && p.playerIndex === acting) {
+      this.setMode(null);
+      this.setTargeting(false);
+      this.showMissionGigasModal(p, acting);
+      return;
+    }
+  }
+
+  showMissionGigasModal(pending, playerIndex) {
+    this.els.overlay.classList.remove('hidden');
+    this.els.modal.innerHTML =
+      '<h3>Mission de Gigas</h3>' +
+      '<p>Placez le Chevalier d\'Argent trouvé sur votre banc pour attacher l\'Énergie trouvée (hors limite du tour).</p>' +
+      '<p>Cliquez sur le Chevalier d\'Argent en main, ou terminez sans le placer.</p>' +
+      '<div class="modal-actions"></div>';
+    const actions = this.els.modal.querySelector('.modal-actions');
+    const doneBtn = document.createElement('button');
+    doneBtn.type = 'button';
+    doneBtn.className = 'btn';
+    doneBtn.textContent = 'Terminer';
+    doneBtn.addEventListener('click', () => {
+      this.engine.finishMissionGigasSkip(playerIndex);
+      this.els.overlay.classList.add('hidden');
+      this.render(this.engine.state);
+    });
+    actions.appendChild(doneBtn);
   }
 
   showAccelerationDiscardModal(pending, playerIndex) {
@@ -7847,7 +8041,7 @@ export class GameUI {
   }
 
   showDistributeDamageModal(pending, playerIndex) {
-    this.els.overlay.classList.remove('hidden');
+    this.showPickOverlay({ boardTarget: true });
     const remaining = pending.remaining ?? pending.totalDamage ?? 0;
     const step = pending.step || 10;
     this.els.modal.innerHTML =
@@ -7864,6 +8058,7 @@ export class GameUI {
     doneBtn.addEventListener('click', () => {
       if ((this.engine.state.pending?.remaining ?? 0) > 0) return;
       this.engine.finishDistributeDamage(playerIndex);
+      this.resetPickOverlay();
       this.els.overlay.classList.add('hidden');
       this.render(this.engine.state);
     });
@@ -8026,6 +8221,46 @@ export class GameUI {
       });
       container.appendChild(btn);
     });
+  }
+
+  showRecoverDiscardModal(pending, playerIndex) {
+    const options = pending?.options || [];
+    const hasObjet = options.some((o) => getCardDef(o.cardId)?.cardType === 'objet');
+    const title = hasObjet ? 'Récupération depuis la défausse' : 'Gardien';
+    const hint = hasObjet
+      ? 'Choisissez un Objet à récupérer en main.'
+      : 'Choisissez un chevalier en défausse.';
+    this.els.overlay.classList.remove('hidden');
+    this.els.modal.innerHTML =
+      `<h3>${title}</h3><p>${hint}</p><div class="modal-cards"></div><div class="modal-actions"></div>`;
+    const container = this.els.modal.querySelector('.modal-cards');
+    options.forEach((opt) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn';
+      btn.textContent = getCardDef(opt.cardId).name;
+      btn.addEventListener('click', () => {
+        this.engine.resolveRecoverDiscard(playerIndex, opt.instanceId);
+        if (!this.engine.state.pending) {
+          this.els.overlay.classList.add('hidden');
+        }
+        this.render(this.engine.state);
+      });
+      container.appendChild(btn);
+    });
+    const actions = this.els.modal.querySelector('.modal-actions');
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'btn btn-cancel';
+    cancelBtn.textContent = 'Annuler';
+    cancelBtn.addEventListener('click', () => {
+      if (this.engine.cancelPending(playerIndex)) {
+        this.els.overlay.classList.add('hidden');
+        this.setTargeting(false);
+        this.render(this.engine.state);
+      }
+    });
+    actions.appendChild(cancelBtn);
   }
 
   showSearchModal(pending, playerIndex = this.getActingPlayer()) {

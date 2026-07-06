@@ -447,6 +447,9 @@ export class EffectResolver {
     ) {
       return true;
     }
+    if ((knight.modifiers?.talentSilencedTurns ?? 0) > 0) {
+      return true;
+    }
     if (def?.knightType === 'Divinite' || def?.tags?.includes('Divinite')) return false;
     for (const p of g.state.players) {
       for (const bk of p.bench) {
@@ -5766,6 +5769,81 @@ export class EffectResolver {
     return true;
   }
 
+  collectOpponentKnightsWithTalent(opponentIndex) {
+    const opp = this.game.state.players[opponentIndex];
+    const targets = [];
+    const add = (knight, target) => {
+      if (!knight) return;
+      const def = getCardDef(knight.cardId);
+      if (!def?.talent) return;
+      targets.push({ knight, target, instanceId: knight.instanceId });
+    };
+    add(opp.active, 'active');
+    opp.bench.forEach((k, i) => add(k, i));
+    return targets;
+  }
+
+  pickBestSilenceOpponentTarget(targets) {
+    const active = targets.find((t) => t.target === 'active');
+    if (active) return active;
+    return targets.reduce(
+      (best, t) => (t.knight.currentHp < best.knight.currentHp ? t : best),
+      targets[0],
+    );
+  }
+
+  applyKnightTalentSilence(knight, turns, playerIndex, fromTalent = {}) {
+    const g = this.game;
+    if (!knight) return false;
+    const def = getCardDef(knight.cardId);
+    knight.modifiers = knight.modifiers || {};
+    knight.modifiers.talentSilencedTurns = turns || 2;
+    if (fromTalent?.knightInstanceId != null) {
+      const p = g.state.players[playerIndex];
+      const sourceKnight = [p.active, ...p.bench].find(
+        (k) => k?.instanceId === fromTalent.knightInstanceId,
+      );
+      if (sourceKnight) {
+        sourceKnight.modifiers.talentOnceThisTurn = true;
+        sourceKnight.talentUsed = true;
+      }
+    }
+    const name = def?.name || knight.cardId;
+    g.feedback(`Envoie de Fairy : talent de ${name} annulé ${turns || 2} tour(s).`, 'status');
+    g.emit();
+    return true;
+  }
+
+  startPickSilenceOpponentKnight(playerIndex, turns, fromTalent = {}) {
+    const g = this.game;
+    const oppIndex = 1 - playerIndex;
+    const targets = this.collectOpponentKnightsWithTalent(oppIndex);
+    if (!targets.length) {
+      g.feedback('Envoie de Fairy : aucun talent adverse à annuler.', 'warn');
+      return false;
+    }
+    if (targets.length === 1 || g.isAiControlled(playerIndex)) {
+      const pick = g.isAiControlled(playerIndex)
+        ? this.pickBestSilenceOpponentTarget(targets)
+        : targets[0];
+      return this.applyKnightTalentSilence(pick.knight, turns, playerIndex, fromTalent);
+    }
+    g.state.pending = {
+      type: 'pickSilenceOpponentKnight',
+      playerIndex,
+      opponentIndex: oppIndex,
+      turns: turns || 2,
+      fromTalent,
+      options: targets.map((t) => ({ target: t.target, instanceId: t.instanceId })),
+    };
+    g.feedback(
+      'Envoie de Fairy : choisissez un chevalier adverse dont annuler le talent.',
+      'talent',
+    );
+    g.emit();
+    return true;
+  }
+
   resolveDiscardHandSilenceOpponentTalent(playerIndex, knight, eff) {
     const g = this.game;
     const player = g.state.players[playerIndex];
@@ -5775,6 +5853,11 @@ export class EffectResolver {
     }
     if (!player.hand.length) {
       g.feedback('Envoie de Fairy : aucune carte en main à défausser.', 'warn');
+      return false;
+    }
+    const oppTargets = this.collectOpponentKnightsWithTalent(1 - playerIndex);
+    if (!oppTargets.length) {
+      g.feedback('Envoie de Fairy : aucun talent adverse à annuler.', 'warn');
       return false;
     }
     if (g.needsPlayerChoice(playerIndex)) {
@@ -5790,16 +5873,9 @@ export class EffectResolver {
     }
     const [card] = player.hand.splice(0, 1);
     player.discard.push(card);
-    const opp = g.state.players[1 - playerIndex];
-    opp.modifiers.activeTalentSilencedTurns = eff.turns || 2;
-    knight.modifiers.talentOnceThisTurn = true;
-    knight.talentUsed = true;
-    g.feedback(
-      `Envoie de Fairy : talent de l'actif adverse annulé ${eff.turns || 2} tour(s).`,
-      'status',
-    );
-    g.emit();
-    return true;
+    return this.startPickSilenceOpponentKnight(playerIndex, eff.turns || 2, {
+      knightInstanceId: knight.instanceId,
+    });
   }
 
   resolveLookTopDeckTalent(playerIndex, knight, eff) {

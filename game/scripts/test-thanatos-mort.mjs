@@ -256,16 +256,57 @@ function runFairySilenceMortTest() {
   const { p0, p1 } = setupThanatosScenario(engine);
   p0.active = makeKnight('myu_papillon', 90);
   p0.hand = [{ cardId: 'energie-commune', instanceId: 'hand-e-1' }];
-  p1.modifiers.activeTalentSilencedTurns = 2;
+
+  // Per-knight silence on active Thanatos
+  p1.active.modifiers.talentSilencedTurns = 2;
   if (!engine.effects.isTalentSilenced(p1.active, 1)) {
-    console.error('FAIL: Envoie de Fairy should silence Thanatos active talent');
+    console.error('FAIL: Envoie de Fairy should silence chosen opponent knight talent');
     process.exit(1);
   }
   if (engine.canUseTalentOnKnight(1, p1.active, getCardDef('thanatos').talent)) {
     console.error('FAIL: silenced Thanatos should not be able to use Mort');
     process.exit(1);
   }
-  console.log('PASS: Envoie de Fairy silences Thanatos Mort');
+  console.log('PASS: Envoie de Fairy silences active Thanatos Mort');
+}
+
+function runFairySilenceBenchMortTest() {
+  initCards();
+  const engine = new GameEngine({ headless: true, gameMode: 'ai', aiDifficulty: 'expert' });
+  engine.reset({ headless: true, gameMode: 'ai', aiDifficulty: 'expert' });
+  const { p0, p1 } = setupThanatosScenario(engine);
+  const benchThanatos = makeKnight('thanatos', 230);
+  p1.active = makeKnight('test_dummy_active', 400);
+  p1.bench = [benchThanatos, makeKnight('shakka', 70)];
+  p0.active = makeKnight('myu_papillon', 90);
+  p0.hand = [{ cardId: 'energie-commune', instanceId: 'hand-e-1' }];
+
+  engine.state.turn = 0;
+  engine.state.phase = 'main';
+  engine.useTalent(0, 'active');
+  if (engine.state.pending?.type !== 'discardHandSilenceOpponentTalent') {
+    console.error('FAIL: Envoie de Fairy should prompt hand discard first');
+    process.exit(1);
+  }
+  engine.resolveDiscardHandSilenceOpponentTalent(0, 0);
+  if (engine.state.pending?.type !== 'pickSilenceOpponentKnight') {
+    console.error('FAIL: Envoie de Fairy should prompt opponent knight pick');
+    process.exit(1);
+  }
+  const ok = engine.resolvePickSilenceOpponentKnight(0, benchThanatos.instanceId);
+  if (!ok) {
+    console.error('FAIL: could not resolve bench Thanatos silence pick');
+    process.exit(1);
+  }
+  if (!engine.effects.isTalentSilenced(benchThanatos, 1)) {
+    console.error('FAIL: bench Thanatos talent should be silenced');
+    process.exit(1);
+  }
+  if (engine.canUseTalentOnKnight(1, benchThanatos, getCardDef('thanatos').talent)) {
+    console.error('FAIL: silenced bench Thanatos should not use Mort');
+    process.exit(1);
+  }
+  console.log('PASS: Envoie de Fairy silences bench Thanatos Mort');
 }
 
 runTest()
@@ -273,6 +314,7 @@ runTest()
   .then(() => {
     runShakkaMortReductionTest();
     runFairySilenceMortTest();
+    runFairySilenceBenchMortTest();
   })
   .catch((err) => {
     console.error(err);
