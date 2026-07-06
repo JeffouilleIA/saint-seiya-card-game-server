@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { CARD_DATABASE, getCardDef } from '../cards.js';
+import { CARD_DATABASE, getCardDef, getPrizeCountForKnockout } from '../cards.js';
 import { GameEngine } from '../engine.js';
 import { pickAiTalent, scoreAiTalentOption } from '../ai-expert.js';
 
@@ -142,7 +142,139 @@ async function runTest() {
   console.log('PASS: Thanatos Mort — score', score.toFixed(1), 'target HP', hpBefore, '->', koTarget.currentHp);
 }
 
-runTest().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+async function runPrizeTests() {
+  initCards();
+  const expectedPrizes = getPrizeCountForKnockout(getCardDef('test_dummy_bench_2'));
+
+  // AI path — talent damage resolves KO immediately, prizes at end of turn
+  {
+    const engine = new GameEngine({ headless: true, gameMode: 'ai', aiDifficulty: 'expert' });
+    engine.reset({ headless: true, gameMode: 'ai', aiDifficulty: 'expert' });
+    const { p0, p1 } = setupThanatosScenario(engine);
+    const prizesBefore = p1.prizesTaken ?? 0;
+    engine._aiTryTalent(1);
+    await engine._aiWaitForCombatIdle?.();
+    if (p0.bench.length !== 1) {
+      console.error('FAIL: AI Mort should KO one bench knight', p0.bench.length);
+      process.exit(1);
+    }
+    if ((p1.modifiers.pendingPrizesAtEndTurn || 0) !== expectedPrizes) {
+      console.error(
+        'FAIL: AI Mort should defer prizes',
+        p1.modifiers.pendingPrizesAtEndTurn,
+        'expected',
+        expectedPrizes,
+      );
+      process.exit(1);
+    }
+    await engine.endTurn();
+    await engine._aiWaitForCombatIdle?.();
+    if ((p1.prizesTaken ?? 0) !== prizesBefore + expectedPrizes) {
+      console.error(
+        'FAIL: AI Mort prizes not awarded at endTurn',
+        p1.prizesTaken,
+        'expected',
+        prizesBefore + expectedPrizes,
+      );
+      process.exit(1);
+    }
+    console.log('PASS: Thanatos Mort AI — prizes awarded at endTurn');
+  }
+
+  // Human pick path — Mort via pickDamageOpponentKnight (local2p)
+  {
+    const engine = new GameEngine({ headless: true, gameMode: 'local2p' });
+    engine.reset({ headless: true, gameMode: 'local2p' });
+    const { p0, p1 } = setupThanatosScenario(engine);
+    const koTarget = p0.bench[1];
+    const prizesBefore = p1.prizesTaken ?? 0;
+    engine.state.pending = {
+      type: 'pickDamageOpponentKnight',
+      playerIndex: 1,
+      opponentIndex: 0,
+      amount: 20,
+      benchOnly: true,
+      options: p0.bench.map((k, i) => ({ target: i, instanceId: k.instanceId })),
+      fromTalent: { playerIndex: 1, knightInstanceId: p1.active.instanceId },
+      sourceLabel: 'Mort (Thanatos)',
+    };
+    engine.resolvePickDamageOpponentKnight(1, koTarget.instanceId);
+    await engine._aiWaitForCombatIdle?.();
+    if ((engine._pendingAttackKnockOuts?.length || 0) > 0) {
+      console.error('FAIL: Mort pick should not leave pending attack KOs');
+      process.exit(1);
+    }
+    if ((p1.modifiers.pendingPrizesAtEndTurn || 0) !== expectedPrizes) {
+      console.error(
+        'FAIL: Mort pick should defer prizes',
+        p1.modifiers.pendingPrizesAtEndTurn,
+        'expected',
+        expectedPrizes,
+      );
+      process.exit(1);
+    }
+    await engine.endTurn();
+    await engine._aiWaitForCombatIdle?.();
+    if ((p1.prizesTaken ?? 0) !== prizesBefore + expectedPrizes) {
+      console.error(
+        'FAIL: Mort pick prizes not awarded at endTurn',
+        p1.prizesTaken,
+        'expected',
+        prizesBefore + expectedPrizes,
+      );
+      process.exit(1);
+    }
+    console.log('PASS: Thanatos Mort pick — prizes awarded at endTurn');
+  }
+}
+
+function runShakkaMortReductionTest() {
+  initCards();
+  const engine = new GameEngine({ headless: true, gameMode: 'ai', aiDifficulty: 'expert' });
+  engine.reset({ headless: true, gameMode: 'ai', aiDifficulty: 'expert' });
+  const { p0, p1 } = setupThanatosScenario(engine);
+  p0.bench.push(makeKnight('shakka', 70));
+  const target = p0.bench[1];
+  const hpBefore = target.currentHp;
+  engine._aiTryTalent(1);
+  if (target.currentHp !== hpBefore) {
+    console.error(
+      'FAIL: Shakka should reduce Mort to 0 dmg on bench',
+      hpBefore,
+      '->',
+      target.currentHp,
+    );
+    process.exit(1);
+  }
+  console.log('PASS: Shakka reduces Thanatos Mort bench damage');
+}
+
+function runFairySilenceMortTest() {
+  initCards();
+  const engine = new GameEngine({ headless: true, gameMode: 'ai', aiDifficulty: 'expert' });
+  engine.reset({ headless: true, gameMode: 'ai', aiDifficulty: 'expert' });
+  const { p0, p1 } = setupThanatosScenario(engine);
+  p0.active = makeKnight('myu_papillon', 90);
+  p0.hand = [{ cardId: 'energie-commune', instanceId: 'hand-e-1' }];
+  p1.modifiers.activeTalentSilencedTurns = 2;
+  if (!engine.effects.isTalentSilenced(p1.active, 1)) {
+    console.error('FAIL: Envoie de Fairy should silence Thanatos active talent');
+    process.exit(1);
+  }
+  if (engine.canUseTalentOnKnight(1, p1.active, getCardDef('thanatos').talent)) {
+    console.error('FAIL: silenced Thanatos should not be able to use Mort');
+    process.exit(1);
+  }
+  console.log('PASS: Envoie de Fairy silences Thanatos Mort');
+}
+
+runTest()
+  .then(() => runPrizeTests())
+  .then(() => {
+    runShakkaMortReductionTest();
+    runFairySilenceMortTest();
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });

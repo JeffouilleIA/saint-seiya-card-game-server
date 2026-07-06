@@ -79,9 +79,13 @@ export class EffectResolver {
       if (eff.type === 'bonus_damage_on_tails' && ctx.coin === RULES.coin.tails) {
         damage += eff.bonusDamage || 0;
       }
-      if (eff.type === 'bonus_damage_per_damage_marker' && ctx.opponentActive) {
-        const markers = this.countDamageMarkers(ctx.opponentActive);
-        damage += (eff.amountPerMarker || 10) * markers;
+      if (eff.type === 'bonus_damage_per_damage_marker') {
+        const markerKnight =
+          eff.target === 'self' || eff.target === 'attacker' ? attacker : ctx.opponentActive;
+        if (markerKnight) {
+          const markers = this.countDamageMarkers(markerKnight);
+          damage += (eff.amountPerMarker || 10) * markers;
+        }
       }
       if (eff.type === 'bonus_damage_if_attacker_has_tool' && attacker?.attachedTool) {
         damage += eff.bonusDamage || 0;
@@ -298,13 +302,17 @@ export class EffectResolver {
 
   getBenchBonusActiveAttackDamage(attackerIndex) {
     const player = this.game.state.players[attackerIndex];
+    const activeId = getCardDef(player.active?.cardId)?.id || player.active?.cardId;
     let bonus = 0;
     for (const benchKnight of player.bench) {
       const def = getCardDef(benchKnight?.cardId);
       const eff = def?.talent?.effects?.find((e) => e.type === 'bench_bonus_active_attack_damage');
       if (!eff) continue;
       if ((benchKnight.energies?.length ?? 0) < (eff.minEnergy ?? 2)) continue;
-      bonus += eff.amount || 0;
+      const brotherId = eff.brotherCardId;
+      const useBrotherBonus =
+        brotherId && (activeId === brotherId || player.active?.cardId === brotherId);
+      bonus += useBrotherBonus ? (eff.brotherBonusAmount ?? eff.amount ?? 0) : (eff.amount || 0);
     }
     return bonus;
   }
@@ -431,7 +439,6 @@ export class EffectResolver {
       const player = this.game.state.players[playerIndex];
       if (!playerHasJulianOrKanonDragonInPlay(player)) return true;
     }
-    if (def?.knightType === 'Divinite' || def?.tags?.includes('Divinite')) return false;
     const g = this.game;
     const player = g.state.players[playerIndex];
     if (
@@ -440,6 +447,7 @@ export class EffectResolver {
     ) {
       return true;
     }
+    if (def?.knightType === 'Divinite' || def?.tags?.includes('Divinite')) return false;
     for (const p of g.state.players) {
       for (const bk of p.bench) {
         const bDef = getCardDef(bk?.cardId);
@@ -592,6 +600,7 @@ export class EffectResolver {
   }
 
   knightHasImmuneStatus(knight, statusId, ownerPlayerIndex = null) {
+    if (knight?.modifiers?.blockStatusThisAttack) return true;
     const def = getCardDef(knight?.cardId);
     if (def?.talent?.effects?.some((e) => e.type === 'immune_all_status')) return true;
     const krishnaEff = def?.talent?.effects?.find((e) => e.type === 'krishna_foi_absolue');
@@ -807,6 +816,10 @@ export class EffectResolver {
     const effects = attack.effects || [];
     for (const eff of effects) {
       await this.applyEffect(attackerIndex, attack, eff, ctx, 'attack');
+    }
+    const opp = this.game.state.players[1 - attackerIndex];
+    if (opp?.active?.modifiers?.blockStatusThisAttack) {
+      opp.active.modifiers.blockStatusThisAttack = false;
     }
   }
 
@@ -1321,6 +1334,10 @@ export class EffectResolver {
 
       case 'recover_energy_discard_attach':
         this.recoverEnergyDiscardAttach(playerIndex, active, player);
+        break;
+
+      case 'recover_energy_discard_attach_knight':
+        this.startRecoverEnergyDiscardAttachKnight(playerIndex, eff, ctx.attackName || source?.name);
         break;
 
       case 'recover_energy_from_discard': {
@@ -2046,12 +2063,19 @@ export class EffectResolver {
       return;
     }
     if (g.needsPlayerChoice(playerIndex)) {
+      const pickLabel =
+        eff.filter?.cardType === 'objet'
+          ? 'Choisissez un Objet en défausse.'
+          : eff.filter?.cardType === 'chevalier' || !eff.filter
+            ? 'Choisissez un chevalier en défausse.'
+            : 'Choisissez une carte en défausse.';
       g.state.pending = {
         type: 'recoverDiscard',
         playerIndex,
         options: candidates.map((c) => ({ ...c })),
+        sourceLabel: eff.sourceLabel,
       };
-      g.feedback('Gardien : choisissez un chevalier en défausse.', 'attack');
+      g.feedback(pickLabel, 'attack');
       g.emit();
       return;
     }
@@ -2096,7 +2120,10 @@ export class EffectResolver {
       'destruction_outil',
     ]);
     return effects.every(
-      (e) => skipTypes.has(e.type) || (e.type === 'search_deck' && !e.attachTo),
+      (e) =>
+        skipTypes.has(e.type) ||
+        (e.type === 'search_deck' && !e.attachTo) ||
+        (e.type === 'search_deck_energy' && e.attachTo === 'own_active_or_bench'),
     );
   }
 
@@ -2270,6 +2297,7 @@ export class EffectResolver {
     const victimOnBench = !!opts.benchOnly;
     for (const benchKnight of player.bench) {
       if (!benchKnight) continue;
+      if (this.isTalentSilenced(benchKnight, defenderIndex)) continue;
       const bDef = getCardDef(benchKnight.cardId);
       const eff = bDef?.talent?.effects?.find((e) => e.type === 'bench_reduce_damage');
       if (!eff) continue;
@@ -2382,10 +2410,12 @@ export class EffectResolver {
           type: 'discardEnergyFromHandForTalent',
           playerIndex,
           count: discardN,
+          sourceLabel: talent?.name || 'Téléportation',
           fromTalent: {
             playerIndex,
             knightInstanceId: knight.instanceId,
             swapScope: eff?.swapScope || 'own',
+            effectType: 'teleport_once_per_turn',
           },
         };
         g.feedback(`Défaussez ${discardN} Énergie(s) (Téléportation).`, 'talent');
@@ -2622,6 +2652,11 @@ export class EffectResolver {
           if (g.state.pending) return;
           break;
         case 'search_deck_energy': {
+          if (eff.attachTo === 'own_active_or_bench') {
+            await this.startMissionGigasChain(playerIndex, objetDef);
+            if (g.state.pending) return;
+            break;
+          }
           const knight = this.getKnightByTarget(player, target);
           if (eff.attachFilter) {
             if (!knight || !this.matchesAttachFilter(knight.cardId, eff.attachFilter)) {
@@ -2773,6 +2808,18 @@ export class EffectResolver {
             knight.statuses = [];
             g.feedback('Effets spéciaux soignés.', 'status');
             g.anim('status', { status: 'cleared', removed: true });
+          }
+          break;
+        }
+        case 'discard_energy': {
+          const knight = this.getKnightByTarget(player, target);
+          if (knight) {
+            const count = eff.count || 1;
+            const before = knight.energies.length;
+            this.discardEnergyFromKnight(knight, count, player);
+            if (before > knight.energies.length) {
+              g.feedback('Énergie(s) défaussée(s).', 'energy');
+            }
           }
           break;
         }
@@ -3475,7 +3522,13 @@ export class EffectResolver {
     }
     for (const eff of def?.talent?.effects || []) {
       if (eff.type === 'on_play_damage') {
-        this.damageOpponentAny(playerIndex, eff.damage || 30);
+        if (eff.target === 'self') {
+          const amount = eff.damage || 30;
+          g.damageKnight(player, knight, amount, 'talent', playerIndex, null);
+          g.feedback(`${def.name} : ${amount} dégâts à lui-même.`, 'damage');
+        } else {
+          this.damageOpponentAny(playerIndex, eff.damage || 30);
+        }
       }
       if (eff.type === 'on_play_damage_all_except_self') {
         this.damageAllExceptKnight(playerIndex, knight, eff.damage || 30);
@@ -4257,6 +4310,120 @@ export class EffectResolver {
     }
   }
 
+  collectOwnKnightsMatchingFilter(player, filter) {
+    const targets = [];
+    if (player.active && this.matchesDeckFilter(player.active.cardId, filter)) {
+      targets.push({ target: 'active', knight: player.active });
+    }
+    player.bench.forEach((k, i) => {
+      if (k && this.matchesDeckFilter(k.cardId, filter)) {
+        targets.push({ target: i, knight: k });
+      }
+    });
+    return targets;
+  }
+
+  startRecoverEnergyDiscardAttachKnight(playerIndex, eff, sourceLabel = '') {
+    const g = this.game;
+    const player = g.state.players[playerIndex];
+    const filter = eff.knightFilter || { knightType: 'GuerrierDivinAsgard' };
+
+    let energyIdx = -1;
+    for (let i = player.discard.length - 1; i >= 0; i--) {
+      if (getCardDef(player.discard[i].cardId)?.cardType === 'energie') {
+        energyIdx = i;
+        break;
+      }
+    }
+    if (energyIdx < 0) {
+      g.feedback('Aucune Énergie en défausse.', 'warn');
+      return;
+    }
+
+    const targets = this.collectOwnKnightsMatchingFilter(player, filter);
+    if (!targets.length) {
+      g.feedback('Aucun Guerrier Divin d\'Asgard à cibler.', 'warn');
+      return;
+    }
+
+    if (g.needsPlayerChoice(playerIndex) && targets.length > 1) {
+      g.state.pending = {
+        type: 'pickKnightForDiscardEnergyAttach',
+        playerIndex,
+        energyDiscardIdx: energyIdx,
+        options: targets.map((t) => ({ target: t.target, instanceId: t.knight.instanceId })),
+        sourceLabel,
+      };
+      g.feedback(
+        `${sourceLabel ? `${sourceLabel} : ` : ''}choisissez un Guerrier Divin d'Asgard pour l'Énergie.`,
+        'energy',
+      );
+      g.emit();
+      return;
+    }
+
+    const pick = g.isAiControlled(playerIndex)
+      ? targets.reduce(
+          (best, t) =>
+            (t.knight.energies?.length ?? 0) < (best.knight.energies?.length ?? 0) ? t : best,
+          targets[0],
+        )
+      : targets[0];
+    this.applyDiscardEnergyAttachToKnight(playerIndex, energyIdx, pick.knight, pick.target);
+  }
+
+  applyDiscardEnergyAttachToKnight(playerIndex, energyDiscardIdx, targetKnight, target) {
+    const g = this.game;
+    const player = g.state.players[playerIndex];
+    if (
+      energyDiscardIdx < 0 ||
+      energyDiscardIdx >= player.discard.length ||
+      getCardDef(player.discard[energyDiscardIdx].cardId)?.cardType !== 'energie'
+    ) {
+      return false;
+    }
+    const [energy] = player.discard.splice(energyDiscardIdx, 1);
+    targetKnight.energies.push({ cardId: energy.cardId, instanceId: energy.instanceId });
+    g.feedback(
+      `Énergie attachée à ${getCardDef(targetKnight.cardId).name} depuis la défausse.`,
+      'energy',
+    );
+    g.anim('attachEnergy', {
+      cardId: energy.cardId,
+      target,
+      playerIndex,
+      fromDeck: false,
+    });
+    g.emit();
+    return true;
+  }
+
+  resolvePickKnightForDiscardEnergyAttach(playerIndex, instanceId) {
+    const g = this.game;
+    const pending = g.state.pending;
+    if (
+      !pending ||
+      pending.type !== 'pickKnightForDiscardEnergyAttach' ||
+      pending.playerIndex !== playerIndex
+    ) {
+      return false;
+    }
+    const player = g.state.players[playerIndex];
+    const opt = pending.options?.find((o) => o.instanceId === instanceId);
+    if (!opt) return false;
+    const knight = this.getKnightByTarget(player, opt.target);
+    if (!knight) return false;
+    const ok = this.applyDiscardEnergyAttachToKnight(
+      playerIndex,
+      pending.energyDiscardIdx,
+      knight,
+      opt.target,
+    );
+    g.state.pending = null;
+    g.emit();
+    return ok;
+  }
+
   matchesDeckFilter(cardId, filter) {
     const def = getCardDef(cardId);
     if (!def || !filter) return false;
@@ -4294,9 +4461,18 @@ export class EffectResolver {
     return true;
   }
 
-  getBonusPrizeWhenKnockedOut(victimDef) {
-    const eff = victimDef?.talent?.effects?.find((e) => e.type === 'bonus_prize_when_knocked_out');
+  getToolBonusPrizeWhenKnockedOut(knight) {
+    if (!knight?.attachedTool) return 0;
+    const toolDef = getCardDef(knight.attachedTool.cardId);
+    const eff = toolDef?.passiveEffects?.find((e) => e.type === 'bonus_prize_when_knocked_out');
     return eff?.amount ?? 0;
+  }
+
+  getBonusPrizeWhenKnockedOut(victimDef, victimKnight) {
+    const talentEff = victimDef?.talent?.effects?.find(
+      (e) => e.type === 'bonus_prize_when_knocked_out',
+    );
+    return (talentEff?.amount ?? 0) + this.getToolBonusPrizeWhenKnockedOut(victimKnight);
   }
 
   getZelosCowardPrizeAdjustments(victimPlayer, victimKnight, killerPlayer, wasActive) {
@@ -4490,12 +4666,68 @@ export class EffectResolver {
       type: 'charonSwapBench',
       playerIndex,
       knightInstanceId: knight.instanceId,
+      sourceLabel: 'Charon',
       options: candidates.map(({ target, knight: k }) => ({
         target,
         instanceId: k.instanceId,
       })),
     };
     g.feedback('Charon : choisissez un Spectre ou Juge sur le banc.', 'talent');
+    g.emit();
+    return true;
+  }
+
+  resolveSwapActiveWithBenchFilter(playerIndex, knight, eff, talent) {
+    const g = this.game;
+    const player = g.state.players[playerIndex];
+    const talentName = talent?.name || 'Talent';
+    if (eff.oncePerTurn && knight.modifiers.talentOnceThisTurn) {
+      g.feedback(`${talentName} déjà utilisé ce tour.`, 'warn');
+      return false;
+    }
+    if (eff.requiresActive && player.active?.instanceId !== knight.instanceId) {
+      g.feedback(`${talentName} : utilisable seulement depuis l'actif.`, 'warn');
+      return false;
+    }
+    if (!player.active) {
+      g.feedback('Aucun chevalier actif.', 'warn');
+      return false;
+    }
+    const candidates = player.bench
+      .map((k, i) => ({ knight: k, target: i }))
+      .filter(
+        ({ knight: k }) =>
+          k &&
+          (!eff.excludeSelf || k.instanceId !== knight.instanceId) &&
+          this.matchesDeckFilter(k.cardId, eff.filter) &&
+          !this.isKnightBenchNoSwap(k, { opponentSwap: false }) &&
+          this.canKnightBecomeActive(k),
+      );
+    if (!candidates.length) {
+      g.feedback('Aucun Chevalier d\'Argent échangeable sur le banc.', 'warn');
+      return false;
+    }
+    if (g.stadiumBlocksActiveSwap?.()) {
+      g.feedback('Sanctuaire : échange impossible.', 'stadium');
+      return false;
+    }
+    if (candidates.length === 1) {
+      g.swapActiveWithBenchIndex(playerIndex, candidates[0].target);
+      knight.talentUsed = true;
+      g.feedback(`${talentName} : échange effectué.`, 'talent');
+      return true;
+    }
+    g.state.pending = {
+      type: 'charonSwapBench',
+      playerIndex,
+      knightInstanceId: knight.instanceId,
+      sourceLabel: talentName,
+      options: candidates.map(({ target, knight: k }) => ({
+        target,
+        instanceId: k.instanceId,
+      })),
+    };
+    g.feedback(`${talentName} : choisissez un Chevalier d'Argent sur le banc.`, 'talent');
     g.emit();
     return true;
   }
@@ -5113,6 +5345,161 @@ export class EffectResolver {
     });
   }
 
+  findSearchedSilverKnightInHand(player, preferInstanceId = null) {
+    const filter = { type: 'chevalier-argent' };
+    const matches = player.hand
+      .map((c, handIndex) => ({ c, handIndex }))
+      .filter(({ c }) => this.matchesDeckFilter(c.cardId, filter));
+    if (preferInstanceId) {
+      const hit = matches.find(({ c }) => c.instanceId === preferInstanceId);
+      if (hit) return hit;
+    }
+    return matches[0] || null;
+  }
+
+  attachMissionGigasEnergyFree(playerIndex, knight, target, energyInstanceId) {
+    const g = this.game;
+    const player = g.state.players[playerIndex];
+    if (!knight) return false;
+    const handIdx = player.hand.findIndex((c) => c.instanceId === energyInstanceId);
+    if (handIdx < 0) return false;
+    const [energy] = player.hand.splice(handIdx, 1);
+    knight.energies.push({ cardId: energy.cardId, instanceId: energy.instanceId });
+    g.feedback(
+      'Mission de Gigas : Énergie attachée (ne compte pas dans la limite du tour).',
+      'energy',
+    );
+    g.anim('attachEnergy', {
+      cardId: energy.cardId,
+      target,
+      playerIndex,
+      fromDeck: true,
+    });
+    return true;
+  }
+
+  async startMissionGigasChain(playerIndex) {
+    const g = this.game;
+    const player = g.state.players[playerIndex];
+    const silverPick = this.findSearchedSilverKnightInHand(player);
+    if (!silverPick) {
+      g.feedback('Mission de Gigas : aucun Chevalier d\'Argent en main.', 'warn');
+      return;
+    }
+
+    const energyCard = this.pickEnergyFromDeck(player);
+    if (!energyCard) {
+      g.feedback('Mission de Gigas : aucune Énergie dans le deck.', 'warn');
+      return;
+    }
+    player.hand.push(energyCard);
+    g.feedback(`${getCardDef(energyCard.cardId).name} ajouté à la main.`, 'energy');
+    g.anim('drawReveal', { cardId: energyCard.cardId, playerIndex });
+
+    const benchFull = player.bench.length >= RULES.maxBench;
+    const canPlace =
+      !benchFull && g.canPlayChevalier(playerIndex, silverPick.handIndex);
+
+    if (!canPlace) {
+      if (benchFull) {
+        g.feedback('Mission de Gigas : banc plein — cartes en main.', 'objet');
+      } else {
+        g.feedback('Mission de Gigas : cartes ajoutées à la main.', 'objet');
+      }
+      return;
+    }
+
+    if (g.isAiControlled(playerIndex)) {
+      await this.aiResolveMissionGigas(
+        playerIndex,
+        silverPick.c.instanceId,
+        energyCard.instanceId,
+      );
+      return;
+    }
+
+    g.state.pending = {
+      type: 'missionGigasPlaceKnight',
+      playerIndex,
+      knightInstanceId: silverPick.c.instanceId,
+      knightCardInstanceId: silverPick.c.instanceId,
+      energyInstanceId: energyCard.instanceId,
+    };
+    g.feedback(
+      'Mission de Gigas : placez le Chevalier d\'Argent sur le banc pour attacher l\'Énergie (hors limite du tour), ou Terminer.',
+      'objet',
+    );
+    g.emit();
+  }
+
+  async aiResolveMissionGigas(playerIndex, knightHandInstanceId, energyInstanceId) {
+    const g = this.game;
+    const player = g.state.players[playerIndex];
+    const handIdx = player.hand.findIndex((c) => c.instanceId === knightHandInstanceId);
+    if (handIdx < 0) return;
+    const ok = await g.playChevalierToBench(playerIndex, handIdx);
+    if (!ok) return;
+    const benchIdx = player.bench.findIndex((k) => k?.cardInstanceId === knightHandInstanceId);
+    if (benchIdx < 0) return;
+    this.attachMissionGigasEnergyFree(
+      playerIndex,
+      player.bench[benchIdx],
+      benchIdx,
+      energyInstanceId,
+    );
+    g.emit();
+  }
+
+  async resolveMissionGigasPlaceKnight(playerIndex, handIndex) {
+    const g = this.game;
+    const pending = g.state.pending;
+    if (
+      !pending ||
+      pending.type !== 'missionGigasPlaceKnight' ||
+      pending.playerIndex !== playerIndex
+    ) {
+      return false;
+    }
+    const player = g.state.players[playerIndex];
+    const card = player.hand[handIndex];
+    if (!card || card.instanceId !== pending.knightInstanceId) return false;
+
+    const energyInstanceId = pending.energyInstanceId;
+    const knightHandInstanceId = pending.knightCardInstanceId || pending.knightInstanceId;
+
+    const ok = await g.playChevalierToBench(playerIndex, handIndex);
+    if (!ok) return false;
+
+    g.state.pending = null;
+    const benchIdx = player.bench.findIndex((k) => k?.cardInstanceId === knightHandInstanceId);
+    if (benchIdx >= 0) {
+      this.attachMissionGigasEnergyFree(
+        playerIndex,
+        player.bench[benchIdx],
+        benchIdx,
+        energyInstanceId,
+      );
+    }
+    g.emit();
+    return true;
+  }
+
+  finishMissionGigasSkip(playerIndex) {
+    const g = this.game;
+    const pending = g.state.pending;
+    if (
+      !pending ||
+      pending.type !== 'missionGigasPlaceKnight' ||
+      pending.playerIndex !== playerIndex
+    ) {
+      return false;
+    }
+    g.state.pending = null;
+    g.feedback('Mission de Gigas : cartes conservées en main.', 'objet');
+    g.emit();
+    return true;
+  }
+
   pickEnergyFromDeck(player) {
     for (let i = player.deck.length - 1; i >= 0; i--) {
       if (getCardDef(player.deck[i].cardId)?.cardType === 'energie') {
@@ -5655,6 +6042,47 @@ export class EffectResolver {
       g.feedback('Asmita : doit être en jeu depuis le début de votre tour.', 'warn');
       return false;
     }
+
+    const discardN = eff?.discardEnergyFromHand || 0;
+    if (discardN > 0) {
+      const energies = player.hand.filter((c) => getCardDef(c.cardId)?.cardType === 'energie');
+      if (energies.length < discardN) {
+        g.feedback('Retour au Sanctuaire : défaussez une Énergie de votre main.', 'warn');
+        return false;
+      }
+      if (g.needsPlayerChoice(playerIndex)) {
+        g.state.pending = {
+          type: 'discardEnergyFromHandForTalent',
+          playerIndex,
+          count: discardN,
+          sourceLabel: 'Retour au Sanctuaire',
+          fromTalent: {
+            playerIndex,
+            knightInstanceId: knight.instanceId,
+            effectType: 'bench_return_to_hand',
+          },
+        };
+        g.feedback(`Défaussez ${discardN} Énergie(s) (Retour au Sanctuaire).`, 'talent');
+        g.emit();
+        return true;
+      }
+      for (let i = 0; i < discardN; i++) {
+        const idx = player.hand.findIndex((c) => getCardDef(c.cardId)?.cardType === 'energie');
+        if (idx >= 0) {
+          player.discard.push(player.hand.splice(idx, 1)[0]);
+        }
+      }
+    }
+
+    return this.continueBenchReturnAfterEnergyDiscard(playerIndex, knight, eff);
+  }
+
+  continueBenchReturnAfterEnergyDiscard(playerIndex, knight, eff) {
+    const g = this.game;
+    const player = g.state.players[playerIndex];
+    const benchIdx = player.bench.findIndex((k) => k?.instanceId === knight.instanceId);
+    if (benchIdx < 0) return false;
+
     const recoverOptions = player.discard
       .map((c, i) => ({ card: c, discardIdx: i }))
       .filter(({ card }) => {

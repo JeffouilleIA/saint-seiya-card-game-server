@@ -189,6 +189,7 @@ const ACTIVATED_TALENT_EFFECT_TYPES = [
   'bench_can_attack_end_turn',
   'transfer_energy_to_hades_bench',
   'swap_active_with_bench_tag',
+  'swap_active_with_bench_filter',
   'discard_hand_silence_opponent_talent',
   'turn_start_heal_other_friendly',
   'kanon_submarine_sanctuary_once',
@@ -1264,6 +1265,18 @@ export class GameEngine {
     return true;
   }
 
+  /** Retire tous les états spéciaux quand un chevalier quitte l'actif pour le banc. */
+  clearAllKnightSpecialStatuses(knight) {
+    if (!knight?.statuses?.length) return [];
+    const removed = knight.statuses.filter((s) => RULES.status[s]);
+    if (!removed.length) return [];
+    knight.statuses = knight.statuses.filter((s) => !RULES.status[s]);
+    for (const statusId of removed) {
+      this.anim('status', { status: statusId, removed: true });
+    }
+    return removed;
+  }
+
   /** Soigné (PV) : retire Confus (règles officielles). */
   onKnightHealed(knight) {
     if (this.clearKnightConfused(knight)) {
@@ -1272,11 +1285,14 @@ export class GameEngine {
   }
 
   onKnightSentToBench(knight) {
-    if (this.clearKnightPoison(knight)) {
-      this.feedback('Empoisonné : soigné (retour au banc).', 'status');
-    }
-    if (this.clearKnightConfused(knight)) {
-      this.feedback('Confus : soigné (quitte l\'actif).', 'status');
+    const benchFeedback = {
+      poisoned: 'Empoisonné : soigné (retour au banc).',
+      confused: 'Confus : soigné (quitte l\'actif).',
+      paralyzed: 'Paralysé : soigné (retour au banc).',
+      frozen: 'Gelé : soigné (retour au banc).',
+    };
+    for (const statusId of this.clearAllKnightSpecialStatuses(knight)) {
+      this.feedback(benchFeedback[statusId] || `${RULES.status[statusId]?.label || statusId} : soigné (retour au banc).`, 'status');
     }
   }
 
@@ -1926,8 +1942,13 @@ export class GameEngine {
     this.state.pending = null;
     const knight = ft ? resolveFieldKnight(p, { instanceId: ft.knightInstanceId }) : p.active;
     const def = getCardDef(knight?.cardId);
-    const eff = def?.talent?.effects?.find((e) => e.type === 'teleport_once_per_turn');
-    this.effects.continueTeleportAfterEnergyDiscard(playerIndex, knight, def?.talent, eff);
+    if (ft?.effectType === 'bench_return_to_hand') {
+      const eff = def?.talent?.effects?.find((e) => e.type === 'bench_return_to_hand');
+      this.effects.continueBenchReturnAfterEnergyDiscard(playerIndex, knight, eff);
+    } else {
+      const eff = def?.talent?.effects?.find((e) => e.type === 'teleport_once_per_turn');
+      this.effects.continueTeleportAfterEnergyDiscard(playerIndex, knight, def?.talent, eff);
+    }
     this.emit();
     return true;
   }
@@ -2221,6 +2242,8 @@ export class GameEngine {
       pending.type === 'revealOpponentHand' ||
       pending.type === 'pickDamageOpponentKnight' ||
       pending.type === 'pickBenchForDeckEnergy' ||
+      pending.type === 'pickKnightForDiscardEnergyAttach' ||
+      pending.type === 'recoverDiscard' ||
       pending.type === 'distributeDamage' ||
       pending.type === 'discardForAttack' ||
       pending.type === 'pickDisableOpponentAttack'
@@ -3188,6 +3211,10 @@ export class GameEngine {
         if (eff.oncePerTurn && knight.modifiers.talentOnceThisTurn) continue;
         if (!player.bench.includes(knight)) continue;
         if (!this.isKnightEvolutionEligible(playerIndex, knight)) continue;
+        if (eff.discardEnergyFromHand) {
+          const hasEnergy = player.hand.some((c) => getCardDef(c.cardId)?.cardType === 'energie');
+          if (!hasEnergy) continue;
+        }
         return true;
       }
       if (eff.type === 'bench_can_attack_end_turn') {
@@ -3216,6 +3243,20 @@ export class GameEngine {
           (k) => k && tags.some((t) => knightHasTag(getCardDef(k.cardId), t)),
         );
         if (player.active && hasTagBench) return true;
+        continue;
+      }
+      if (eff.type === 'swap_active_with_bench_filter') {
+        if (eff.oncePerTurn && knight.modifiers.talentOnceThisTurn) continue;
+        if (eff.requiresActive && player.active?.instanceId !== knight.instanceId) continue;
+        const hasFilterBench = player.bench.some(
+          (k) =>
+            k &&
+            (!eff.excludeSelf || k.instanceId !== knight.instanceId) &&
+            this.effects.matchesDeckFilter(k.cardId, eff.filter) &&
+            !this.effects.isKnightBenchNoSwap(k, { opponentSwap: false }) &&
+            this.effects.canKnightBecomeActive(k),
+        );
+        if (player.active && hasFilterBench) return true;
         continue;
       }
       if (eff.type === 'discard_hand_silence_opponent_talent') {
@@ -3425,6 +3466,15 @@ export class GameEngine {
     const charonSwap = effects.find((e) => e.type === 'swap_active_with_bench_tag');
     if (charonSwap) {
       return this.effects.resolveSwapActiveWithBenchTag(playerIndex, knight, charonSwap);
+    }
+    const benchFilterSwap = effects.find((e) => e.type === 'swap_active_with_bench_filter');
+    if (benchFilterSwap) {
+      return this.effects.resolveSwapActiveWithBenchFilter(
+        playerIndex,
+        knight,
+        benchFilterSwap,
+        talent,
+      );
     }
     const reparateur = effects.find((e) => e.type === 'turn_start_heal_other_friendly');
     if (reparateur) {
@@ -3788,12 +3838,16 @@ export class GameEngine {
     if (!opt) return false;
     const knight = opt.target === 'active' ? opp.active : opp.bench[opt.target];
     if (!knight || this.effects.isKnightBenchUntargetable(knight)) return false;
-    this.damageKnight(opp, knight, pending.amount || 0, 'attack', playerIndex, null);
-    if (pending.fromTalent) {
-      const pl = this.state.players[pending.fromTalent.playerIndex];
-      const k = resolveFieldKnight(pl, { instanceId: pending.fromTalent.knightInstanceId });
-      if (k) k.talentUsed = true;
+    const fromTalent = pending.fromTalent;
+    const source = fromTalent ? 'talent' : 'attack';
+    let attackerCardId = null;
+    if (fromTalent) {
+      const pl = this.state.players[fromTalent.playerIndex];
+      const sourceKnight = resolveFieldKnight(pl, { instanceId: fromTalent.knightInstanceId });
+      attackerCardId = sourceKnight?.cardId ?? null;
+      if (sourceKnight) sourceKnight.talentUsed = true;
     }
+    this.damageKnight(opp, knight, pending.amount || 0, source, playerIndex, attackerCardId);
     this.state.pending = null;
     this.emit();
     if (this._pendingAttackFinish?.playerIndex === playerIndex) {
@@ -3825,6 +3879,14 @@ export class GameEngine {
     );
     this.state.pending = null;
     this.emit();
+    return ok;
+  }
+
+  resolvePickKnightForDiscardEnergyAttach(playerIndex, instanceId) {
+    const ok = this.effects.resolvePickKnightForDiscardEnergyAttach(playerIndex, instanceId);
+    if (ok && !this.state.pending && this._pendingAttackFinish?.playerIndex === playerIndex) {
+      this._finishDeferredAttackAfterBenchPick();
+    }
     return ok;
   }
 
@@ -3920,7 +3982,7 @@ export class GameEngine {
       knight.talentUsed = true;
     }
     this.state.pending = null;
-    this.feedback('Charon : échange effectué.', 'talent');
+    this.feedback(`${pending.sourceLabel || 'Charon'} : échange effectué.`, 'talent');
     this.emit();
     return true;
   }
@@ -4052,6 +4114,9 @@ export class GameEngine {
     this.state.pending = null;
     this.feedback(`${getCardDef(card.cardId).name} récupéré en main.`, 'attack');
     this.emit();
+    if (this._pendingAttackFinish?.playerIndex === playerIndex) {
+      this._finishDeferredAttackAfterBenchPick();
+    }
     return true;
   }
 
@@ -4066,6 +4131,14 @@ export class GameEngine {
   finishAccelerationEnergieDiscard(playerIndex) {
     void this.effects.finishAccelerationEnergieDiscard(playerIndex);
     return true;
+  }
+
+  resolveMissionGigasPlaceKnight(playerIndex, handIndex) {
+    return this.effects.resolveMissionGigasPlaceKnight(playerIndex, handIndex);
+  }
+
+  finishMissionGigasSkip(playerIndex) {
+    return this.effects.finishMissionGigasSkip(playerIndex);
   }
 
   resolveAccelerationAttach(playerIndex, instanceId) {
@@ -4094,6 +4167,7 @@ export class GameEngine {
       'pickHealAlly',
       'pickBenchForDeckEnergy',
       'pickBenchForEnergyRecover',
+      'pickKnightForDiscardEnergyAttach',
       'pickDamageOpponentKnight',
       'pickRecoverFromDiscard',
       'lookTopDeck',
@@ -4109,6 +4183,7 @@ export class GameEngine {
       'discardEnergyFromHandForTalent',
       'discardForTalent',
       'donDeVie',
+      'missionGigasPlaceKnight',
     ];
     if (!cancellable.includes(pending.type)) return false;
 
@@ -4121,6 +4196,8 @@ export class GameEngine {
         pending.type === 'pickOwnBenchActive' ||
         pending.type === 'pickDamageOpponentKnight' ||
         pending.type === 'pickBenchForDeckEnergy' ||
+        pending.type === 'pickKnightForDiscardEnergyAttach' ||
+        pending.type === 'recoverDiscard' ||
         pending.type === 'distributeDamage');
 
     if (pending.type === 'lookTopDeck') {
@@ -4693,7 +4770,9 @@ export class GameEngine {
       this.state.pending?.type === 'pickOpponentBenchActive' ||
       this.state.pending?.type === 'pickOwnBenchActive' ||
       this.state.pending?.type === 'pickDamageOpponentKnight' ||
-      this.state.pending?.type === 'pickBenchForDeckEnergy'
+      this.state.pending?.type === 'pickBenchForDeckEnergy' ||
+      this.state.pending?.type === 'pickKnightForDiscardEnergyAttach' ||
+      this.state.pending?.type === 'recoverDiscard'
     ) {
       this._pendingAttackFinish = {
         playerIndex,
@@ -4868,6 +4947,8 @@ export class GameEngine {
       'revealOpponentHand',
       'pickDamageOpponentKnight',
       'pickBenchForDeckEnergy',
+      'pickKnightForDiscardEnergyAttach',
+      'recoverDiscard',
       'cerbereBenchBonus',
       'distributeDamage',
       'discardForAttack',
@@ -5643,30 +5724,34 @@ export class GameEngine {
     }
 
     let dmg = amount;
+    const victimOnBench = player.bench.some((k) => k?.instanceId === knight.instanceId);
+    if (!skipMitigation && victimOnBench) {
+      dmg = this.effects.applyBenchDamageReduction(player.index, dmg, { benchOnly: true });
+    }
     if (source === 'attack' && attackerPlayerIndex != null) {
       const def = getCardDef(knight.cardId);
       if (!skipMitigation) {
         const whenAttacked = def?.talent?.effects?.find((e) => e.type === 'when_attacked_coin_flip');
-        if (whenAttacked && !this.effects.isTalentSilenced(knight, player.index)) {
-          const c = await this.awaitFlipCoinWithUI('Armure de cristal — talent défensif');
-          this.feedback(`Armure de cristal — pièce : ${formatCoinFlipResult(c)}`, 'coin');
-          if (c === RULES.coin.heads && whenAttacked.reduceOnHeads) {
-            dmg = Math.max(0, dmg - (whenAttacked.reduceOnHeads || 0));
-            if (whenAttacked.reduceOnHeads) {
-              this.feedback(`−${whenAttacked.reduceOnHeads} dégâts (face).`, 'status');
+        if (
+          whenAttacked &&
+          !this.effects.isTalentSilenced(knight, player.index) &&
+          player.active?.instanceId === knight.instanceId
+        ) {
+          const talentName = def?.talent?.name || 'Talent défensif';
+          const c = await this.awaitFlipCoinWithUI(`${talentName} — talent défensif`);
+          this.feedback(`${talentName} — pièce : ${formatCoinFlipResult(c)}`, 'coin');
+          if (c === RULES.coin.tails && whenAttacked.reduceOnPile) {
+            dmg = Math.max(0, dmg - (whenAttacked.reduceOnPile || 0));
+            this.feedback(`−${whenAttacked.reduceOnPile} dégâts (pile).`, 'status');
+            if (whenAttacked.blockStatusOnPile) {
+              knight.modifiers.blockStatusThisAttack = true;
+              this.feedback('Aucun état spécial infligé (pile).', 'status');
             }
-          } else if (c === RULES.coin.tails && whenAttacked.blockOnTails) {
-            this.feedback('Armure de cristal : attaque bloquée (pile).', 'status');
-            return 0;
           }
         }
-        dmg = this.effects.applyBenchDamageReduction(
-          player.index,
-          dmg,
-          player.bench.some((k) => k?.instanceId === knight.instanceId)
-            ? { benchOnly: true }
-            : { activeOnly: true },
-        );
+        if (!victimOnBench) {
+          dmg = this.effects.applyBenchDamageReduction(player.index, dmg, { activeOnly: true });
+        }
         const gardeEff = def?.talent?.effects?.find(
           (e) => e.type === 'reduce_damage_if_did_not_attack_last_turn',
         );
@@ -5891,30 +5976,34 @@ export class GameEngine {
     }
 
     let dmg = amount;
+    const victimOnBench = player.bench.some((k) => k?.instanceId === knight.instanceId);
+    if (!skipMitigation && victimOnBench) {
+      dmg = this.effects.applyBenchDamageReduction(player.index, dmg, { benchOnly: true });
+    }
     if (source === 'attack' && attackerPlayerIndex != null) {
       const def = getCardDef(knight.cardId);
       if (!skipMitigation) {
         const whenAttacked = def?.talent?.effects?.find((e) => e.type === 'when_attacked_coin_flip');
-        if (whenAttacked && !this.effects.isTalentSilenced(knight, player.index)) {
-          const c = this.flipCoinWithUI('Armure de cristal — talent défensif');
-          this.feedback(`Armure de cristal — pièce : ${formatCoinFlipResult(c)}`, 'coin');
-          if (c === RULES.coin.heads && whenAttacked.reduceOnHeads) {
-            dmg = Math.max(0, dmg - (whenAttacked.reduceOnHeads || 0));
-            if (whenAttacked.reduceOnHeads) {
-              this.feedback(`−${whenAttacked.reduceOnHeads} dégâts (face).`, 'status');
+        if (
+          whenAttacked &&
+          !this.effects.isTalentSilenced(knight, player.index) &&
+          player.active?.instanceId === knight.instanceId
+        ) {
+          const talentName = def?.talent?.name || 'Talent défensif';
+          const c = this.flipCoinWithUI(`${talentName} — talent défensif`);
+          this.feedback(`${talentName} — pièce : ${formatCoinFlipResult(c)}`, 'coin');
+          if (c === RULES.coin.tails && whenAttacked.reduceOnPile) {
+            dmg = Math.max(0, dmg - (whenAttacked.reduceOnPile || 0));
+            this.feedback(`−${whenAttacked.reduceOnPile} dégâts (pile).`, 'status');
+            if (whenAttacked.blockStatusOnPile) {
+              knight.modifiers.blockStatusThisAttack = true;
+              this.feedback('Aucun état spécial infligé (pile).', 'status');
             }
-          } else if (c === RULES.coin.tails && whenAttacked.blockOnTails) {
-            this.feedback('Armure de cristal : attaque bloquée (pile).', 'status');
-            return 0;
           }
         }
-        dmg = this.effects.applyBenchDamageReduction(
-          player.index,
-          dmg,
-          player.bench.some((k) => k?.instanceId === knight.instanceId)
-            ? { benchOnly: true }
-            : { activeOnly: true },
-        );
+        if (!victimOnBench) {
+          dmg = this.effects.applyBenchDamageReduction(player.index, dmg, { activeOnly: true });
+        }
         const gardeEff = def?.talent?.effects?.find(
           (e) => e.type === 'reduce_damage_if_did_not_attack_last_turn',
         );
@@ -6031,10 +6120,18 @@ export class GameEngine {
     const taker = this.state.players[koBy];
     const victimDef = getCardDef(knight.cardId);
     let prizeCount = options.noPrize ? 0 : getPrizeCountForKnockout(victimDef);
-    const victimBonusPrize = this.effects.getBonusPrizeWhenKnockedOut(victimDef);
+    const victimToolBonus = this.effects.getToolBonusPrizeWhenKnockedOut(knight);
+    const victimBonusPrize = this.effects.getBonusPrizeWhenKnockedOut(victimDef, knight);
     if (!options.noPrize && victimBonusPrize > 0) {
       prizeCount += victimBonusPrize;
-      this.feedback(`+${victimBonusPrize} Récompense (talent).`, 'prize');
+      const victimTalentBonus = victimBonusPrize - victimToolBonus;
+      if (victimToolBonus > 0) {
+        const toolName = getCardDef(knight.attachedTool?.cardId)?.name || 'Outil';
+        this.feedback(`${toolName} : +${victimToolBonus} Récompense pour l'adversaire.`, 'prize');
+      }
+      if (victimTalentBonus > 0) {
+        this.feedback(`+${victimTalentBonus} Récompense (talent).`, 'prize');
+      }
     }
     const zelosAdj = this.effects.getZelosCowardPrizeAdjustments(
       player,
@@ -6450,6 +6547,19 @@ export class GameEngine {
         return this.resolveAccelerationAttach(playerIndex, opt.instanceId);
       }
 
+      case 'missionGigasPlaceKnight': {
+        if (pending.playerIndex !== playerIndex) return false;
+        const p = this.state.players[playerIndex];
+        const handIdx = p.hand.findIndex((c) => c.instanceId === pending.knightInstanceId);
+        if (handIdx < 0) return this.finishMissionGigasSkip(playerIndex);
+        void this.effects.aiResolveMissionGigas(
+          playerIndex,
+          pending.knightInstanceId,
+          pending.energyInstanceId,
+        );
+        return true;
+      }
+
       case 'discardForTalent': {
         if (pending.playerIndex !== playerIndex) return false;
         const p = this.state.players[playerIndex];
@@ -6629,9 +6739,13 @@ export class GameEngine {
 
       case 'recoverDiscard': {
         if (pending.playerIndex !== playerIndex) return false;
-        const card = this.state.players[playerIndex].discard[0];
-        if (!card) return this.cancelPending(playerIndex);
-        return this.resolveRecoverDiscard(playerIndex, card.instanceId);
+        const opts = pending.options || [];
+        const pick =
+          opts.find((o) => getCardDef(o.cardId)?.cardType === 'objet') ||
+          opts.find((o) => getCardDef(o.cardId)?.cardType === 'chevalier') ||
+          opts[0];
+        if (!pick) return this.cancelPending(playerIndex);
+        return this.resolveRecoverDiscard(playerIndex, pick.instanceId);
       }
 
       case 'attachEnergyFromHand': {
@@ -6751,6 +6865,23 @@ export class GameEngine {
         }
         if (!best) return this.cancelPending(playerIndex);
         return this.resolvePickBenchForEnergyRecover(playerIndex, best.instanceId);
+      }
+
+      case 'pickKnightForDiscardEnergyAttach': {
+        if (pending.playerIndex !== playerIndex) return false;
+        const p = this.state.players[playerIndex];
+        let best = pending.options?.[0];
+        let bestEnergy = Infinity;
+        for (const opt of pending.options || []) {
+          const knight = this.effects.getKnightByTarget(p, opt.target);
+          const n = knight?.energies?.length ?? 0;
+          if (n < bestEnergy) {
+            bestEnergy = n;
+            best = opt;
+          }
+        }
+        if (!best) return this.cancelPending(playerIndex);
+        return this.resolvePickKnightForDiscardEnergyAttach(playerIndex, best.instanceId);
       }
 
       case 'pickRecoverFromDiscard': {
