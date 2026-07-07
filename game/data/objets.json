@@ -31,7 +31,7 @@
     "name": "Bouclier d'Athena",
     "category": "objet",
     "image": "20260521_233947.jpg",
-    "effectText": "Soignez 60 dégâts et tous les effets spéciaux d'un Chevalier. Défaussez toutes les cartes Énergies.",
+    "effectText": "Soignez 60 dégâts et tous les effets spéciaux d'un Chevalier. Défaussez une carte Énergie.",
     "effects": [
       {
         "type": "heal",
@@ -43,7 +43,8 @@
         "target": "chosen_knight"
       },
       {
-        "type": "discard_all_energy",
+        "type": "discard_energy",
+        "count": 1,
         "target": "chosen_knight"
       }
     ]
@@ -200,7 +201,7 @@
     "name": "Mission de Gigas",
     "category": "objet",
     "image": "20260523_123625.jpg",
-    "effectText": "Cherchez un Chevalier d'Argent et une Énergie dans votre deck. Vous pouvez attacher immédiatement cette énergie au Chevalier d'Argent trouvé.",
+    "effectText": "Cherchez un Chevalier d'Argent et une Énergie dans votre deck. Vous pouvez placer le Chevalier d'Argent sur votre banc et attacher immédiatement l'Énergie trouvée sous lui (cela ne compte pas comme votre Énergie jouable du tour).",
     "effects": [
       {
         "type": "search_deck",
@@ -462,12 +463,12 @@
     "id": "athena-exclamation",
     "name": "Exclamation d'Athéna",
     "category": "supporter",
-    "effectText": "Votre Chevalier d'Or actif et jusqu'à 2 Chevaliers d'Or sur votre banc défaussent 1 Énergie chacun. À la fin de votre tour, infligez 250 dégâts au Chevalier actif adverse.",
+    "effectText": "Votre Chevalier d'Or actif et 2 Chevaliers d'Or distincts sur votre banc défaussent chacun 1 Énergie. À la fin de votre tour, infligez 250 dégâts au Chevalier actif adverse.",
     "effects": [
       {
         "type": "athena_exclamation",
         "endTurnDamage": 250,
-        "maxBenchGold": 2
+        "requiredBenchGold": 2
       }
     ],
     "image": "athena-exclamation.jpg"
@@ -801,7 +802,7 @@
         "hilda_polaris"
       ]
     },
-    "effectText": "Guerrier Divin d'Asgard (sauf Hilda) : +70 PV max, +40 dégâts aux attaques (sauf Corps à Corps). Si ce Chevalier met K.O. un adversaire, prenez 1 Récompense de plus.",
+    "effectText": "Guerrier Divin d'Asgard (sauf Hilda) : +70 PV max, +40 dégâts aux attaques (sauf Corps à Corps). Si ce Chevalier met K.O. un adversaire, prenez 1 Récompense de plus. Si ce Chevalier est mis K.O., l'adversaire prend 1 Récompense de plus (3 au lieu de 2).",
     "passiveEffects": [
       {
         "type": "bonus_max_hp",
@@ -814,6 +815,10 @@
       },
       {
         "type": "bonus_prize_on_knockout",
+        "amount": 1
+      },
+      {
+        "type": "bonus_prize_when_knocked_out",
         "amount": 1
       }
     ],

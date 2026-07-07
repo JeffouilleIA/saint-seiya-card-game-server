@@ -2100,6 +2100,7 @@ export class EffectResolver {
       'renouvellement_main',
       'look_top_pick_one',
       'voluntary_sacrifice_knight',
+      'athena_exclamation',
       'don_de_vie',
       'shuffle_deck',
       'search_deck',
@@ -2893,6 +2894,7 @@ export class EffectResolver {
           break;
         case 'athena_exclamation':
           this.resolveAthenaExclamation(playerIndex, eff);
+          if (g.state.pending) return;
           break;
         case 'survie':
           this.applySunreiProtection(playerIndex, eff);
@@ -3357,30 +3359,160 @@ export class EffectResolver {
     g.emit();
   }
 
-  resolveAthenaExclamation(playerIndex, eff) {
-    const g = this.game;
-    const player = g.state.players[playerIndex];
+  isGoldKnight(knight) {
+    return !!(knight && getCardDef(knight.cardId)?.rawType === 'chevalier-or');
+  }
+
+  listAthenaExclamationBenchGold(player, excludeInstanceIds = []) {
     const targets = [];
-    if (player.active && getCardDef(player.active.cardId)?.rawType === 'chevalier-or') {
-      targets.push(player.active);
-    }
-    let benchGold = 0;
-    for (const k of player.bench) {
+    player.bench.forEach((k, i) => {
       if (
         k &&
-        getCardDef(k.cardId)?.rawType === 'chevalier-or' &&
-        benchGold < (eff.maxBenchGold || 2)
+        this.isGoldKnight(k) &&
+        (k.energies?.length ?? 0) > 0 &&
+        !excludeInstanceIds.includes(k.instanceId)
       ) {
-        targets.push(k);
-        benchGold++;
+        targets.push({ target: i, knight: k });
+      }
+    });
+    return targets;
+  }
+
+  canActivateAthenaExclamation(playerIndex) {
+    const player = this.game.state.players[playerIndex];
+    const active = player.active;
+    if (!this.isGoldKnight(active) || !(active.energies?.length > 0)) return false;
+    return this.listAthenaExclamationBenchGold(player).length >= 2;
+  }
+
+  resolveAthenaExclamation(playerIndex, eff) {
+    const g = this.game;
+    if (!this.canActivateAthenaExclamation(playerIndex)) {
+      g.feedback(
+        "Exclamation d'Athéna : Chevalier d'Or actif + 2 Chevaliers d'Or de banc distincts avec Énergie requis.",
+        'warn',
+      );
+      return;
+    }
+
+    const player = g.state.players[playerIndex];
+    const benchNeeded = eff.requiredBenchGold ?? 2;
+    const endTurnDamage = eff.endTurnDamage || 250;
+    const benchOptions = this.listAthenaExclamationBenchGold(player);
+
+    if (benchOptions.length === benchNeeded || g.isAiControlled(playerIndex)) {
+      const picks = g.isAiControlled(playerIndex)
+        ? benchOptions
+            .slice()
+            .sort((a, b) => (a.knight.energies?.length ?? 0) - (b.knight.energies?.length ?? 0))
+            .slice(0, benchNeeded)
+        : benchOptions.slice(0, benchNeeded);
+      this.finishAthenaExclamation(
+        playerIndex,
+        endTurnDamage,
+        picks.map((p) => p.knight),
+      );
+      return;
+    }
+
+    g.state.pending = {
+      type: 'athenaExclamationPickBench',
+      playerIndex,
+      endTurnDamage,
+      picksNeeded: benchNeeded,
+      picked: [],
+    };
+    g.feedback(
+      `Exclamation d'Athéna : choisissez ${benchNeeded} Chevaliers d'Or de banc distincts (l'actif participe automatiquement).`,
+      'supporter',
+    );
+    g.emit();
+  }
+
+  resolveAthenaExclamationPickBench(playerIndex, instanceId) {
+    const g = this.game;
+    const pending = g.state.pending;
+    if (
+      !pending ||
+      pending.type !== 'athenaExclamationPickBench' ||
+      pending.playerIndex !== playerIndex
+    ) {
+      return false;
+    }
+
+    const player = g.state.players[playerIndex];
+    const pickedIds = (pending.picked || []).map((p) => p.instanceId);
+    if (pickedIds.includes(instanceId) || player.active?.instanceId === instanceId) {
+      g.feedback("Exclamation d'Athéna : ce Chevalier d'Or est déjà sélectionné.", 'warn');
+      return false;
+    }
+
+    const benchOptions = this.listAthenaExclamationBenchGold(player, [
+      player.active?.instanceId,
+      ...pickedIds,
+    ]);
+    const opt = benchOptions.find((o) => o.knight.instanceId === instanceId);
+    if (!opt) {
+      g.feedback("Exclamation d'Athéna : choisissez un Chevalier d'Or de banc avec Énergie.", 'warn');
+      return false;
+    }
+
+    pending.picked = [...(pending.picked || []), { target: opt.target, instanceId: opt.knight.instanceId }];
+
+    if (pending.picked.length < pending.picksNeeded) {
+      const remaining = pending.picksNeeded - pending.picked.length;
+      g.feedback(
+        `Exclamation d'Athéna : choisissez ${remaining} autre(s) Chevalier(s) d'Or de banc.`,
+        'supporter',
+      );
+      g.emit();
+      return true;
+    }
+
+    const benchKnights = pending.picked
+      .map((p) => this.getKnightByTarget(player, p.target))
+      .filter(Boolean);
+    const endTurnDamage = pending.endTurnDamage || 250;
+    g.state.pending = null;
+    this.finishAthenaExclamation(playerIndex, endTurnDamage, benchKnights);
+    g.emit();
+    return true;
+  }
+
+  finishAthenaExclamation(playerIndex, endTurnDamage, benchKnights) {
+    const g = this.game;
+    const player = g.state.players[playerIndex];
+    const active = player.active;
+    const benchNeeded = 2;
+
+    if (!this.isGoldKnight(active) || benchKnights.length < benchNeeded) {
+      g.feedback("Exclamation d'Athéna : configuration invalide.", 'warn');
+      return;
+    }
+
+    const targets = [active, ...benchKnights];
+    const instanceIds = new Set(targets.map((k) => k.instanceId));
+    if (instanceIds.size !== 3) {
+      g.feedback("Exclamation d'Athéna : les 3 Chevaliers d'Or doivent être distincts.", 'warn');
+      return;
+    }
+
+    for (const k of targets) {
+      if (!(k.energies?.length > 0)) {
+        g.feedback(
+          "Exclamation d'Athéna : chaque Chevalier doit avoir une Énergie à défausser.",
+          'warn',
+        );
+        return;
       }
     }
+
     for (const k of targets) {
       this.discardEnergyFromKnight(k, 1, player);
     }
-    player.modifiers.athenaExclamationDamage = eff.endTurnDamage || 250;
+    player.modifiers.athenaExclamationDamage = endTurnDamage;
     g.feedback(
-      `Exclamation d'Athéna : ${targets.length} cible(s), ${eff.endTurnDamage || 250} dégâts en fin de tour (partiel).`,
+      `Exclamation d'Athéna : 3 Chevaliers d'Or défaussent 1 Énergie — ${endTurnDamage} dégâts en fin de tour.`,
       'supporter',
     );
   }

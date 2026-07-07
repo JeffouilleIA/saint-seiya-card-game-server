@@ -170,6 +170,7 @@ export class GameUI {
         'discardHandSilenceOpponentTalent',
         'pickHealAllyNextTurn',
         'cerbereBenchBonus',
+        'athenaExclamationPickBench',
         'destructionOutilDiscard',
         'optionalDiscardNamedCardsForAttack',
         'pickHuitiemeSensTransfer',
@@ -223,6 +224,19 @@ export class GameUI {
       return false;
     }
     return pending.options?.some((o) => o.instanceId === knight.instanceId) ?? false;
+  }
+
+  isAthenaExclamationBenchOption(state, acting, knight) {
+    if (!knight) return false;
+    const pending = state.pending;
+    if (pending?.type !== 'athenaExclamationPickBench' || pending.playerIndex !== acting) {
+      return false;
+    }
+    const player = state.players[acting];
+    if (player.active?.instanceId === knight.instanceId) return false;
+    if (pending.picked?.some((p) => p.instanceId === knight.instanceId)) return false;
+    if (getCardDef(knight.cardId)?.rawType !== 'chevalier-or') return false;
+    return (knight.energies?.length ?? 0) > 0;
   }
 
   isPendingOptionKnight(state, acting, knight, type, phases = null) {
@@ -5812,6 +5826,7 @@ export class GameUI {
       'teleportPickSide',
       'donDeVie',
       'transferEnergyTalent',
+      'athenaExclamationPickBench',
     ];
     if (!cancellable.includes(pending.type)) return false;
     const owner = pending.chooserPlayerIndex ?? pending.playerIndex;
@@ -5894,6 +5909,9 @@ export class GameUI {
     const pickCerbereBench =
       state.pending?.type === 'cerbereBenchBonus' &&
       state.pending.playerIndex === acting;
+    const pickAthenaExclamationBench =
+      state.pending?.type === 'athenaExclamationPickBench' &&
+      state.pending.playerIndex === acting;
     const pickDistributeDamage =
       state.pending?.type === 'distributeDamage' &&
       state.pending.playerIndex === acting;
@@ -5924,6 +5942,8 @@ export class GameUI {
     const sacrificeClickable = (knight) =>
       pickVoluntarySacrifice &&
       this.isPendingOptionKnight(state, acting, knight, 'voluntarySacrificePick');
+    const athenaExclamationBenchClickable = (knight) =>
+      pickAthenaExclamationBench && this.isAthenaExclamationBenchOption(state, acting, knight);
     const huitiemeSensBenchClickable = (knight) =>
       !pickHuitiemeSensTarget ||
       this.isPendingOptionKnight(state, acting, knight, 'pickHuitiemeSensTransfer', ['target']);
@@ -5957,6 +5977,7 @@ export class GameUI {
       (!pickDonDeVie &&
         !pickHealAllyNextTurn &&
         !pickVoluntarySacrifice &&
+        !pickAthenaExclamationBench &&
         !pickHuitiemeSensTarget &&
         !pickKanonSanctuaryTarget &&
         !pickOppOnlyBenchTarget &&
@@ -5998,6 +6019,7 @@ export class GameUI {
         donDeVieClickable(knight) ||
         healNextTurnClickable(knight) ||
         sacrificeClickable(knight) ||
+        athenaExclamationBenchClickable(knight) ||
         (!pickOppBenchPending && !pickOppOnlyBenchTarget),
       state,
       acting,
@@ -6868,6 +6890,24 @@ export class GameUI {
     }
 
     if (
+      state.pending?.type === 'athenaExclamationPickBench' &&
+      state.pending.playerIndex === acting &&
+      fieldData
+    ) {
+      if (this.isAthenaExclamationBenchOption(state, acting, fieldData)) {
+        const ok = this.engine.resolveAthenaExclamationPickBench(acting, fieldData.instanceId);
+        if (ok && !this.engine.state.pending) this.setTargeting(false);
+        else if (ok) this.render(this.engine.state);
+      } else {
+        this.showBanner(
+          "Exclamation d'Athéna : choisissez un Chevalier d'Or de banc distinct avec Énergie.",
+          'warn',
+        );
+      }
+      return;
+    }
+
+    if (
       state.pending?.type === 'pickBenchForDeckEnergy' &&
       state.pending.playerIndex === acting &&
       fieldData
@@ -7529,6 +7569,16 @@ export class GameUI {
       this.setMode(null);
       this.setTargeting(true);
       this.showCerbereBenchModal(p, acting);
+      return;
+    }
+    if (p.type === 'athenaExclamationPickBench' && p.playerIndex === acting) {
+      this.setMode(null);
+      this.setTargeting(true);
+      const remaining = p.picksNeeded - (p.picked?.length ?? 0);
+      this.showBanner(
+        `Exclamation d'Athéna : choisissez ${remaining} Chevalier(s) d'Or de banc (l'actif participe automatiquement).`,
+        'supporter',
+      );
       return;
     }
     if (p.type === 'distributeDamage' && p.playerIndex === acting) {

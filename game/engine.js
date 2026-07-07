@@ -1735,10 +1735,18 @@ export class GameEngine {
     const needsActiveSurvie = def.effects?.some((e) => e.type === 'survie');
     const needsAcceleration = def.effects?.some((e) => e.type === 'acceleration_energie');
     const needsSacrificeTarget = def.effects?.some((e) => e.type === 'voluntary_sacrifice_knight');
+    const needsAthenaExclamation = def.effects?.some((e) => e.type === 'athena_exclamation');
     const skipsKnight = this.effects.supporterSkipsKnightTarget(def);
     if (needsSacrificeTarget && !this.effects.listVoluntarySacrificeOptions(playerIndex).length) {
       this.feedback(
         'Sacrifice : aucun chevalier éligible (Divinités et Chevaliers divins exclus).',
+        'warn',
+      );
+      return false;
+    }
+    if (needsAthenaExclamation && !this.effects.canActivateAthenaExclamation(playerIndex)) {
+      this.feedback(
+        "Exclamation d'Athéna : Chevalier d'Or actif + 2 Chevaliers d'Or de banc distincts avec Énergie requis.",
         'warn',
       );
       return false;
@@ -3808,6 +3816,10 @@ export class GameEngine {
     return true;
   }
 
+  resolveAthenaExclamationPickBench(playerIndex, instanceId) {
+    return this.effects.resolveAthenaExclamationPickBench(playerIndex, instanceId);
+  }
+
   resolvePickBenchForDeckEnergy(playerIndex, instanceId) {
     const pending = this.state.pending;
     if (
@@ -4209,6 +4221,7 @@ export class GameEngine {
       'donDeVie',
       'missionGigasPlaceKnight',
       'transferEnergyTalent',
+      'athenaExclamationPickBench',
     ];
     if (!cancellable.includes(pending.type)) return false;
 
@@ -6918,6 +6931,28 @@ export class GameEngine {
         }
         if (!best) return this.cancelPending(playerIndex);
         return this.resolvePickKnightForDiscardEnergyAttach(playerIndex, best.instanceId);
+      }
+
+      case 'athenaExclamationPickBench': {
+        if (pending.playerIndex !== playerIndex) return false;
+        while (this.state.pending?.type === 'athenaExclamationPickBench') {
+          const p = this.state.players[playerIndex];
+          const cur = this.state.pending;
+          const pickedIds = (cur.picked || []).map((x) => x.instanceId);
+          const options = this.effects.listAthenaExclamationBenchGold(p, [
+            p.active?.instanceId,
+            ...pickedIds,
+          ]);
+          let best = options[0];
+          for (const opt of options) {
+            if ((opt.knight.energies?.length ?? 0) < (best?.knight.energies?.length ?? Infinity)) {
+              best = opt;
+            }
+          }
+          if (!best) break;
+          this.resolveAthenaExclamationPickBench(playerIndex, best.knight.instanceId);
+        }
+        return true;
       }
 
       case 'pickRecoverFromDiscard': {
