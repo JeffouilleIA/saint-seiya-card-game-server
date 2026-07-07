@@ -1746,7 +1746,7 @@ export class GameEngine {
     }
     if (needsAthenaExclamation && !this.effects.canActivateAthenaExclamation(playerIndex)) {
       this.feedback(
-        "Exclamation d'Athéna : Chevalier d'Or actif + 2 Chevaliers d'Or de banc distincts avec Énergie requis.",
+        "Exclamation d'Athéna : 3 Chevaliers d'Or distincts avec Énergie requis (dont 1 sur le banc).",
         'warn',
       );
       return false;
@@ -2572,6 +2572,18 @@ export class GameEngine {
       }
     }
     return best;
+  }
+
+  _aiPickAthenaExclamationOption(playerIndex, pool, pending) {
+    const valid = (pool || []).filter((opt) =>
+      this.effects._athenaExclamationPickWouldStayValid(pending, opt.instanceId, opt),
+    );
+    if (!valid.length) return null;
+    const bench = valid.filter((o) => o.isBench);
+    const needBench = !pending.hasBenchPick && (pending.remaining ?? 1) <= 1;
+    if (needBench && bench.length) return bench[0];
+    if (!pending.hasBenchPick && bench.length) return bench[0];
+    return valid[0];
   }
 
   _aiTryTalent(playerIndex) {
@@ -3816,8 +3828,8 @@ export class GameEngine {
     return true;
   }
 
-  resolveAthenaExclamationPickBench(playerIndex, instanceId) {
-    return this.effects.resolveAthenaExclamationPickBench(playerIndex, instanceId);
+  resolveAthenaExclamationPick(playerIndex, instanceId) {
+    return this.effects.resolveAthenaExclamationPick(playerIndex, instanceId);
   }
 
   resolvePickBenchForDeckEnergy(playerIndex, instanceId) {
@@ -4221,7 +4233,6 @@ export class GameEngine {
       'donDeVie',
       'missionGigasPlaceKnight',
       'transferEnergyTalent',
-      'athenaExclamationPickBench',
     ];
     if (!cancellable.includes(pending.type)) return false;
 
@@ -6933,24 +6944,17 @@ export class GameEngine {
         return this.resolvePickKnightForDiscardEnergyAttach(playerIndex, best.instanceId);
       }
 
-      case 'athenaExclamationPickBench': {
+      case 'athenaExclamationPick': {
         if (pending.playerIndex !== playerIndex) return false;
-        while (this.state.pending?.type === 'athenaExclamationPickBench') {
-          const p = this.state.players[playerIndex];
+        while (this.state.pending?.type === 'athenaExclamationPick') {
           const cur = this.state.pending;
-          const pickedIds = (cur.picked || []).map((x) => x.instanceId);
-          const options = this.effects.listAthenaExclamationBenchGold(p, [
-            p.active?.instanceId,
-            ...pickedIds,
-          ]);
-          let best = options[0];
-          for (const opt of options) {
-            if ((opt.knight.energies?.length ?? 0) < (best?.knight.energies?.length ?? Infinity)) {
-              best = opt;
-            }
-          }
-          if (!best) break;
-          this.resolveAthenaExclamationPickBench(playerIndex, best.knight.instanceId);
+          const pool = (cur.options || []).filter(
+            (o) => !(cur.selected || []).includes(o.instanceId),
+          );
+          if (!pool.length) break;
+          const pick = this._aiPickAthenaExclamationOption(playerIndex, pool, cur);
+          if (!pick) break;
+          this.resolveAthenaExclamationPick(playerIndex, pick.instanceId);
         }
         return true;
       }

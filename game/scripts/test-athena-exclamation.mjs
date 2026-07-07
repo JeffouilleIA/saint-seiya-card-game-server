@@ -1,6 +1,6 @@
 /**
  * Headless test — Exclamation d'Athéna (athena-exclamation)
- * Active gold knight + 2 distinct bench gold knights, each discards 1 energy.
+ * Exactly 3 distinct gold knights, each discards 1 energy, at least 1 on bench.
  */
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -60,14 +60,10 @@ function ok(msg) {
 }
 
 function setupEngine({ ai = false } = {}) {
-  const engine = new GameEngine({ headless: true });
+  const engine = new GameEngine({ headless: true, gameMode: ai ? 'ai-battle' : 'local2p' });
   engine.state.phase = 'main';
   engine.state.turn = 0;
   engine.state.pending = null;
-  if (ai) {
-    engine.gameMode = 'ai-battle';
-    engine.aiDifficulty = 'expert';
-  }
   engine.resetTurnActions();
   return engine;
 }
@@ -84,66 +80,50 @@ function fillThreeGoldWithBench(p0) {
 async function runTest() {
   await loadCards();
 
-  const def = getCardDef('athena-exclamation');
-  if (!def?.effects?.some((e) => e.type === 'athena_exclamation')) {
-    fail('athena-exclamation card missing athena_exclamation effect');
-  } else {
-    ok('card id athena-exclamation found in objets.json');
-  }
-
   const engine = setupEngine();
   const p0 = engine.state.players[0];
   fillThreeGoldWithBench(p0);
 
   if (!engine.effects.canActivateAthenaExclamation(0)) {
-    fail('should be activatable with active gold + 2 bench gold with energy');
+    fail('should be activatable with 3 gold knights including bench');
+  } else {
+    ok('eligibility: 3 gold knights with energy and bench');
   }
-  ok('eligibility: active gold + 2 bench gold with energy');
 
-  const activeEnergyBefore = p0.active.energies.length;
   const played = await engine.playSupporterCard(0, 0, 'active');
-  if (!played) fail('play should succeed with active + 2 bench gold');
-  if (engine.state.pending) {
-    fail(`expected auto-resolve with exactly 2 bench gold, got pending ${engine.state.pending?.type}`);
+  if (!played) fail('play should succeed with 3 gold knights');
+  if (engine.state.pending?.type !== 'athenaExclamationPick') {
+    fail(`expected athenaExclamationPick pending, got ${engine.state.pending?.type ?? 'none'}`);
+  } else {
+    ok('human play opens athenaExclamationPick pending');
   }
+
+  const pending = engine.state.pending;
+  const activeOpt = pending.options.find((o) => o.target === 'active');
+  const bench1 = pending.options.find((o) => o.instanceId === 'gold-bench-1');
+  const bench2 = pending.options.find((o) => o.instanceId === 'gold-bench-2');
+
+  if (!engine.resolveAthenaExclamationPick(0, activeOpt.instanceId)) {
+    fail('first pick (active) should succeed');
+  }
+  if (!engine.resolveAthenaExclamationPick(0, bench1.instanceId)) {
+    fail('second pick (bench) should succeed');
+  }
+  if (engine.resolveAthenaExclamationPick(0, bench1.instanceId)) {
+    fail('duplicate knight pick should be rejected');
+  }
+
+  const beforeEnergy = p0.bench.find((k) => k.instanceId === 'gold-bench-2')?.energies?.length ?? 0;
+  if (!engine.resolveAthenaExclamationPick(0, bench2.instanceId)) {
+    fail('third pick should complete effect');
+  }
+  if (engine.state.pending) fail('pending should clear after 3 picks');
   if (p0.modifiers.athenaExclamationDamage !== 250) {
     fail(`expected 250 end-turn damage, got ${p0.modifiers.athenaExclamationDamage}`);
   }
-  if (p0.active.energies.length !== activeEnergyBefore - 1) {
-    fail('active gold knight should have discarded 1 energy');
-  }
-  ok('auto-resolves when exactly 2 bench gold knights; active always participates');
-
-  const enginePick = setupEngine();
-  const pPick = enginePick.state.players[0];
-  pPick.active = makeKnight('aior-du-lion', 'pick-active');
-  pPick.bench = [
-    makeKnight('milo-du-scorpion', 'pick-bench-1'),
-    makeKnight('shakka', 'pick-bench-2'),
-    makeKnight('saga-des-gemeaux', 'pick-bench-3'),
-  ];
-  pPick.hand = [{ cardId: 'athena-exclamation', instanceId: 'ath-pick' }];
-  await enginePick.playSupporterCard(0, 0, 'active');
-  if (enginePick.state.pending?.type !== 'athenaExclamationPickBench') {
-    fail(`expected athenaExclamationPickBench pending, got ${enginePick.state.pending?.type ?? 'none'}`);
-  } else {
-    ok('opens bench pick when more than 2 eligible bench gold knights');
-  }
-
-  if (!enginePick.resolveAthenaExclamationPickBench(0, 'pick-bench-1')) {
-    fail('first bench pick should succeed');
-  }
-  if (enginePick.resolveAthenaExclamationPickBench(0, 'pick-bench-1')) {
-    fail('duplicate bench knight pick should be rejected');
-  }
-  if (!enginePick.resolveAthenaExclamationPickBench(0, 'pick-bench-2')) {
-    fail('second bench pick should complete effect');
-  }
-  if (enginePick.state.pending) fail('pending should clear after 2 bench picks');
-  if (pPick.modifiers.athenaExclamationDamage !== 250) {
-    fail('bench pick flow should set end-turn damage');
-  }
-  ok('bench pick flow rejects duplicate knights and completes with active + 2 bench');
+  const afterEnergy = p0.bench.find((k) => k.instanceId === 'gold-bench-2')?.energies?.length ?? 0;
+  if (afterEnergy !== beforeEnergy - 1) fail('third knight should have discarded 1 energy');
+  ok('3 distinct picks discard energy and set end-turn damage');
 
   const engine2 = setupEngine();
   const p2 = engine2.state.players[0];
@@ -151,30 +131,46 @@ async function runTest() {
   p2.bench = [makeKnight('milo-du-scorpion', 'g2-bench')];
   p2.hand = [{ cardId: 'athena-exclamation', instanceId: 'ath2' }];
   const blocked = await engine2.playSupporterCard(0, 0, 'active');
-  if (blocked) fail('play should be blocked with only 1 bench gold knight');
-  ok('rejects play with fewer than 2 bench gold knights');
+  if (blocked) fail('play should be blocked with only 2 gold knights');
+  else ok('rejects play with fewer than 3 gold knights');
 
-  const engineBronze = setupEngine();
-  const pBronze = engineBronze.state.players[0];
-  pBronze.active = makeKnight('seiya-de-pegase', 'bronze-active');
-  pBronze.bench = [
-    makeKnight('milo-du-scorpion', 'bronze-b1'),
-    makeKnight('shakka', 'bronze-b2'),
+  const engine3 = setupEngine();
+  const p3 = engine3.state.players[0];
+  p3.active = makeKnight('aior-du-lion', 'g3-a');
+  p3.active.energies = [];
+  p3.bench = [
+    makeKnight('milo-du-scorpion', 'g3-b1', 0),
+    makeKnight('shakka', 'g3-b2', 0),
   ];
-  pBronze.hand = [{ cardId: 'athena-exclamation', instanceId: 'ath-bronze' }];
-  if (engineBronze.effects.canActivateAthenaExclamation(0)) {
-    fail('should reject when active is not gold');
+  if (engine3.effects.canActivateAthenaExclamation(0)) {
+    fail('should reject when fewer than 3 gold knights have energy');
+  } else {
+    ok('rejects when fewer than 3 gold knights have energy');
   }
-  ok('rejects when active is not a gold knight');
+
+  const engineBenchOnly = setupEngine();
+  const pBench = engineBenchOnly.state.players[0];
+  pBench.active = makeKnight('seiya-de-pegase', 'bronze-active');
+  pBench.bench = [
+    makeKnight('milo-du-scorpion', 'bench-only-1'),
+    makeKnight('shakka', 'bench-only-2'),
+    makeKnight('saga-des-gemeaux', 'bench-only-3'),
+  ];
+  if (!engineBenchOnly.effects.canActivateAthenaExclamation(0)) {
+    fail('3 bench gold knights should be enough without active gold');
+  } else {
+    ok('3 bench gold knights valid without active gold knight');
+  }
 
   const engine4 = setupEngine({ ai: true });
   fillThreeGoldWithBench(engine4.state.players[0]);
-  engine4.effects.resolveAthenaExclamation(0, { endTurnDamage: 250, requiredBenchGold: 2 });
-  if (engine4.state.pending) fail('AI should not leave pending with exactly 2 bench gold');
+  engine4.effects.resolveAthenaExclamation(0, { endTurnDamage: 250, requiredKnights: 3 });
+  if (engine4.state.pending) fail('AI should not leave pending');
   if (engine4.state.players[0].modifiers.athenaExclamationDamage !== 250) {
     fail('AI should set end-turn damage');
+  } else {
+    ok('AI resolves without pending');
   }
-  ok('AI resolves without pending');
 
   if (failed) process.exit(1);
   console.log('\nAll Athena Exclamation tests passed.');

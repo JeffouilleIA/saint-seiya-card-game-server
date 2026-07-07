@@ -463,12 +463,12 @@
     "id": "athena-exclamation",
     "name": "Exclamation d'Athéna",
     "category": "supporter",
-    "effectText": "Votre Chevalier d'Or actif et 2 Chevaliers d'Or distincts sur votre banc défaussent chacun 1 Énergie. À la fin de votre tour, infligez 250 dégâts au Chevalier actif adverse.",
+    "effectText": "Choisissez 3 Chevaliers d'Or distincts (dont au moins 1 sur le banc) : chacun défausse 1 Énergie. À la fin de votre tour, infligez 250 dégâts au Chevalier actif adverse.",
     "effects": [
       {
         "type": "athena_exclamation",
         "endTurnDamage": 250,
-        "requiredBenchGold": 2
+        "requiredKnights": 3
       }
     ],
     "image": "athena-exclamation.jpg"
