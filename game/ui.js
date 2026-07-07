@@ -5811,6 +5811,7 @@ export class GameUI {
       'discardHandKnight',
       'teleportPickSide',
       'donDeVie',
+      'transferEnergyTalent',
     ];
     if (!cancellable.includes(pending.type)) return false;
     const owner = pending.chooserPlayerIndex ?? pending.playerIndex;
@@ -7152,6 +7153,7 @@ export class GameUI {
     if (this.tryHumanCerbereBenchPick(index)) return;
     if (this.tryHumanDistributeDamagePick(index)) return;
     if (this.tryHumanPickDamageOpponentKnight(index)) return;
+    if (this.tryHumanPickSilenceOpponentKnight(index)) return;
     if (this.tryHumanPickOpponentBenchActive(index)) return;
     if (this.tryHumanPickOwnBenchActive(index)) return;
     if (this.tryHumanPickBenchForDeckEnergy(index)) return;
@@ -7197,6 +7199,30 @@ export class GameUI {
     const knight = opp.bench[benchIndex];
     if (!knight) return false;
     const ok = this.engine.resolvePickDamageOpponentKnight(acting, knight.instanceId);
+    if (ok) {
+      this.setMode(null);
+      this.setTargeting(false);
+    }
+    return ok;
+  }
+
+  canHumanPickSilenceOpponentKnight(state = this.engine.state) {
+    const pending = state.pending;
+    const acting = this.getActingPlayer(state);
+    return pending?.type === 'pickSilenceOpponentKnight' && pending.playerIndex === acting;
+  }
+
+  tryHumanPickSilenceOpponentKnight(benchIndex) {
+    const state = this.engine.state;
+    if (!this.canHumanPickSilenceOpponentKnight(state)) return false;
+    const acting = this.getActingPlayer(state);
+    const pending = state.pending;
+    const opp = state.players[pending.opponentIndex ?? 1 - acting];
+    const knight = opp.bench[benchIndex];
+    if (!knight) return false;
+    const opt = pending.options?.find((o) => o.instanceId === knight.instanceId);
+    if (!opt) return false;
+    const ok = this.engine.resolvePickSilenceOpponentKnight(acting, knight.instanceId);
     if (ok) {
       this.setMode(null);
       this.setTargeting(false);

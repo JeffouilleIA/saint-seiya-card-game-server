@@ -4208,6 +4208,7 @@ export class GameEngine {
       'discardForTalent',
       'donDeVie',
       'missionGigasPlaceKnight',
+      'transferEnergyTalent',
     ];
     if (!cancellable.includes(pending.type)) return false;
 
