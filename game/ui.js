@@ -132,6 +132,20 @@ export class GameUI {
     return true;
   }
 
+  execEngine(method, ...args) {
+    if (this.relayOnlineAction({ type: 'engineCall', method, args })) return true;
+    const fn = this.engine?.[method];
+    if (typeof fn !== 'function') return undefined;
+    return fn.apply(this.engine, args);
+  }
+
+  async execEngineAsync(method, ...args) {
+    if (this.relayOnlineAction({ type: 'engineCall', method, args })) return true;
+    const fn = this.engine?.[method];
+    if (typeof fn !== 'function') return undefined;
+    return await fn.apply(this.engine, args);
+  }
+
   canOnlineGuestAct(state = this.engine.state) {
     if (!this.isOnline2p() || this.onlineHost) return true;
     const acting = this.getActingPlayer(state);
@@ -474,8 +488,7 @@ export class GameUI {
     this.els.btnEndTurn.addEventListener('click', () => {
       const acting = this.getActingPlayer();
       if (this.engine.state.turn === acting && !this.engine.state.winner) {
-        if (this.relayOnlineAction({ type: 'endTurn' })) return;
-        this.engine.endTurn();
+        this.execEngine('endTurn');
       }
     });
 
@@ -5860,7 +5873,7 @@ export class GameUI {
       return;
     }
 
-    if (this.engine.cancelPending(acting)) {
+    if (this.execEngine('cancelPending', acting)) {
       this.setTargeting(false);
       this.els.overlay.classList.add('hidden');
       this.render(state);
@@ -6427,7 +6440,7 @@ export class GameUI {
 
   onTalentClick(acting, zone, state) {
     if (state.turn !== acting || state.phase !== 'main' || state.pending) return;
-    const ok = this.engine.useTalent(acting, zone);
+    const ok = this.execEngine('useTalent', acting, zone);
     if (!ok) {
       this.showBanner('Talent indisponible.', 'warn');
       return;
@@ -6468,11 +6481,7 @@ export class GameUI {
           this.showBanner('Premier tour : vous ne pouvez pas attaquer.', 'warn');
           return;
         }
-        if (this.relayOnlineAction({ type: 'attack', attackIndex: o.index })) {
-          this.setMode(null);
-          return;
-        }
-        this.engine.attack(acting, o.index);
+        this.execEngine('attack', acting, o.index);
         this.setMode(null);
       });
       bar.appendChild(btn);
@@ -6524,8 +6533,7 @@ export class GameUI {
       state.pending.playerIndex === acting
     ) {
       if (isBaseChevalier(card.cardId)) {
-        if (this.relayOnlineAction({ type: 'chooseActive', benchIndex: index })) return;
-        this.engine.chooseActive(acting, index);
+        this.execEngine('chooseActive', acting, index);
       } else if (isChevalierCard(def)) {
         this.showBanner('Choisissez un chevalier de base comme actif.', 'warn');
       }
@@ -6533,11 +6541,7 @@ export class GameUI {
     }
 
     if (state.pending?.type === 'discardForAttack' && state.pending.playerIndex === acting) {
-      if (this.relayOnlineAction({ type: 'discardForPending', handIndex: index })) {
-        if (!this.engine.state.pending) this.setTargeting(false);
-        return;
-      }
-      this.engine.discardForPending(acting, index);
+      this.execEngine('discardForPending', acting, index);
       if (!this.engine.state.pending) this.setTargeting(false);
       return;
     }
@@ -6546,7 +6550,7 @@ export class GameUI {
       state.pending?.type === 'optionalDiscardNamedCardsForAttack' &&
       state.pending.playerIndex === acting
     ) {
-      const ok = this.engine.discardNamedCardForAttack(acting, index);
+      const ok = this.execEngine('discardNamedCardForAttack', acting, index);
       if (ok) this.render(this.engine.state);
       else this.showBanner('Choisissez un Saphir d\'Odin en main.', 'warn');
       return;
@@ -6554,7 +6558,7 @@ export class GameUI {
 
     if (state.pending?.type === 'accelerationEnergieDiscard' && state.pending.playerIndex === acting) {
       if (isChevalierNoirCard(card.cardId)) {
-        this.engine.resolveAccelerationDiscardFromHand(acting, index);
+        this.execEngine('resolveAccelerationDiscardFromHand', acting, index);
         if (this.engine.state.pending?.type !== 'accelerationEnergieDiscard') {
           this.els.overlay.classList.add('hidden');
         }
@@ -6566,7 +6570,7 @@ export class GameUI {
 
     if (state.pending?.type === 'missionGigasPlaceKnight' && state.pending.playerIndex === acting) {
       if (card.instanceId === state.pending.knightInstanceId) {
-        void this.engine.resolveMissionGigasPlaceKnight(acting, index).then((ok) => {
+        void this.execEngineAsync('resolveMissionGigasPlaceKnight', acting, index).then((ok) => {
           if (!ok) {
             this.showBanner('Impossible de placer ce Chevalier d\'Argent sur le banc.', 'warn');
           } else {
@@ -6583,7 +6587,7 @@ export class GameUI {
     }
 
     if (state.pending?.type === 'discardForTalent' && state.pending.playerIndex === acting) {
-      this.engine.resolveDiscardForTalent(acting, index);
+      this.execEngine('resolveDiscardForTalent', acting, index);
       if (!this.engine.state.pending) this.setTargeting(false);
       return;
     }
@@ -6593,7 +6597,7 @@ export class GameUI {
       state.pending.playerIndex === acting
     ) {
       if (isEnergieCard(def)) {
-        this.engine.resolveDiscardEnergyFromHandForTalent(acting, index);
+        this.execEngine('resolveDiscardEnergyFromHandForTalent', acting, index);
       } else {
         this.showBanner('Défaussez une carte Énergie.', 'warn');
       }
@@ -6604,14 +6608,14 @@ export class GameUI {
     if (state.pending?.type === 'attachEnergyFromHand' && state.pending.playerIndex === acting) {
       const allowed = state.pending.options?.some((o) => o.handIndex === index);
       if (allowed && isEnergieCard(def)) {
-        this.engine.resolveAttachEnergyFromHand(acting, index);
+        this.execEngine('resolveAttachEnergyFromHand', acting, index);
       }
       return;
     }
 
     if (state.pending?.type === 'discardHandKnight' && state.pending.playerIndex === acting) {
       if (isChevalierCard(def)) {
-        const ok = this.engine.resolveDiscardHandKnight(acting, index);
+        const ok = this.execEngine('resolveDiscardHandKnight', acting, index);
         if (ok) this.render(this.engine.state);
       } else {
         this.showBanner('Défaussez un Chevalier de votre main.', 'warn');
@@ -6623,14 +6627,14 @@ export class GameUI {
       state.pending?.type === 'discardHandSilenceOpponentTalent' &&
       state.pending.playerIndex === acting
     ) {
-      const ok = this.engine.resolveDiscardHandSilenceOpponentTalent(acting, index);
+      const ok = this.execEngine('resolveDiscardHandSilenceOpponentTalent', acting, index);
       if (ok) this.setTargeting(false);
       return;
     }
 
     if (state.pending?.type === 'searchDeck' && state.pending.playerIndex === acting) {
       const deckCard = state.pending.options?.find((o) => o.instanceId === card.instanceId);
-      if (deckCard) this.engine.resolveSearchDeck(acting, deckCard.instanceId);
+      if (deckCard) this.execEngine('resolveSearchDeck', acting, deckCard.instanceId);
       return;
     }
 
@@ -6655,7 +6659,7 @@ export class GameUI {
     }
 
     if (def.cardType === 'stade' && this.engine.canPlayStadium(acting)) {
-      const ok = this.engine.playStadium(acting, index);
+      const ok = this.execEngine('playStadium', acting, index);
       if (!ok) {
         this.showBanner(`Impossible de jouer ${def.name} (Stade).`, 'warn');
       } else {
@@ -6677,7 +6681,7 @@ export class GameUI {
     if (def.cardType === 'supporter' && this.engine.canPlaySupporter(acting)) {
       if (def.effects?.some((e) => e.type === 'acceleration_energie')) {
         this.selectedHandIndex = index;
-        void this.engine.playObjet(acting, index, 'active').then((ok) => {
+        void this.execEngineAsync('playObjet', acting, index, 'active').then((ok) => {
           if (!ok) this.showBanner(`Impossible de jouer ${def.name} (Supporter).`, 'warn');
           else this.setMode(null);
           this.setTargeting(false);
@@ -6704,7 +6708,7 @@ export class GameUI {
       const skipsKnight = this.engine.effects.objetSkipsKnightTarget(def);
       if (skipsKnight) {
         this.selectedHandIndex = index;
-        void this.engine.playObjet(acting, index, 'active').then((ok) => {
+        void this.execEngineAsync('playObjet', acting, index, 'active').then((ok) => {
           if (!ok) this.showBanner(`Impossible de jouer ${def.name}.`, 'warn');
           else this.setMode(null);
           this.setTargeting(false);
@@ -6765,11 +6769,7 @@ export class GameUI {
 
     if (isBaseChevalier(card.cardId)) {
       if (this.engine.canPlayChevalier(acting, index)) {
-        if (this.relayOnlineAction({ type: 'playChevalierToBench', handIndex: index })) {
-          this.setMode(null);
-          return;
-        }
-        this.engine.playChevalierToBench(acting, index);
+        this.execEngine('playChevalierToBench', acting, index);
         this.setMode(null);
         return;
       }
@@ -6810,7 +6810,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolveDonDeViePick(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolveDonDeViePick', acting, fieldData.instanceId);
         if (ok && this.engine.state.pending?.type !== 'donDeVie') {
           this.setTargeting(false);
         } else if (ok) {
@@ -6828,7 +6828,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolvePickHuitiemeSensTarget(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolvePickHuitiemeSensTarget', acting, fieldData.instanceId);
         if (ok && !this.engine.state.pending) this.setTargeting(false);
         else if (ok) this.render(this.engine.state);
       }
@@ -6842,7 +6842,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolvePickHealAllyNextTurn(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolvePickHealAllyNextTurn', acting, fieldData.instanceId);
         if (ok) this.setTargeting(false);
       }
       return;
@@ -6855,7 +6855,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolveVoluntarySacrificeKnight(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolveVoluntarySacrificeKnight', acting, fieldData.instanceId);
         if (ok) this.setTargeting(false);
       }
       return;
@@ -6864,7 +6864,7 @@ export class GameUI {
     if (state.pending?.type === 'pickKanonSanctuary' && state.pending.playerIndex === acting) {
       const target = zone === 'active' ? 'active' : typeof zone === 'number' ? zone : null;
       if (target != null && fieldData) {
-        const ok = this.engine.resolvePickKanonSanctuaryTarget(acting, target);
+        const ok = this.execEngine('resolvePickKanonSanctuaryTarget', acting, target);
         if (ok && !this.engine.state.pending) {
           this.setTargeting(false);
         } else if (ok && this.engine.state.pending?.type === 'pickKanonSanctuary') {
@@ -6877,7 +6877,7 @@ export class GameUI {
     if (this.mode === 'attachEnergy' && this.selectedHandIndex != null) {
       const target = zone === 'active' ? 'active' : typeof zone === 'number' ? zone : null;
       if (target != null) {
-        const ok = this.engine.attachEnergy(acting, this.selectedHandIndex, target);
+        const ok = this.execEngine('attachEnergy', acting, this.selectedHandIndex, target);
         if (!ok) this.showBanner('Impossible d\'attacher l\'énergie.', 'warn');
       }
       this.setMode(null);
@@ -6888,7 +6888,7 @@ export class GameUI {
     if (state.pending?.type === 'moveEnergy' && state.pending.playerIndex === acting) {
       const target = zone === 'active' ? 'active' : typeof zone === 'number' ? zone : null;
       if (target != null) {
-        const ok = this.engine.resolveMoveEnergy(acting, target);
+        const ok = this.execEngine('resolveMoveEnergy', acting, target);
         if (!ok) this.showBanner('Impossible de déplacer l\'énergie vers ce chevalier.', 'warn');
         else this.setTargeting(false);
       }
@@ -6898,7 +6898,7 @@ export class GameUI {
     if (state.pending?.type === 'pickHealAlly' && state.pending.playerIndex === acting && fieldData) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolvePickHealAlly(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolvePickHealAlly', acting, fieldData.instanceId);
         if (ok) this.setTargeting(false);
       }
       return;
@@ -6911,7 +6911,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolvePickKnightForDiscardEnergyAttach(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolvePickKnightForDiscardEnergyAttach', acting, fieldData.instanceId);
         if (ok && !this.engine.state.pending) this.setTargeting(false);
       } else {
         this.showBanner('Choisissez un Guerrier Divin d\'Asgard.', 'warn');
@@ -6926,7 +6926,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolveAthenaExclamationPick(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolveAthenaExclamationPick', acting, fieldData.instanceId);
         if (ok && !this.engine.state.pending) this.setTargeting(false);
         else if (ok) this.render(this.engine.state);
       } else {
@@ -6945,7 +6945,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolvePickBenchForDeckEnergy(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolvePickBenchForDeckEnergy', acting, fieldData.instanceId);
         if (ok) this.setTargeting(false);
       }
       return;
@@ -6958,7 +6958,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolvePickBenchForEnergyRecover(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolvePickBenchForEnergyRecover', acting, fieldData.instanceId);
         if (ok) this.setTargeting(false);
       }
       return;
@@ -6969,7 +6969,7 @@ export class GameUI {
       state.pending.playerIndex === acting &&
       fieldData?.attachedTool
     ) {
-      const ok = this.engine.resolveDestructionOutilPick(acting, fieldData.instanceId);
+      const ok = this.execEngine('resolveDestructionOutilPick', acting, fieldData.instanceId);
       if (ok && this.engine.state.pending?.type !== 'destructionOutilDiscard') {
         this.setTargeting(false);
         this.els.overlay.classList.add('hidden');
@@ -6984,7 +6984,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolveCerbereBenchBonusPick(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolveCerbereBenchBonusPick', acting, fieldData.instanceId);
         if (ok && !this.engine.state.pending) this.setTargeting(false);
       }
       return;
@@ -6997,7 +6997,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolveDistributeDamageAssign(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolveDistributeDamageAssign', acting, fieldData.instanceId);
         if (ok && this.engine.state.pending?.type === 'distributeDamage') {
           this.showDistributeDamageModal(this.engine.state.pending, acting);
         } else if (ok) {
@@ -7016,7 +7016,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolvePickDamageOpponentKnight(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolvePickDamageOpponentKnight', acting, fieldData.instanceId);
         if (ok) this.setTargeting(false);
       }
       return;
@@ -7029,7 +7029,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolvePickSilenceOpponentKnight(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolvePickSilenceOpponentKnight', acting, fieldData.instanceId);
         if (ok) this.setTargeting(false);
       }
       return;
@@ -7042,7 +7042,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolveSacrificeBenchForAttack(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolveSacrificeBenchForAttack', acting, fieldData.instanceId);
         if (ok) this.setTargeting(false);
       }
       return;
@@ -7055,7 +7055,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolveCharonSwapBench(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolveCharonSwapBench', acting, fieldData.instanceId);
         if (ok) this.setTargeting(false);
       }
       return;
@@ -7068,14 +7068,14 @@ export class GameUI {
     ) {
       const pending = state.pending;
       if (pending.step === 'from' && fieldData.energies?.length) {
-        const ok = this.engine.resolveTransferEnergyToHadesSource(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolveTransferEnergyToHadesSource', acting, fieldData.instanceId);
         if (!ok) this.showBanner('Pharaon : choisissez un chevalier avec Énergie.', 'warn');
         return;
       }
       if (pending.step === 'to') {
         const opt = pending.hadesOptions?.find((o) => o.instanceId === fieldData.instanceId);
         if (opt) {
-          const ok = this.engine.resolveTransferEnergyToHadesDest(acting, fieldData.instanceId);
+          const ok = this.execEngine('resolveTransferEnergyToHadesDest', acting, fieldData.instanceId);
           if (ok) this.setTargeting(false);
         }
       }
@@ -7085,7 +7085,7 @@ export class GameUI {
     if (state.pending?.type === 'transferEnergyTalent' && state.pending.playerIndex === acting) {
       const target = zone === 'active' ? 'active' : typeof zone === 'number' ? zone : null;
       if (target != null) {
-        const ok = this.engine.resolveTransferEnergyTalentStep(acting, target);
+        const ok = this.execEngine('resolveTransferEnergyTalentStep', acting, target);
         if (!ok) this.showBanner('Transfert impossible.', 'warn');
         else if (!this.engine.state.pending) this.setTargeting(false);
       }
@@ -7095,7 +7095,7 @@ export class GameUI {
     if (state.pending?.type === 'pickMeleeBonusAlly' && state.pending.playerIndex === acting && fieldData) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        const ok = this.engine.resolvePickMeleeBonusAlly(acting, fieldData.instanceId);
+        const ok = this.execEngine('resolvePickMeleeBonusAlly', acting, fieldData.instanceId);
         if (ok) this.setTargeting(false);
       }
       return;
@@ -7108,7 +7108,7 @@ export class GameUI {
     ) {
       const opt = state.pending.options?.find((o) => o.instanceId === fieldData.instanceId);
       if (opt) {
-        this.engine.resolveAccelerationAttach(acting, fieldData.instanceId);
+        this.execEngine('resolveAccelerationAttach', acting, fieldData.instanceId);
         if (!this.engine.state.pending) this.setTargeting(false);
       } else {
         this.showBanner('Guilty : choisissez un Chevalier Noir ou Phénix Méchant.', 'warn');
@@ -7126,7 +7126,7 @@ export class GameUI {
           return;
         }
         const def = getCardDef(p.hand[this.selectedHandIndex]?.cardId);
-        const ok = await this.engine.playTool(acting, this.selectedHandIndex, target);
+        const ok = await this.execEngineAsync('playTool', acting, this.selectedHandIndex, target);
         if (!ok) {
           this.showBanner(`Impossible d'attacher ${def?.name || 'cet outil'}.`, 'warn');
           return;
@@ -7158,7 +7158,7 @@ export class GameUI {
         return;
       }
       if (target != null) {
-        const ok = this.engine.playObjet(acting, this.selectedHandIndex, target);
+        const ok = this.execEngine('playObjet', acting, this.selectedHandIndex, target);
         if (!ok) this.showBanner(`Impossible de jouer ${def?.name || 'cet objet'}.`, 'warn');
         else if (this.engine.state.pending?.type === 'moveEnergy') {
           this.showBanner('Harpe de Pandore : choisissez le chevalier destinataire.');
@@ -7173,7 +7173,7 @@ export class GameUI {
     if (this.mode === 'evolve' && this.selectedHandIndex != null) {
       const target = zone === 'active' ? 'active' : typeof zone === 'number' ? zone : null;
       if (target != null) {
-        const ok = this.engine.evolveCosmo(acting, this.selectedHandIndex, target);
+        const ok = this.execEngine('evolveCosmo', acting, this.selectedHandIndex, target);
         if (!ok) return;
       }
       this.setMode(null);
@@ -7184,7 +7184,7 @@ export class GameUI {
     if (this.mode === 'retreat') {
       if (typeof zone === 'number') {
         const benchIdx = zone;
-        this.engine.retreat(acting, benchIdx);
+        this.execEngine('retreat', acting, benchIdx);
         this.setMode(null);
         this.setTargeting(false);
       }
@@ -7209,8 +7209,7 @@ export class GameUI {
     const acting = this.getActingPlayer(state);
     if (!this.canHumanPromoteActive(state)) return false;
     if (typeof benchIndex !== 'number' || !state.players[acting].bench[benchIndex]) return false;
-    if (this.relayOnlineAction({ type: 'promoteActive', benchIndex })) return true;
-    const ok = this.engine.promoteActive(acting, benchIndex);
+    const ok = this.execEngine('promoteActive', acting, benchIndex);
     if (ok) {
       this.setMode(null);
       this.setTargeting(false);
@@ -7249,7 +7248,7 @@ export class GameUI {
       if (knight) this.showBanner('Guilty : choisissez un Chevalier Noir sur le banc.', 'warn');
       return false;
     }
-    const ok = this.engine.resolveAccelerationDiscardFromBench(acting, benchIndex);
+    const ok = this.execEngine('resolveAccelerationDiscardFromBench', acting, benchIndex);
     if (ok && state.pending?.type !== 'accelerationEnergieDiscard') {
       this.els.overlay.classList.add('hidden');
     }
@@ -7270,7 +7269,7 @@ export class GameUI {
     const opp = state.players[pending.opponentIndex ?? 1 - acting];
     const knight = opp.bench[benchIndex];
     if (!knight) return false;
-    const ok = this.engine.resolvePickDamageOpponentKnight(acting, knight.instanceId);
+    const ok = this.execEngine('resolvePickDamageOpponentKnight', acting, knight.instanceId);
     if (ok) {
       this.setMode(null);
       this.setTargeting(false);
@@ -7294,7 +7293,7 @@ export class GameUI {
     if (!knight) return false;
     const opt = pending.options?.find((o) => o.instanceId === knight.instanceId);
     if (!opt) return false;
-    const ok = this.engine.resolvePickSilenceOpponentKnight(acting, knight.instanceId);
+    const ok = this.execEngine('resolvePickSilenceOpponentKnight', acting, knight.instanceId);
     if (ok) {
       this.setMode(null);
       this.setTargeting(false);
@@ -7316,7 +7315,7 @@ export class GameUI {
       this.showBanner('Sceau d\'Athéna : aucun Outil sur ce slot de banc.', 'warn');
       return false;
     }
-    const ok = this.engine.resolveDestructionOutilPick(acting, knight.instanceId);
+    const ok = this.execEngine('resolveDestructionOutilPick', acting, knight.instanceId);
     if (ok && state.pending?.type !== 'destructionOutilDiscard') {
       this.setMode(null);
       this.setTargeting(false);
@@ -7335,7 +7334,7 @@ export class GameUI {
     const opp = state.players[pending.opponentIndex ?? 1 - acting];
     const knight = opp.bench[benchIndex];
     if (!knight) return false;
-    const ok = this.engine.resolveCerbereBenchBonusPick(acting, knight.instanceId);
+    const ok = this.execEngine('resolveCerbereBenchBonusPick', acting, knight.instanceId);
     if (ok && !this.engine.state.pending) {
       this.setMode(null);
       this.setTargeting(false);
@@ -7352,7 +7351,7 @@ export class GameUI {
     }
     const opt = pending.options?.find((o) => o.target === benchIndex);
     if (!opt) return false;
-    const ok = this.engine.resolveDistributeDamageAssign(acting, opt.instanceId);
+    const ok = this.execEngine('resolveDistributeDamageAssign', acting, opt.instanceId);
     if (ok && this.engine.state.pending?.type === 'distributeDamage') {
       this.showDistributeDamageModal(this.engine.state.pending, acting);
     } else if (ok) {
@@ -7375,7 +7374,7 @@ export class GameUI {
     if (!knight) return false;
     const opt = pending.options?.find((o) => o.instanceId === knight.instanceId);
     if (!opt) return false;
-    const ok = this.engine.resolvePickBenchForDeckEnergy(acting, knight.instanceId);
+    const ok = this.execEngine('resolvePickBenchForDeckEnergy', acting, knight.instanceId);
     if (ok) {
       this.setMode(null);
       this.setTargeting(false);
@@ -7397,7 +7396,7 @@ export class GameUI {
     const acting = this.getActingPlayer(state);
     const pending = state.pending;
     if (!state.players[pending.opponentIndex]?.bench[benchIndex]) return false;
-    const ok = this.engine.pickOpponentBenchActive(acting, benchIndex);
+    const ok = this.execEngine('pickOpponentBenchActive', acting, benchIndex);
     if (ok) {
       this.setMode(null);
       this.setTargeting(false);
@@ -7416,7 +7415,7 @@ export class GameUI {
     if (!this.canHumanPickOwnBench(state)) return false;
     const acting = this.getActingPlayer(state);
     if (!state.players[acting].bench[benchIndex]) return false;
-    const ok = this.engine.pickOwnBenchActive(acting, benchIndex);
+    const ok = this.execEngine('pickOwnBenchActive', acting, benchIndex);
     if (ok) {
       this.setMode(null);
       this.setTargeting(false);
@@ -7769,7 +7768,7 @@ export class GameUI {
     doneBtn.className = 'btn';
     doneBtn.textContent = 'Terminer';
     doneBtn.addEventListener('click', () => {
-      this.engine.finishMissionGigasSkip(playerIndex);
+      this.execEngine('finishMissionGigasSkip', playerIndex);
       this.els.overlay.classList.add('hidden');
       this.render(this.engine.state);
     });
@@ -7791,7 +7790,7 @@ export class GameUI {
     doneBtn.className = 'btn';
     doneBtn.textContent = discarded === 0 ? 'Ne rien défausser' : 'Terminer';
     doneBtn.addEventListener('click', () => {
-      this.engine.finishAccelerationEnergieDiscard(playerIndex);
+      this.execEngine('finishAccelerationEnergieDiscard', playerIndex);
       this.els.overlay.classList.add('hidden');
       this.render(this.engine.state);
     });
@@ -7812,7 +7811,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = name;
       btn.addEventListener('click', () => {
-        this.engine.resolvePickDisableOpponentAttack(playerIndex, name);
+        this.execEngine('resolvePickDisableOpponentAttack', playerIndex, name);
         this.els.overlay.classList.add('hidden');
       });
       actions.appendChild(btn);
@@ -7832,7 +7831,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = `${atk.name} (${atk.sourceName || ''})`;
       btn.addEventListener('click', () => {
-        this.engine.resolvePickCopyBenchAttack(playerIndex, atk.name);
+        this.execEngine('resolvePickCopyBenchAttack', playerIndex, atk.name);
         this.els.overlay.classList.add('hidden');
       });
       actions.appendChild(btn);
@@ -7852,7 +7851,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = `${atk.name} (${atk.sourceName || ''})`;
       btn.addEventListener('click', () => {
-        this.engine.resolvePickCopyOpponentAttack(playerIndex, atk.name);
+        this.execEngine('resolvePickCopyOpponentAttack', playerIndex, atk.name);
         this.els.overlay.classList.add('hidden');
         this.render(this.engine.state);
       });
@@ -7877,7 +7876,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = label;
       btn.addEventListener('click', () => {
-        const ok = this.engine.resolvePickKanonSanctuary(playerIndex, choice);
+        const ok = this.execEngine('resolvePickKanonSanctuary', playerIndex, choice);
         if (ok && this.engine.state.pending?.type === 'pickKanonSanctuary') {
           this.els.overlay.classList.add('hidden');
           this.handlePending(this.engine.state);
@@ -7904,7 +7903,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = def?.name || opt.cardId;
       btn.addEventListener('click', () => {
-        this.engine.resolveAttachEnergyFromDiscard(playerIndex, opt.instanceId);
+        this.execEngine('resolveAttachEnergyFromDiscard', playerIndex, opt.instanceId);
         this.els.overlay.classList.add('hidden');
         this.render(this.engine.state);
       });
@@ -7927,7 +7926,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = String(n);
       btn.addEventListener('click', () => {
-        this.engine.resolveDonDeVieAmount(playerIndex, n);
+        this.execEngine('resolveDonDeVieAmount', playerIndex, n);
         this.els.overlay.classList.add('hidden');
         this.setTargeting(false);
         this.render(this.engine.state);
@@ -7940,7 +7939,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = String(max);
       btn.addEventListener('click', () => {
-        this.engine.resolveDonDeVieAmount(playerIndex, max);
+        this.execEngine('resolveDonDeVieAmount', playerIndex, max);
         this.els.overlay.classList.add('hidden');
         this.setTargeting(false);
         this.render(this.engine.state);
@@ -7963,7 +7962,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = n === 0 ? 'Aucune' : String(n);
       btn.addEventListener('click', () => {
-        this.engine.resolvePickHuitiemeSensCount(playerIndex, n);
+        this.execEngine('resolvePickHuitiemeSensCount', playerIndex, n);
         this.els.overlay.classList.add('hidden');
         const next = this.engine.state.pending;
         if (next?.type === 'pickHuitiemeSensTransfer' && next.phase === 'target') {
@@ -7988,7 +7987,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = animal.label || animal.id;
       btn.addEventListener('click', () => {
-        this.engine.resolvePickIoAnimal(playerIndex, animal.id);
+        this.execEngine('resolvePickIoAnimal', playerIndex, animal.id);
         this.els.overlay.classList.add('hidden');
         this.render(this.engine.state);
       });
@@ -8010,7 +8009,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = labels[status] || status;
       btn.addEventListener('click', () => {
-        this.engine.resolvePickIoBigTornadoStatus(playerIndex, status);
+        this.execEngine('resolvePickIoBigTornadoStatus', playerIndex, status);
         this.els.overlay.classList.add('hidden');
         this.render(this.engine.state);
       });
@@ -8033,7 +8032,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = def?.name || card.cardId;
       btn.addEventListener('click', () => {
-        this.engine.resolveLookTopPickOne(playerIndex, card.instanceId);
+        this.execEngine('resolveLookTopPickOne', playerIndex, card.instanceId);
         this.els.overlay.classList.add('hidden');
         this.render(this.engine.state);
       });
@@ -8054,7 +8053,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = atk.name;
       btn.addEventListener('click', () => {
-        this.engine.resolvePickBenchSelfAttack(playerIndex, atk.index);
+        this.execEngine('resolvePickBenchSelfAttack', playerIndex, atk.index);
         this.els.overlay.classList.add('hidden');
       });
       actions.appendChild(btn);
@@ -8078,7 +8077,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = n === 0 ? 'Aucune' : String(n);
       btn.addEventListener('click', () => {
-        this.engine.resolveOptionalDiscardEnergyForAttack(playerIndex, n);
+        this.execEngine('resolveOptionalDiscardEnergyForAttack', playerIndex, n);
         this.els.overlay.classList.add('hidden');
       });
       actions.appendChild(btn);
@@ -8099,7 +8098,7 @@ export class GameUI {
     doneBtn.className = 'btn';
     doneBtn.textContent = 'Valider et attaquer';
     doneBtn.addEventListener('click', () => {
-      this.engine.resolveOptionalDiscardNamedCardsForAttack(playerIndex);
+      this.execEngine('resolveOptionalDiscardNamedCardsForAttack', playerIndex);
       this.els.overlay.classList.add('hidden');
       this.render(this.engine.state);
     });
@@ -8120,7 +8119,7 @@ export class GameUI {
     doneBtn.className = 'btn';
     doneBtn.textContent = discarded === 0 ? 'Ne rien défausser' : 'Terminer';
     doneBtn.addEventListener('click', () => {
-      this.engine.finishDestructionOutil(playerIndex);
+      this.execEngine('finishDestructionOutil', playerIndex);
       this.els.overlay.classList.add('hidden');
       this.render(this.engine.state);
     });
@@ -8141,7 +8140,7 @@ export class GameUI {
     doneBtn.className = 'btn';
     doneBtn.textContent = 'Terminer';
     doneBtn.addEventListener('click', () => {
-      this.engine.finishCerbereBenchBonus(playerIndex);
+      this.execEngine('finishCerbereBenchBonus', playerIndex);
       this.els.overlay.classList.add('hidden');
       this.render(this.engine.state);
     });
@@ -8165,7 +8164,7 @@ export class GameUI {
     doneBtn.disabled = remaining > 0;
     doneBtn.addEventListener('click', () => {
       if ((this.engine.state.pending?.remaining ?? 0) > 0) return;
-      this.engine.finishDistributeDamage(playerIndex);
+      this.execEngine('finishDistributeDamage', playerIndex);
       this.resetPickOverlay();
       this.els.overlay.classList.add('hidden');
       this.render(this.engine.state);
@@ -8199,7 +8198,7 @@ export class GameUI {
         upBtn.textContent = '↑';
         upBtn.disabled = index === 0;
         upBtn.addEventListener('click', () => {
-          this.engine.moveLookTopDeckCard(playerIndex, index, -1);
+          this.execEngine('moveLookTopDeckCard', playerIndex, index, -1);
           this.showLookTopDeckModal(this.engine.state.pending, playerIndex);
         });
         const downBtn = document.createElement('button');
@@ -8208,7 +8207,7 @@ export class GameUI {
         downBtn.textContent = '↓';
         downBtn.disabled = index === order.length - 1;
         downBtn.addEventListener('click', () => {
-          this.engine.moveLookTopDeckCard(playerIndex, index, 1);
+          this.execEngine('moveLookTopDeckCard', playerIndex, index, 1);
           this.showLookTopDeckModal(this.engine.state.pending, playerIndex);
         });
         row.appendChild(upBtn);
@@ -8223,7 +8222,7 @@ export class GameUI {
     okBtn.className = 'btn';
     okBtn.textContent = 'Remettre sur la pioche';
     okBtn.addEventListener('click', () => {
-      this.engine.confirmLookTopDeck(playerIndex);
+      this.execEngine('confirmLookTopDeck', playerIndex);
       this.els.overlay.classList.add('hidden');
       this.render(this.engine.state);
     });
@@ -8243,7 +8242,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = opt.name || opt.cardId;
       btn.addEventListener('click', () => {
-        this.engine.resolvePickRecoverFromDiscard(playerIndex, opt.instanceId);
+        this.execEngine('resolvePickRecoverFromDiscard', playerIndex, opt.instanceId);
         this.els.overlay.classList.add('hidden');
         this.render(this.engine.state);
       });
@@ -8264,7 +8263,7 @@ export class GameUI {
     ownBtn.textContent = 'Mon banc';
     ownBtn.addEventListener('click', () => {
       this.els.overlay.classList.add('hidden');
-      this.engine.pickTeleportSide(playerIndex, 'own');
+      this.execEngine('pickTeleportSide', playerIndex, 'own');
       this.render(this.engine.state);
     });
     const oppBtn = document.createElement('button');
@@ -8273,7 +8272,7 @@ export class GameUI {
     oppBtn.textContent = 'Banc adverse';
     oppBtn.addEventListener('click', () => {
       this.els.overlay.classList.add('hidden');
-      this.engine.pickTeleportSide(playerIndex, 'opponent');
+      this.execEngine('pickTeleportSide', playerIndex, 'opponent');
       this.render(this.engine.state);
     });
     actions.appendChild(ownBtn);
@@ -8362,7 +8361,7 @@ export class GameUI {
     cancelBtn.className = 'btn btn-cancel';
     cancelBtn.textContent = 'Annuler';
     cancelBtn.addEventListener('click', () => {
-      if (this.engine.cancelPending(playerIndex)) {
+      if (this.execEngine('cancelPending', playerIndex)) {
         this.els.overlay.classList.add('hidden');
         this.setTargeting(false);
         this.render(this.engine.state);
@@ -8388,7 +8387,7 @@ export class GameUI {
       btn.className = 'btn';
       btn.textContent = getCardDef(opt.cardId).name;
       btn.addEventListener('click', () => {
-        this.engine.resolveSearchDeck(playerIndex, opt.instanceId);
+        this.execEngine('resolveSearchDeck', playerIndex, opt.instanceId);
         if (this.engine.state.pending?.type !== 'searchDeck') {
           this.els.overlay.classList.add('hidden');
         }
@@ -8401,7 +8400,7 @@ export class GameUI {
     cancelBtn.className = 'btn btn-cancel';
     cancelBtn.textContent = 'Annuler';
     cancelBtn.addEventListener('click', () => {
-      if (this.engine.cancelPending(playerIndex)) {
+      if (this.execEngine('cancelPending', playerIndex)) {
         this.els.overlay.classList.add('hidden');
         this.setTargeting(false);
       }

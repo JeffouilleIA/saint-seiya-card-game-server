@@ -87,10 +87,16 @@ app.get('/health', (_req, res) => {
     folderCount: deckData.folders.length,
     menuHasDeckFolders: menuHasDeckFolders(),
     gitCommit: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.GIT_COMMIT || null,
+    gitBranch:
+      process.env.RAILWAY_GIT_BRANCH ||
+      process.env.GIT_BRANCH ||
+      process.env.BRANCH ||
+      'chevalier-multi',
     port: PORT,
     railway: IS_RAILWAY,
     socketio: true,
-    multiplayerRooms: getLobbyStats().roomCount,
+    multiplayer: true,
+    multiplayerRooms: getLobbyStats(),
   });
 });
 

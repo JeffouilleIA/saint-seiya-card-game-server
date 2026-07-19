@@ -89,7 +89,7 @@ import {
   loadCombat1000History,
   minDecksRequiredForCombat,
 } from './combat-1000-jours.js';
-import { getMultiplayerClient } from './multiplayer.js';
+import { getMultiplayerClient, readLastRoom } from './multiplayer.js';
 
 const DECK_LIMIT_HINT = `max ${MAX_COPIES_PER_CARD} par carte (énergies illimitées)`;
 /** Clé spéciale de navigation : afficher tous les decks (combat). */
@@ -675,10 +675,27 @@ export class GameMenu {
       this.onlineMsg = 'L’adversaire s’est déconnecté.';
       this.showOnlineHome();
     };
+    this.onlineClient.onRejoined = (payload) => {
+      if (!payload?.start) return;
+      this.onStartOnlineMatch({
+        seat: payload.seat ?? this.onlineClient.seat,
+        start: payload.start,
+        client: this.onlineClient,
+        reconnected: true,
+        state: payload.state ?? null,
+      });
+    };
   }
 
   renderOnlineHome() {
     this.bindOnlineLobbyClient();
+    const lastRoom = readLastRoom();
+    const resumeBlock = lastRoom?.code
+      ? `<div class="online-resume">
+          <p>Session en cours : <strong>${this.escapeHtml(lastRoom.code)}</strong></p>
+          <button type="button" class="btn-menu primary" data-action="reconnect-room" ${this.onlineBusy ? 'disabled' : ''}>Reprendre la partie</button>
+        </div>`
+      : '';
     const msg = this.onlineMsg
       ? `<p class="online-msg" role="status">${this.escapeHtml(this.onlineMsg)}</p>`
       : '<div id="online-msg"></div>';
@@ -689,6 +706,7 @@ export class GameMenu {
         </div>
         <h1 class="menu-title">Jouer en ligne</h1>
         <p class="menu-subtitle">Partie 1v1 sur internet — créez une salle ou rejoignez avec un code</p>
+        ${resumeBlock}
         ${msg}
         <label class="online-field">
           <span>Votre pseudo</span>
@@ -714,7 +732,7 @@ export class GameMenu {
 
     const setBusy = (busy) => {
       this.onlineBusy = busy;
-      for (const btn of this.host.querySelectorAll('[data-action="create-room"], [data-action="join-room"]')) {
+      for (const btn of this.host.querySelectorAll('[data-action="create-room"], [data-action="join-room"], [data-action="reconnect-room"]')) {
         btn.toggleAttribute('disabled', busy);
       }
     };
@@ -761,6 +779,36 @@ export class GameMenu {
         this.showOnlineLobby();
       } catch (err) {
         showMsg(err.message || 'Impossible de rejoindre.', true);
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    this.host.querySelector('[data-action="reconnect-room"]')?.addEventListener('click', async () => {
+      const saved = readLastRoom();
+      if (!saved?.code) {
+        showMsg('Aucune session à reprendre.', true);
+        return;
+      }
+      const name = this.host.querySelector('#online-name')?.value?.trim() || 'Joueur';
+      this.onlinePlayerName = name;
+      setBusy(true);
+      showMsg('Reconnexion…');
+      try {
+        const reply = await this.onlineClient.reconnectRoom(saved.code, name);
+        if (reply.start) {
+          this.onStartOnlineMatch({
+            seat: reply.seat,
+            start: reply.start,
+            client: this.onlineClient,
+            reconnected: true,
+            state: reply.state ?? null,
+          });
+        } else {
+          this.showOnlineLobby();
+        }
+      } catch (err) {
+        showMsg(err.message || 'Reconnexion impossible.', true);
       } finally {
         setBusy(false);
       }

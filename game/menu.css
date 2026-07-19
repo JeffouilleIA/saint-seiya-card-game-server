@@ -2007,6 +2007,16 @@
   font-size: 1rem;
 }
 
+.online-resume {
+  width: min(420px, 100%);
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 215, 120, 0.35);
+  border-radius: 8px;
+  background: rgba(255, 215, 120, 0.08);
+  text-align: center;
+}
+
 .online-wait-host {
   color: var(--text-muted, #a8b4c8);
   font-style: italic;

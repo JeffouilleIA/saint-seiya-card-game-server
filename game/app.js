@@ -859,7 +859,7 @@ function resolveOnlineDeckLists(startPayload) {
   };
 }
 
-function startOnlineMatch(menuHost, gameHost, { seat, start, client }) {
+function startOnlineMatch(menuHost, gameHost, { seat, start, client, reconnected = false, state = null }) {
   const resolved = resolveOnlineDeckLists(start);
   const mode = 'online2p';
   const isHost = seat === 0;
@@ -938,32 +938,46 @@ function startOnlineMatch(menuHost, gameHost, { seat, start, client }) {
   });
   if (isHost) {
     const baseOnStateChange = engine.onStateChange;
-    engine.onStateChange = (state) => {
-      baseOnStateChange(state);
-      client.pushState(state);
+    engine.onStateChange = (nextState) => {
+      baseOnStateChange(nextState);
+      client.pushState(nextState);
     };
     client.onGameAction = ({ seat: fromSeat, action }) => {
-      if (fromSeat !== 1) return;
-      applyRemoteGameAction(engine, action);
+      if (fromSeat !== 1 || !action) return;
+      void applyRemoteGameAction(engine, action);
     };
   } else {
-    client.onGameState = ({ state }) => {
-      if (state) engine.applyRemoteState(state);
+    client.onGameState = ({ state: remoteState }) => {
+      if (remoteState) engine.applyRemoteState(remoteState);
     };
     client.onGameAction = null;
   }
 
+  client.onPlayerDisconnected = ({ name, graceMs }) => {
+    ui.showBanner(`${name || 'Adversaire'} déconnecté — reconnexion possible (${Math.round((graceMs || 0) / 60000)} min).`, 'warn');
+  };
+  client.onPlayerReconnected = ({ name }) => {
+    ui.showBanner(`${name || 'Adversaire'} est de retour.`, 'info');
+  };
   client.onOpponentLeft = () => {
-    window.alert('Votre adversaire s’est déconnecté.');
+    window.alert('Votre adversaire s’est déconnecté définitivement.');
     ui.hideEndGameOverlay?.();
     void client.leaveRoom();
     const shells = tearDownMatch();
     initMenu(shells.menuHost, shells.gameHost);
   };
+  client.onRejoined = (payload) => {
+    if (payload?.state) engine.applyRemoteState(payload.state);
+  };
 
-  if (isHost) {
+  if (reconnected && state) {
+    engine.reset({ deckLists: resolved.deckLists, gameMode: mode });
+    engine.applyRemoteState(state);
+  } else if (isHost) {
     engine.reset({ deckLists: resolved.deckLists, gameMode: mode });
     engine.startGame();
+  } else if (!reconnected) {
+    engine.reset({ deckLists: resolved.deckLists, gameMode: mode });
   }
 
   activeMatch = {
