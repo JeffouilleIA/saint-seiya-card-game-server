@@ -36,6 +36,8 @@ Vérifier : `http://127.0.0.1:3000/health` → `"multiplayer": true`, `"gitBranc
 
 ## Déployer sur Railway (branche `chevalier-multi`)
 
+Checklist détaillée : **[RAILWAY-DEPLOY.md](./RAILWAY-DEPLOY.md)**.
+
 1. Ouvrir le projet **saint-seiya-card-game-server** sur [Railway](https://railway.app).
 2. Service web → **Settings** → **Source** → **Branch** : choisir `chevalier-multi` (au lieu de `main`).
 3. Variables utiles (optionnel) :
