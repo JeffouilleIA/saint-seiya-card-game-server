@@ -8,7 +8,8 @@
     "start": "node server.js",
     "build": "node scripts/sync-game.mjs",
     "sync-game": "node scripts/sync-game.mjs",
-    "test:multiplayer": "node scripts/test-multiplayer-smoke.mjs"
+    "test:online-attach": "node ../Chevalier1/scripts/test-online-attach-energy.mjs",
+    "test:multiplayer": "node scripts/test-multiplayer-smoke.mjs && npm run test:online-attach"
   },
   "engines": {
     "node": ">=18"

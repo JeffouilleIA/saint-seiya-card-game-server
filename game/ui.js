@@ -148,8 +148,9 @@ export class GameUI {
 
   canOnlineGuestAct(state = this.engine.state) {
     if (!this.isOnline2p() || this.onlineHost) return true;
-    const acting = this.getActingPlayer(state);
-    return acting === this.onlineSeat;
+    if (state.winner != null) return false;
+    if (state.turn === this.onlineSeat && state.phase === 'main') return true;
+    return this.canHumanActOnPending(state, this.onlineSeat);
   }
 
   isAttackTestMode() {
@@ -5828,6 +5829,36 @@ export class GameUI {
     document.getElementById('game')?.classList.toggle('targeting-mode', !!on);
   }
 
+  resolveOnlineAttachPending(state, acting = this.getActingPlayer(state)) {
+    const pending = this._onlineAttachPending;
+    if (!pending || !this.isOnline2p() || this.onlineHost) return;
+    const player = state.players[pending.acting];
+    if (!player) {
+      this._onlineAttachPending = null;
+      return;
+    }
+    const knight = pending.target === 'active' ? player.active : player.bench[pending.target];
+    const handCard = player.hand[pending.handIndex];
+    const handUsed =
+      player.hand.length < pending.handLenBefore ||
+      (pending.handInstanceId != null && handCard?.instanceId !== pending.handInstanceId);
+    const attached = (knight?.energies?.length ?? 0) > pending.energyCountBefore;
+    if (attached || handUsed) {
+      this._onlineAttachPending = null;
+      this.setMode(null);
+      this.setTargeting(false);
+      return;
+    }
+    if (Date.now() - pending.t > 2500) {
+      this._onlineAttachPending = null;
+      this.setMode(null);
+      this.setTargeting(false);
+      if (state.turn === acting && state.phase === 'main') {
+        this.showBanner('Impossible d\'attacher l\'énergie.', 'warn');
+      }
+    }
+  }
+
   canCancelSelection(state = this.engine.state) {
     const acting = this.getActingPlayer(state);
     if (this.mode && ['attachEnergy', 'objet', 'supporter', 'tool', 'evolve', 'retreat', 'talent'].includes(this.mode)) {
@@ -6082,6 +6113,7 @@ export class GameUI {
         this.setMode('chooseActive');
       }
     }
+    this.resolveOnlineAttachPending(state, acting);
     this.renderControls(state, acting);
 
     if (state.winner != null && !attackTest) {
@@ -6523,7 +6555,9 @@ export class GameUI {
     }
   }
 
-  onHandClick(index, card, state) {
+  onHandClick(index, card, _state) {
+    const state = this.engine.state;
+    if (!this.canOnlineGuestAct(state)) return;
     const def = getCardDef(card.cardId);
     const acting = this.getActingPlayer(state);
 
@@ -6794,7 +6828,9 @@ export class GameUI {
     const state = this.engine.state;
     const acting = this.getActingPlayer(state);
     if (this.tryHumanPromoteActive(this.benchIndexFromZone(zone))) return;
-    if (
+    if (this.isOnline2p()) {
+      if (!this.canOnlineGuestAct(state) && state.phase !== 'chooseActive') return;
+    } else if (
       state.turn !== acting &&
       state.phase !== 'chooseActive' &&
       !this.canHumanActOnPending(state, acting)
@@ -6877,7 +6913,24 @@ export class GameUI {
     if (this.mode === 'attachEnergy' && this.selectedHandIndex != null) {
       const target = zone === 'active' ? 'active' : typeof zone === 'number' ? zone : null;
       if (target != null) {
-        const ok = this.execEngine('attachEnergy', acting, this.selectedHandIndex, target);
+        const handIndex = this.selectedHandIndex;
+        if (this.isOnline2p() && !this.onlineHost) {
+          const player = state.players[acting];
+          const knight = target === 'active' ? player.active : player.bench[target];
+          const handCard = player.hand[handIndex];
+          this._onlineAttachPending = {
+            acting,
+            handIndex,
+            handInstanceId: handCard?.instanceId ?? null,
+            handLenBefore: player.hand.length,
+            target,
+            energyCountBefore: knight?.energies?.length ?? 0,
+            t: Date.now(),
+          };
+          this.execEngine('attachEnergy', acting, handIndex, target);
+          return;
+        }
+        const ok = this.execEngine('attachEnergy', acting, handIndex, target);
         if (!ok) this.showBanner('Impossible d\'attacher l\'énergie.', 'warn');
       }
       this.setMode(null);

@@ -79,24 +79,41 @@ export const ONLINE_GUEST_METHODS = new Set([
   'pickTeleportSide',
 ]);
 
+const GUEST_SEAT = 1;
+
 function guestPlayerIndex(action) {
-  return action.playerIndex ?? 1;
+  return action.playerIndex ?? GUEST_SEAT;
+}
+
+function guestOwnsPending(engine, guestIndex = GUEST_SEAT) {
+  const pending = engine.state?.pending;
+  if (!pending) return false;
+  const owner = pending.chooserPlayerIndex ?? pending.playerIndex;
+  return owner === guestIndex;
+}
+
+function guestCanRelayEngineCall(engine, args = []) {
+  if (args[0] !== GUEST_SEAT) return false;
+  if (engine.state.turn === GUEST_SEAT && engine.state.phase === 'main' && !engine.state.winner) {
+    return true;
+  }
+  return guestOwnsPending(engine, GUEST_SEAT);
 }
 
 async function invokeGuestMethod(engine, method, args = []) {
   if (!ONLINE_GUEST_METHODS.has(method)) return false;
+  if (!guestCanRelayEngineCall(engine, args)) return false;
   const fn = engine[method];
   if (typeof fn !== 'function') return false;
   const result = fn.apply(engine, args);
-  if (result != null && typeof result.then === 'function') {
-    await result;
-  }
+  const resolved = result != null && typeof result.then === 'function' ? await result : result;
+  if (resolved === false) return false;
   return true;
 }
 
 export async function applyRemoteGameAction(engine, action) {
   if (!engine || !action?.type) return false;
-  if (guestPlayerIndex(action) !== 1) return false;
+  if (guestPlayerIndex(action) !== GUEST_SEAT) return false;
 
   if (action.type === 'engineCall') {
     return invokeGuestMethod(engine, action.method, action.args || []);
@@ -104,45 +121,39 @@ export async function applyRemoteGameAction(engine, action) {
 
   switch (action.type) {
     case 'endTurn':
-      if (engine.state.turn === 1 && !engine.state.pending) {
+      if (engine.state.turn === GUEST_SEAT && !engine.state.pending) {
         await engine.endTurn();
         return true;
       }
       return false;
     case 'playChevalierToBench':
       if (typeof action.handIndex === 'number') {
-        engine.playChevalierToBench(1, action.handIndex);
-        return true;
+        return (await invokeGuestMethod(engine, 'playChevalierToBench', [GUEST_SEAT, action.handIndex])) !== false;
       }
       return false;
     case 'playStadium':
       if (typeof action.handIndex === 'number') {
-        engine.playStadium(1, action.handIndex);
-        return true;
+        return (await invokeGuestMethod(engine, 'playStadium', [GUEST_SEAT, action.handIndex])) !== false;
       }
       return false;
     case 'attack':
       if (typeof action.attackIndex === 'number') {
-        engine.attack(1, action.attackIndex);
-        return true;
+        return (await invokeGuestMethod(engine, 'attack', [GUEST_SEAT, action.attackIndex])) !== false;
       }
       return false;
     case 'chooseActive':
       if (typeof action.benchIndex === 'number') {
-        engine.chooseActive(1, action.benchIndex);
-        return true;
+        return (await invokeGuestMethod(engine, 'chooseActive', [GUEST_SEAT, action.benchIndex])) !== false;
       }
       return false;
     case 'promoteActive':
       if (typeof action.benchIndex === 'number') {
-        engine.promoteActive(1, action.benchIndex);
-        return true;
+        return (await invokeGuestMethod(engine, 'promoteActive', [GUEST_SEAT, action.benchIndex])) !== false;
       }
       return false;
     case 'discardForPending':
       if (typeof action.handIndex === 'number') {
-        engine.discardForPending(1, action.handIndex);
-        return true;
+        return (await invokeGuestMethod(engine, 'discardForPending', [GUEST_SEAT, action.handIndex])) !== false;
       }
       return false;
     default:
