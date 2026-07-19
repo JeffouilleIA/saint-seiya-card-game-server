@@ -11,6 +11,14 @@ function emitAsync(socket, event, data) {
   });
 }
 
+function assertBothReady(room, label) {
+  const players = room?.players || [];
+  const summary = players.map((p) => ({ seat: p.seat, ready: p.ready, deckId: p.deckId }));
+  if (players.length < 2 || !players.every((p) => p.deckId && p.ready)) {
+    throw new Error(`${label}: both players must stay ready — ${JSON.stringify(summary)}`);
+  }
+}
+
 async function main() {
   const health = await fetch(`${URL}/health`).then((r) => r.json());
   if (!health.ok || !health.multiplayer) {
@@ -44,12 +52,17 @@ async function main() {
   });
   if (!joined.ok) throw new Error(`join failed: ${joined.error}`);
 
-  await emitAsync(host, 'mp:update', { deckId: 'deck-1780782458146-lptba', ready: true });
-  await emitAsync(guest, 'mp:update', { deckId: 'deck-1780782458146-lptba', ready: true });
+  const deckId = 'deck-1780782458146-lptba';
+
+  let hostReady = await emitAsync(host, 'mp:update', { deckId, ready: true });
+  let guestReady = await emitAsync(guest, 'mp:update', { deckId, ready: true });
+  assertBothReady(guestReady.room, 'after both ready');
 
   // Simulate lobby re-render auto-sync (deck only, no ready flag).
-  await emitAsync(host, 'mp:update', { deckId: 'deck-1780782458146-lptba' });
-  await emitAsync(guest, 'mp:update', { deckId: 'deck-1780782458146-lptba' });
+  hostReady = await emitAsync(host, 'mp:update', { deckId });
+  assertBothReady(hostReady.room, 'after host deck resync');
+  guestReady = await emitAsync(guest, 'mp:update', { deckId });
+  assertBothReady(guestReady.room, 'after guest deck resync');
 
   const startPromise = new Promise((resolve) => {
     guest.once('mp:start', resolve);

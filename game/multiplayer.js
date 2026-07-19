@@ -229,7 +229,11 @@ export class MultiplayerClient {
 
   async updateSelf({ name, deckId, ready } = {}) {
     if (!this.socket) return { ok: false, error: 'Non connecté.' };
-    const reply = await emitAsync(this.socket, 'mp:update', { name, deckId, ready });
+    const payload = {};
+    if (typeof name === 'string') payload.name = name;
+    if (typeof deckId === 'string') payload.deckId = deckId;
+    if (typeof ready === 'boolean') payload.ready = ready;
+    const reply = await emitAsync(this.socket, 'mp:update', payload);
     if (reply.ok && reply.room) this.room = reply.room;
     return reply;
   }
