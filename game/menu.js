@@ -89,6 +89,7 @@ import {
   loadCombat1000History,
   minDecksRequiredForCombat,
 } from './combat-1000-jours.js';
+import { getMultiplayerClient } from './multiplayer.js';
 
 const DECK_LIMIT_HINT = `max ${MAX_COPIES_PER_CARD} par carte (énergies illimitées)`;
 /** Clé spéciale de navigation : afficher tous les decks (combat). */
@@ -382,7 +383,7 @@ function createBuilderThumb(cardId, { eager = false, onPreview = null } = {}) {
 export class GameMenu {
   /**
    * @param {HTMLElement} host
-   * @param {{ onStartMatch: (opts: { playerDeckId: string, opponentDeckId: string, gameMode: 'ai' | 'local2p', aiDifficulty?: string }) => void, onStartAttackTest: (knightCardId: string) => void, onStartTwelveHouses: (opts: { playerDeckId: string, difficulty: string, prepared?: object }) => void, onInitCombat1000: (run: object) => void, onStartCombat1000Match: () => void }} callbacks
+   * @param {{ onStartMatch: (opts: { playerDeckId: string, opponentDeckId: string, gameMode: 'ai' | 'local2p', aiDifficulty?: string }) => void, onStartAttackTest: (knightCardId: string) => void, onStartTwelveHouses: (opts: { playerDeckId: string, difficulty: string, prepared?: object }) => void, onInitCombat1000: (run: object) => void, onStartCombat1000Match: () => void, onStartOnlineMatch: (opts: { seat: number, start: object, client: import('./multiplayer.js').MultiplayerClient }) => void }} callbacks
    */
   constructor(host, callbacks = {}) {
     this.host = host;
@@ -391,6 +392,7 @@ export class GameMenu {
     this.onStartTwelveHouses = callbacks.onStartTwelveHouses || (() => {});
     this.onInitCombat1000 = callbacks.onInitCombat1000 || (() => {});
     this.onStartCombat1000Match = callbacks.onStartCombat1000Match || (() => {});
+    this.onStartOnlineMatch = callbacks.onStartOnlineMatch || (() => {});
     this.screen = 'main';
     this.builderCards = [];
     this.builderEditingId = null;
@@ -416,6 +418,11 @@ export class GameMenu {
     this.editPickFolderId = null;
     /** @type {string | null} null = liste des dossiers ; ALL_FOLDERS_NAV_KEY = tous les decks */
     this.combatDraftFolderId = null;
+    this.onlineClient = getMultiplayerClient();
+    this.onlineJoinCode = '';
+    this.onlinePlayerName = '';
+    this.onlineMsg = '';
+    this.onlineBusy = false;
   }
 
   showCombat1000Config() {
@@ -452,7 +459,19 @@ export class GameMenu {
       document.removeEventListener('keydown', this._builderPreviewKeyHandler);
       this._builderPreviewKeyHandler = null;
     }
+    this.onlineMsg = '';
     this.screen = 'main';
+    this.render();
+  }
+
+  showOnlineHome() {
+    this.screen = 'online-home';
+    this.onlineMsg = '';
+    this.render();
+  }
+
+  showOnlineLobby() {
+    this.screen = 'online-lobby';
     this.render();
   }
 
@@ -565,6 +584,8 @@ export class GameMenu {
       'combat-1000-config',
       'combat-1000-draft',
       'combat-1000-secret',
+      'online-home',
+      'online-lobby',
     ]);
     if (usesServerDeckStorage() && deckScreens.has(this.screen)) {
       refreshDeckStorage().finally(() => this.renderNow());
@@ -591,6 +612,8 @@ export class GameMenu {
     else if (this.screen === 'combat-1000-secret') this.renderCombat1000SecretPick();
     else if (this.screen === 'combat-1000-vs') this.renderCombat1000Vs();
     else if (this.screen === 'combat-1000-end') this.renderCombat1000End();
+    else if (this.screen === 'online-home') this.renderOnlineHome();
+    else if (this.screen === 'online-lobby') this.renderOnlineLobby();
   }
 
   renderMain() {
@@ -606,6 +629,7 @@ export class GameMenu {
           <button type="button" class="btn-menu primary" data-action="builder">Créer un deck</button>
           <button type="button" class="btn-menu" data-action="edit-pick">Modifier un deck</button>
           <button type="button" class="btn-menu" data-action="start">Lancer une partie</button>
+          <button type="button" class="btn-menu" data-action="online">Jouer en ligne</button>
           <button type="button" class="btn-menu" data-action="ai-battle">IA Battle</button>
           <button type="button" class="btn-menu" data-action="twelve-houses">Les 12 maisons</button>
           <button type="button" class="btn-menu" data-action="combat-1000">Combat des 1000 Jours</button>
@@ -618,6 +642,7 @@ export class GameMenu {
     this.host.querySelector('[data-action="builder"]')?.addEventListener('click', () => this.showBuilder());
     this.host.querySelector('[data-action="edit-pick"]')?.addEventListener('click', () => this.showEditPicker());
     this.host.querySelector('[data-action="start"]')?.addEventListener('click', () => this.showStart());
+    this.host.querySelector('[data-action="online"]')?.addEventListener('click', () => this.showOnlineHome());
     this.host.querySelector('[data-action="ai-battle"]')?.addEventListener('click', () => this.showAiBattlePick());
     this.host.querySelector('[data-action="twelve-houses"]')?.addEventListener('click', () => this.showTwelveHousesDifficulty());
     this.host.querySelector('[data-action="combat-1000"]')?.addEventListener('click', () => this.showCombat1000Config());
@@ -632,6 +657,217 @@ export class GameMenu {
           window.alert(res.error || 'Échec de la publication.');
         }
       });
+    });
+  }
+
+  bindOnlineLobbyClient() {
+    this.onlineClient.onRoomUpdate = (room) => {
+      if (this.screen === 'online-lobby') this.renderOnlineLobby();
+    };
+    this.onlineClient.onGameStart = (start) => {
+      this.onStartOnlineMatch({
+        seat: this.onlineClient.seat,
+        start,
+        client: this.onlineClient,
+      });
+    };
+    this.onlineClient.onOpponentLeft = () => {
+      this.onlineMsg = 'L’adversaire s’est déconnecté.';
+      this.showOnlineHome();
+    };
+  }
+
+  renderOnlineHome() {
+    this.bindOnlineLobbyClient();
+    const msg = this.onlineMsg
+      ? `<p class="online-msg" role="status">${this.escapeHtml(this.onlineMsg)}</p>`
+      : '<div id="online-msg"></div>';
+    this.host.innerHTML = `
+      <div class="menu-screen menu-online-home">
+        <div class="menu-bar">
+          <button type="button" class="btn-back" data-action="back">← Menu principal</button>
+        </div>
+        <h1 class="menu-title">Jouer en ligne</h1>
+        <p class="menu-subtitle">Partie 1v1 sur internet — créez une salle ou rejoignez avec un code</p>
+        ${msg}
+        <label class="online-field">
+          <span>Votre pseudo</span>
+          <input type="text" id="online-name" maxlength="24" placeholder="Joueur" value="${this.escapeAttr(this.onlinePlayerName)}" />
+        </label>
+        <div class="online-actions">
+          <button type="button" class="btn-menu primary" data-action="create-room" ${this.onlineBusy ? 'disabled' : ''}>Créer une salle</button>
+        </div>
+        <fieldset class="online-join">
+          <legend>Rejoindre une salle</legend>
+          <label class="online-field">
+            <span>Code (6 caractères)</span>
+            <input type="text" id="online-code" maxlength="6" autocapitalize="characters" autocomplete="off" placeholder="ABC123" value="${this.escapeAttr(this.onlineJoinCode)}" />
+          </label>
+          <button type="button" class="btn-menu" data-action="join-room" ${this.onlineBusy ? 'disabled' : ''}>Rejoindre</button>
+        </fieldset>
+      </div>
+    `;
+
+    this.host.querySelector('[data-action="back"]')?.addEventListener('click', () => {
+      void this.onlineClient.leaveRoom().finally(() => this.showMain());
+    });
+
+    const setBusy = (busy) => {
+      this.onlineBusy = busy;
+      for (const btn of this.host.querySelectorAll('[data-action="create-room"], [data-action="join-room"]')) {
+        btn.toggleAttribute('disabled', busy);
+      }
+    };
+
+    const showMsg = (text, isError = false) => {
+      this.onlineMsg = text;
+      const el = this.host.querySelector('#online-msg') || this.host.querySelector('.online-msg');
+      if (el) {
+        el.textContent = text;
+        el.classList.toggle('online-msg-error', isError);
+      } else {
+        this.renderOnlineHome();
+      }
+    };
+
+    this.host.querySelector('[data-action="create-room"]')?.addEventListener('click', async () => {
+      const name = this.host.querySelector('#online-name')?.value?.trim() || 'Hôte';
+      this.onlinePlayerName = name;
+      setBusy(true);
+      showMsg('Connexion…');
+      try {
+        await this.onlineClient.createRoom(name);
+        this.showOnlineLobby();
+      } catch (err) {
+        showMsg(err.message || 'Impossible de créer la salle.', true);
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    this.host.querySelector('[data-action="join-room"]')?.addEventListener('click', async () => {
+      const name = this.host.querySelector('#online-name')?.value?.trim() || 'Invité';
+      const code = this.host.querySelector('#online-code')?.value?.trim() || '';
+      this.onlinePlayerName = name;
+      this.onlineJoinCode = code.toUpperCase();
+      if (!code.trim()) {
+        showMsg('Entrez le code de la salle.', true);
+        return;
+      }
+      setBusy(true);
+      showMsg('Connexion…');
+      try {
+        await this.onlineClient.joinRoom(code, name);
+        this.showOnlineLobby();
+      } catch (err) {
+        showMsg(err.message || 'Impossible de rejoindre.', true);
+      } finally {
+        setBusy(false);
+      }
+    });
+  }
+
+  renderOnlineLobby() {
+    this.bindOnlineLobbyClient();
+    const room = this.onlineClient.room;
+    if (!room) {
+      this.showOnlineHome();
+      return;
+    }
+
+    const decks = getAllDeckOptions();
+    const { empty, folderOptionsHtml, optionsHtml } = this.buildDeckSelectOptions(decks);
+    const mySeat = this.onlineClient.seat ?? 0;
+    const me = room.players?.find((p) => p.seat === mySeat) || room.players?.[0];
+    const opp = room.players?.find((p) => p.seat !== mySeat);
+    const isHost = mySeat === 0;
+    const bothConnected = room.players?.every((p) => p.connected);
+    const canStart =
+      isHost &&
+      bothConnected &&
+      room.players?.every((p) => p.deckId && p.ready) &&
+      room.status === 'waiting';
+
+    const playerRows = (room.players || [])
+      .map((p) => {
+        const deckLabel = p.deckId ? (getDeckById(p.deckId)?.name || p.deckId) : '—';
+        return `<li class="online-player ${p.connected ? 'connected' : 'away'}">
+          <span class="online-player-name">${this.escapeHtml(p.name)}${p.seat === 0 ? ' (hôte)' : ''}</span>
+          <span class="online-player-deck">${this.escapeHtml(deckLabel)}</span>
+          <span class="online-player-ready">${p.ready ? 'Prêt' : 'En attente'}</span>
+        </li>`;
+      })
+      .join('');
+
+    this.host.innerHTML = `
+      <div class="menu-screen menu-online-lobby">
+        <div class="menu-bar">
+          <button type="button" class="btn-back" data-action="leave">← Quitter la salle</button>
+        </div>
+        <h1 class="menu-title">Salle ${this.escapeHtml(room.code)}</h1>
+        <p class="menu-subtitle">Partagez ce code avec votre adversaire</p>
+        <div class="online-code-display" aria-label="Code de salle">${this.escapeHtml(room.code)}</div>
+        <ul class="online-players">${playerRows}</ul>
+        ${empty ? this.renderNoDecksHint() : `
+        <div class="online-deck-pick">
+          ${this.renderFolderDeckPickerRow({
+            folderSelectId: 'online-deck-folder',
+            deckSelectId: 'online-deck',
+            folderLabel: 'Dossier',
+            deckLabel: 'Votre deck',
+            folderOptionsHtml,
+            deckOptionsHtml: optionsHtml,
+          })}
+          <label class="online-ready">
+            <input type="checkbox" id="online-ready" ${me?.ready ? 'checked' : ''} ${me?.deckId ? '' : 'disabled'} />
+            Prêt
+          </label>
+        </div>
+        <div class="menu-footer-actions">
+          ${isHost ? `<button type="button" class="btn-menu primary" data-action="start-game" ${canStart ? '' : 'disabled'}>Lancer la partie</button>` : `<p class="online-wait-host">${opp?.connected ? 'En attente de l’hôte…' : 'En attente du 2e joueur…'}</p>`}
+        </div>`}
+      </div>
+    `;
+
+    this.host.querySelector('[data-action="leave"]')?.addEventListener('click', () => {
+      void this.onlineClient.leaveRoom().finally(() => this.showMain());
+    });
+
+    if (empty) {
+      this.bindNoDecksBuilderAction();
+      return;
+    }
+
+    this.bindFolderDeckCascade({
+      folderSelectId: 'online-deck-folder',
+      deckSelectId: 'online-deck',
+      decks,
+      defaultDeckIndex: 0,
+    });
+
+    const deckSelect = this.host.querySelector('#online-deck');
+    if (deckSelect && me?.deckId) deckSelect.value = me.deckId;
+
+    const readyBox = this.host.querySelector('#online-ready');
+    readyBox?.addEventListener('change', () => {
+      const deckId = this.host.querySelector('#online-deck')?.value;
+      if (!deckId) return;
+      void this.onlineClient.updateSelf({ deckId, ready: readyBox.checked });
+    });
+
+    deckSelect?.addEventListener('change', () => {
+      const deckId = deckSelect.value;
+      if (!deckId) return;
+      if (readyBox) readyBox.disabled = false;
+      void this.onlineClient.updateSelf({ deckId, ready: false });
+      if (readyBox) readyBox.checked = false;
+    });
+
+    this.host.querySelector('[data-action="start-game"]')?.addEventListener('click', async () => {
+      const reply = await this.onlineClient.startGame();
+      if (!reply.ok) {
+        window.alert(reply.error || 'Impossible de lancer la partie.');
+      }
     });
   }
 

@@ -17,6 +17,7 @@ import {
   saveCombat1000ToHistory,
   setActiveCombat1000Run,
 } from './combat-1000-jours.js';
+import { applyRemoteGameAction } from './online-actions.js';
 
 const root = document.getElementById('app');
 
@@ -846,6 +847,147 @@ function startAttackTest(menuHost, gameHost, knightCardId) {
   };
 }
 
+function resolveOnlineDeckLists(startPayload) {
+  const deck0 = startPayload.decks.find((d) => d.seat === 0);
+  const deck1 = startPayload.decks.find((d) => d.seat === 1);
+  const entry0 = getDeckById(deck0?.deckId);
+  const entry1 = getDeckById(deck1?.deckId);
+  return {
+    deckIds: [deck0?.deckId, deck1?.deckId],
+    deckLists: [deckEntryToCardList(entry0), deckEntryToCardList(entry1)],
+    names: [deck0?.name || entry0?.name || 'Joueur 1', deck1?.name || entry1?.name || 'Joueur 2'],
+  };
+}
+
+function startOnlineMatch(menuHost, gameHost, { seat, start, client }) {
+  const resolved = resolveOnlineDeckLists(start);
+  const mode = 'online2p';
+  const isHost = seat === 0;
+  const myDeckId = resolved.deckIds[seat];
+  const oppDeckId = resolved.deckIds[1 - seat];
+
+  const hosts = showGameShell();
+  if (!hosts) return;
+  menuHost = hosts.menuHost;
+  gameHost = hosts.gameHost;
+  gameHost.innerHTML = '';
+
+  const engine = new GameEngine({ gameMode: mode, aiDifficulty: 'moyen' });
+  engine.onlineRole = isHost ? 'host' : 'guest';
+
+  function attachMatchStatsTracker() {
+    engine.matchStats = createMatchStatsTracker({
+      gameMode: 'local2p',
+      deckIds: [resolved.deckIds[0], resolved.deckIds[1]],
+    });
+  }
+  attachMatchStatsTracker();
+
+  function flushMatchStats(winner) {
+    const snapshots = engine.matchStats?.finalize(engine.state.turnCount || 0) || [];
+    recordDeckMatchFromGame({
+      deckId: resolved.deckIds[0],
+      deckName: getDeckById(resolved.deckIds[0])?.name || resolved.names[0],
+      outcome: winner === 0 ? 'win' : 'loss',
+      match: snapshots[0],
+      opponentDeckId: resolved.deckIds[1],
+      opponentDeckName: getDeckById(resolved.deckIds[1])?.name || resolved.names[1],
+      gameMode: 'local2p',
+    });
+    recordDeckMatchFromGame({
+      deckId: resolved.deckIds[1],
+      deckName: getDeckById(resolved.deckIds[1])?.name || resolved.names[1],
+      outcome: winner === 1 ? 'win' : 'loss',
+      match: snapshots[1],
+      opponentDeckId: resolved.deckIds[0],
+      opponentDeckName: getDeckById(resolved.deckIds[0])?.name || resolved.names[0],
+      gameMode: 'local2p',
+    });
+  }
+
+  const ui = new GameUI(gameHost, engine, gameAudio, {
+    gameMode: mode,
+    onlineSeat: seat,
+    onlineHost: isHost,
+    onlineRelay: (action) => {
+      client.sendAction({ ...action, playerIndex: seat });
+    },
+    housesProgress: {
+      progress: `En ligne · ${start.code}`,
+      opponentName: resolved.names[1 - seat],
+    },
+    onMatchEnd: ({ winner }) => {
+      flushMatchStats(winner);
+    },
+    onReplay: () => {
+      if (!isHost) {
+        window.alert('Seul l’hôte peut relancer la partie.');
+        return;
+      }
+      ui.hideEndGameOverlay();
+      engine.reset({ deckLists: resolved.deckLists, gameMode: mode });
+      attachMatchStatsTracker();
+      engine.startGame();
+    },
+    onMainMenu: () => {
+      ui.hideEndGameOverlay();
+      void client.leaveRoom();
+      const shells = tearDownMatch();
+      initMenu(shells.menuHost, shells.gameHost);
+    },
+  });
+  if (isHost) {
+    const baseOnStateChange = engine.onStateChange;
+    engine.onStateChange = (state) => {
+      baseOnStateChange(state);
+      client.pushState(state);
+    };
+    client.onGameAction = ({ seat: fromSeat, action }) => {
+      if (fromSeat !== 1) return;
+      applyRemoteGameAction(engine, action);
+    };
+  } else {
+    client.onGameState = ({ state }) => {
+      if (state) engine.applyRemoteState(state);
+    };
+    client.onGameAction = null;
+  }
+
+  client.onOpponentLeft = () => {
+    window.alert('Votre adversaire s’est déconnecté.');
+    ui.hideEndGameOverlay?.();
+    void client.leaveRoom();
+    const shells = tearDownMatch();
+    initMenu(shells.menuHost, shells.gameHost);
+  };
+
+  if (isHost) {
+    engine.reset({ deckLists: resolved.deckLists, gameMode: mode });
+    engine.startGame();
+  }
+
+  activeMatch = {
+    engine,
+    ui,
+    lastMatch: {
+      playerDeckId: myDeckId,
+      opponentDeckId: oppDeckId,
+      gameMode: mode,
+    },
+  };
+
+  window.chevalierGame = {
+    engine,
+    ui,
+    audio: gameAudio,
+    lastMatch: activeMatch.lastMatch,
+    mode: 'online',
+    roomCode: start.code,
+    seat,
+    isHost,
+  };
+}
+
 function initMenu(menuHost, gameHost, { showMain = true } = {}) {
   const menu = new GameMenu(menuHost, {
     onStartMatch: ({ playerDeckId, opponentDeckId, gameMode, aiDifficulty }) => {
@@ -865,6 +1007,10 @@ function initMenu(menuHost, gameHost, { showMain = true } = {}) {
     onStartCombat1000Match: () => {
       const hosts = getShellHosts() || { menuHost, gameHost };
       startCombat1000FromVsScreen(hosts.menuHost, hosts.gameHost);
+    },
+    onStartOnlineMatch: ({ seat, start, client }) => {
+      const hosts = getShellHosts() || { menuHost, gameHost };
+      startOnlineMatch(hosts.menuHost, hosts.gameHost, { seat, start, client });
     },
   });
   if (showMain) menu.showMain();

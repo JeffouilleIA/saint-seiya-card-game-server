@@ -1898,3 +1898,116 @@
   color: var(--gold);
   font-weight: 700;
 }
+
+.menu-online-home,
+.menu-online-lobby {
+  align-items: center;
+}
+
+.online-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: min(360px, 100%);
+  margin-bottom: 1rem;
+}
+
+.online-field span {
+  font-size: 0.9rem;
+  color: var(--text-muted, #a8b4c8);
+}
+
+.online-field input {
+  padding: 0.65rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  background: #121820;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.online-actions,
+.online-join {
+  width: min(360px, 100%);
+  margin-bottom: 1.25rem;
+}
+
+.online-join {
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.online-msg {
+  width: min(360px, 100%);
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(201, 162, 39, 0.12);
+  border: 1px solid rgba(201, 162, 39, 0.35);
+}
+
+.online-msg-error {
+  background: rgba(180, 60, 60, 0.15);
+  border-color: rgba(220, 80, 80, 0.45);
+}
+
+.online-code-display {
+  font-family: Cinzel, serif;
+  font-size: 2rem;
+  letter-spacing: 0.35em;
+  padding: 0.75rem 1.25rem;
+  border: 2px solid var(--gold);
+  border-radius: 10px;
+  margin: 1rem 0 1.5rem;
+  color: var(--gold);
+}
+
+.online-players {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+  width: min(420px, 100%);
+}
+
+.online-player {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--card-border);
+  font-size: 0.95rem;
+}
+
+.online-player.connected .online-player-name::before {
+  content: '● ';
+  color: #5ecf7a;
+}
+
+.online-player.away .online-player-name::before {
+  content: '○ ';
+  color: #888;
+}
+
+.online-player-ready {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.online-deck-pick {
+  width: min(420px, 100%);
+  margin-bottom: 1rem;
+}
+
+.online-ready {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  font-size: 1rem;
+}
+
+.online-wait-host {
+  color: var(--text-muted, #a8b4c8);
+  font-style: italic;
+}

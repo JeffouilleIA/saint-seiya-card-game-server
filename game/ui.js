@@ -59,6 +59,9 @@ export class GameUI {
     this.onMatchEnd = matchCallbacks.onMatchEnd || null;
     this.formatEndGame = matchCallbacks.formatEndGame || null;
     this.gameMode = matchCallbacks.gameMode || engine.gameMode || 'ai';
+    this.onlineSeat = matchCallbacks.onlineSeat ?? 0;
+    this.onlineHost = matchCallbacks.onlineHost ?? true;
+    this.onlineRelay = matchCallbacks.onlineRelay || null;
     this.selectedHandIndex = null;
     this.mode = null;
     this.bannerTimer = null;
@@ -114,11 +117,35 @@ export class GameUI {
     return mode === 'local2p' || mode === 'combat-1000-jours';
   }
 
+  isOnline2p() {
+    const mode = this.gameMode || this.engine?.gameMode;
+    return mode === 'online2p';
+  }
+
+  isSharedHuman2p() {
+    return this.isLocal2p() || this.isOnline2p();
+  }
+
+  relayOnlineAction(action) {
+    if (!this.isOnline2p() || this.onlineHost) return false;
+    this.onlineRelay?.(action);
+    return true;
+  }
+
+  canOnlineGuestAct(state = this.engine.state) {
+    if (!this.isOnline2p() || this.onlineHost) return true;
+    const acting = this.getActingPlayer(state);
+    return acting === this.onlineSeat;
+  }
+
   isAttackTestMode() {
     return this.gameMode === 'attack-test' || this.engine.isAttackTestMode;
   }
 
   getViewSeat(state = this.engine.state) {
+    if (this.isOnline2p()) {
+      return this.onlineSeat ?? 0;
+    }
     if (!this.isLocal2p()) return 0;
     const pending = state.pending;
     const pendingOwner = pending?.chooserPlayerIndex ?? pending?.playerIndex;
@@ -447,6 +474,7 @@ export class GameUI {
     this.els.btnEndTurn.addEventListener('click', () => {
       const acting = this.getActingPlayer();
       if (this.engine.state.turn === acting && !this.engine.state.winner) {
+        if (this.relayOnlineAction({ type: 'endTurn' })) return;
         this.engine.endTurn();
       }
     });
@@ -6440,6 +6468,10 @@ export class GameUI {
           this.showBanner('Premier tour : vous ne pouvez pas attaquer.', 'warn');
           return;
         }
+        if (this.relayOnlineAction({ type: 'attack', attackIndex: o.index })) {
+          this.setMode(null);
+          return;
+        }
         this.engine.attack(acting, o.index);
         this.setMode(null);
       });
@@ -6492,6 +6524,7 @@ export class GameUI {
       state.pending.playerIndex === acting
     ) {
       if (isBaseChevalier(card.cardId)) {
+        if (this.relayOnlineAction({ type: 'chooseActive', benchIndex: index })) return;
         this.engine.chooseActive(acting, index);
       } else if (isChevalierCard(def)) {
         this.showBanner('Choisissez un chevalier de base comme actif.', 'warn');
@@ -6500,6 +6533,10 @@ export class GameUI {
     }
 
     if (state.pending?.type === 'discardForAttack' && state.pending.playerIndex === acting) {
+      if (this.relayOnlineAction({ type: 'discardForPending', handIndex: index })) {
+        if (!this.engine.state.pending) this.setTargeting(false);
+        return;
+      }
       this.engine.discardForPending(acting, index);
       if (!this.engine.state.pending) this.setTargeting(false);
       return;
@@ -6728,6 +6765,10 @@ export class GameUI {
 
     if (isBaseChevalier(card.cardId)) {
       if (this.engine.canPlayChevalier(acting, index)) {
+        if (this.relayOnlineAction({ type: 'playChevalierToBench', handIndex: index })) {
+          this.setMode(null);
+          return;
+        }
         this.engine.playChevalierToBench(acting, index);
         this.setMode(null);
         return;
@@ -7168,6 +7209,7 @@ export class GameUI {
     const acting = this.getActingPlayer(state);
     if (!this.canHumanPromoteActive(state)) return false;
     if (typeof benchIndex !== 'number' || !state.players[acting].bench[benchIndex]) return false;
+    if (this.relayOnlineAction({ type: 'promoteActive', benchIndex })) return true;
     const ok = this.engine.promoteActive(acting, benchIndex);
     if (ok) {
       this.setMode(null);

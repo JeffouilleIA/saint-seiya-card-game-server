@@ -11,6 +11,7 @@ import path from 'path';
 import os from 'os';
 import { Server as SocketServer } from 'socket.io';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { attachMultiplayerLobby, getLobbyStats } from './lobby.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3000;
@@ -70,9 +71,7 @@ const io = new SocketServer(httpServer, {
   pingTimeout: 20000,
 });
 
-io.on('connection', (socket) => {
-  socket.on('disconnect', () => {});
-});
+attachMultiplayerLobby(io);
 
 function sendJson(res, status, body) {
   res.status(status).set('Cache-Control', 'no-store').json(body);
@@ -91,6 +90,7 @@ app.get('/health', (_req, res) => {
     port: PORT,
     railway: IS_RAILWAY,
     socketio: true,
+    multiplayerRooms: getLobbyStats().roomCount,
   });
 });
 

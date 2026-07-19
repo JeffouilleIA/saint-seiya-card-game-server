@@ -218,6 +218,7 @@ export class GameEngine {
 
   static normalizeGameMode(value) {
     if (value === 'local2p') return 'local2p';
+    if (value === 'online2p') return 'online2p';
     if (value === 'attack-test') return 'attack-test';
     if (value === 'ai-battle') return 'ai-battle';
     return 'ai';
@@ -251,6 +252,10 @@ export class GameEngine {
 
   get isAttackTestMode() {
     return this.gameMode === 'attack-test';
+  }
+
+  get isOnlineMode() {
+    return this.gameMode === 'online2p';
   }
 
   /** Joueur contrôlé par l'IA (adversaire solo ou les deux en IA battle). */
@@ -413,6 +418,14 @@ export class GameEngine {
 
   emit() {
     this.onStateChange(structuredClone(this.state));
+  }
+
+  /** Invité en ligne : remplace l'état depuis l'hôte sans relancer la partie. */
+  applyRemoteState(nextState) {
+    if (!nextState) return false;
+    this.state = structuredClone(nextState);
+    this.onStateChange(structuredClone(this.state));
+    return true;
   }
 
   feedback(msg, type = 'info') {
@@ -1060,7 +1073,7 @@ export class GameEngine {
     this.anim('turnStartBanner', { playerIndex });
     await this.pause(RULES.ui?.turnStartBannerMs ?? 1600);
 
-    if (this.gameMode === 'local2p') {
+    if (this.gameMode === 'local2p' || this.gameMode === 'online2p') {
       await this.awaitLocal2pPerspectiveBeforeDraw();
     }
 
@@ -5523,7 +5536,7 @@ export class GameEngine {
   shouldAutoEndTurnFor(playerIndex) {
     if (this.isAttackTestMode) return false;
     if (this.state.winner || this.state.phase !== 'main') return false;
-    if (this.gameMode === 'local2p') return playerIndex === this.state.turn;
+    if (this.gameMode === 'local2p' || this.gameMode === 'online2p') return playerIndex === this.state.turn;
     return this.aiEnabled && playerIndex === 0;
   }
 
