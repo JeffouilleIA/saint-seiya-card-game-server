@@ -164,6 +164,7 @@
         "name": "Vent du Nord",
         "cost": 3,
         "damage": 70,
+        "effectText": "Lancez une pièce. Pile : le chevalier adverse est gelé. Face : le chevalier adverse est paralysé.",
         "effects": [
           {
             "type": "coin_flip"
@@ -171,12 +172,12 @@
           {
             "type": "status_on_heads",
             "target": "opponent_active",
-            "status": "frozen"
+            "status": "paralyzed"
           },
           {
             "type": "status_on_tails",
             "target": "opponent_active",
-            "status": "paralyzed"
+            "status": "frozen"
           }
         ]
       }
@@ -334,12 +335,12 @@
     "retreat": 3,
     "talent": {
       "name": "Un frère protecteur",
-      "effect": "Si ce chevalier a 40 PV ou moins et que Bud est sur votre banc, vous pouvez échanger ces deux chevaliers et transférer les cartes énergie vers Bud.",
+      "effect": "Si ce chevalier a 50 PV ou moins et que Bud est sur votre banc, vous pouvez échanger ces deux chevaliers et transférer les cartes énergie vers Bud.",
       "effects": [
         {
           "type": "swap_with_card_id",
           "cardId": "bud_alcor",
-          "hpThreshold": 40,
+          "hpThreshold": 50,
           "transferEnergyTo": "bud_alcor"
         }
       ]
@@ -348,7 +349,7 @@
       {
         "name": "Griffes du Tigre Viking",
         "cost": 2,
-        "damage": 20,
+        "damage": 0,
         "effectText": "Fait 20 dégâts par carte énergie attachée. Le chevalier adverse est gelé.",
         "effects": [
           {
@@ -398,12 +399,14 @@
     "retreat": 3,
     "talent": {
       "name": "Attaque dans l'ombre",
-      "effect": "Si ce chevalier est sur votre banc et qu'il a au moins 2 cartes énergie, les dégâts infligés par votre chevalier actif au chevalier actif adverse augmentent de 20.",
+      "effect": "Si ce chevalier est sur votre banc et qu'il a au moins 1 carte énergie, les dégâts infligés par votre chevalier actif au chevalier actif adverse augmentent de 20. Si Syd de Mizar est votre chevalier actif, ce bonus passe à 30.",
       "effects": [
         {
           "type": "bench_bonus_active_attack_damage",
-          "minEnergy": 2,
-          "amount": 20
+          "minEnergy": 1,
+          "amount": 20,
+          "brotherCardId": "syd_mizar",
+          "brotherBonusAmount": 30
         }
       ]
     },
@@ -428,52 +431,6 @@
     "name": "Siegfried de Dubhe",
     "stage": "base",
     "evolvesFrom": null,
-    "hp": 100,
-    "type": "guerrier-divin-asgard",
-    "knightType": "GuerrierDivinAsgard",
-    "rewardCards": 2,
-    "tags": [
-      "GuerrierDivinAsgard"
-    ],
-    "retreat": 3,
-    "talent": {
-      "name": "Armure de cristal",
-      "effect": "Lorsque ce Chevalier subit une attaque, lancez une pièce. Face : les dégâts sont réduits de 60. Pile : bloquez les dégâts de cette attaque.",
-      "effects": [
-        {
-          "type": "when_attacked_coin_flip",
-          "reduceOnHeads": 60,
-          "blockOnTails": true
-        }
-      ]
-    },
-    "attacks": [
-      {
-        "name": "Corps à corps",
-        "cost": 1,
-        "damage": 20,
-        "effects": []
-      },
-      {
-        "name": "Dragon de glace",
-        "cost": 2,
-        "damage": 50,
-        "effects": []
-      },
-      {
-        "name": "Souffle du dragon",
-        "cost": 3,
-        "damage": 80,
-        "effects": []
-      }
-    ],
-    "image": "siegfried_dubhe.jpg"
-  },
-  {
-    "id": "hilda_polaris",
-    "name": "Hilda de Polaris",
-    "stage": "base",
-    "evolvesFrom": null,
     "hp": 90,
     "type": "guerrier-divin-asgard",
     "knightType": "GuerrierDivinAsgard",
@@ -483,7 +440,67 @@
     ],
     "retreat": 3,
     "talent": {
-      "name": "Appel des guerriers",
+      "name": "Le héros invincible",
+      "effect": "Lorsque ce chevalier est actif et subit une attaque, lancez une pièce. Pile : les dégâts sont réduits de 60 et aucun nouvel état spécial n'est appliqué. Face : le talent ne fait rien.",
+      "effects": [
+        {
+          "type": "when_attacked_coin_flip",
+          "reduceOnPile": 60,
+          "blockStatusOnPile": true
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 20,
+        "effects": []
+      },
+      {
+        "name": "L'Épée d'Odin",
+        "cost": 1,
+        "damage": 40,
+        "effectText": "Défaussez une carte énergie.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "count": 1,
+            "target": "self"
+          }
+        ]
+      },
+      {
+        "name": "Les flammes du dragon",
+        "cost": 3,
+        "damage": 100,
+        "effectText": "Défaussez une carte énergie.",
+        "effects": [
+          {
+            "type": "discard_energy",
+            "count": 1,
+            "target": "self"
+          }
+        ]
+      }
+    ],
+    "image": "siegfried_dubhe.jpg"
+  },
+  {
+    "id": "hilda_polaris",
+    "name": "Hilda de Polaris",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 80,
+    "type": "guerrier-divin-asgard",
+    "knightType": "GuerrierDivinAsgard",
+    "rewardCards": 2,
+    "tags": [
+      "GuerrierDivinAsgard"
+    ],
+    "retreat": 3,
+    "talent": {
+      "name": "Le réveil des Guerriers Divins",
       "effect": "Une fois par tour, cherchez un Guerrier Divin d'Asgard dans votre deck et ajoutez-le à votre main.",
       "effects": [
         {
@@ -498,25 +515,30 @@
     },
     "attacks": [
       {
-        "name": "Corps à corps",
+        "name": "Rayon de l'anneau",
         "cost": 1,
-        "damage": 20,
-        "effects": []
-      },
-      {
-        "name": "Lance nordique",
-        "cost": 2,
         "damage": 40,
-        "effects": []
-      },
-      {
-        "name": "Bénédiction d'Odin",
-        "cost": 3,
-        "damage": 60,
-        "effectText": "Récupérez une Énergie de votre défausse et attachez-la à ce Chevalier, ou attachez un Outil de votre défausse sous ce Chevalier.",
+        "effectText": "Récupérez une Énergie de votre défausse et attachez-la à un Guerrier Divin d'Asgard.",
         "effects": [
           {
-            "type": "recover_energy_discard_attach"
+            "type": "recover_energy_discard_attach_knight",
+            "knightFilter": {
+              "knightType": "GuerrierDivinAsgard"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Boule d'énergie",
+        "cost": 3,
+        "damage": 60,
+        "effectText": "Récupérez un Objet de votre défausse dans votre main.",
+        "effects": [
+          {
+            "type": "recover_from_discard",
+            "filter": {
+              "cardType": "objet"
+            }
           }
         ]
       }

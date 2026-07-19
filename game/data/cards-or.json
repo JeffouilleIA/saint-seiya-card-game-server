@@ -1165,10 +1165,11 @@
     "image": "20260530_233443.jpg",
     "talent": {
       "name": "Frère jumeau",
-      "effect": "Lorsque ce chevalier entre en jeu, infligez 60 dégâts à un chevalier adverse. Une fois par tour, si ce chevalier est sur votre banc, soignez 10 dégâts à un chevalier de votre banc (non annulable).",
+      "effect": "Lorsque ce chevalier entre en jeu, il subit 60 dégâts. Une fois par tour, si ce chevalier est sur votre banc, soignez 10 dégâts à un chevalier de votre banc (non annulable).",
       "effects": [
         {
           "type": "on_play_damage",
+          "target": "self",
           "damage": 60
         },
         {
@@ -1322,11 +1323,12 @@
     "image": "20260530_233507.jpg",
     "talent": {
       "name": "Retour au Sanctuaire",
-      "effect": "Une fois par tour, si ce chevalier est sur votre banc depuis le début de votre tour, renvoyez-le en main (défaussez ses Énergies et Outils), récupérez 1 Outil ou Objet de votre défausse en main. Vous ne pouvez pas le remettre en jeu ce tour.",
+      "effect": "Une fois par tour, si ce chevalier est sur votre banc depuis le début de votre tour, défaussez une Énergie de votre main, renvoyez-le en main (défaussez ses Énergies et Outils), récupérez 1 Outil ou Objet de votre défausse en main. Vous ne pouvez pas le remettre en jeu ce tour.",
       "effects": [
         {
           "type": "bench_return_to_hand",
-          "oncePerTurn": true
+          "oncePerTurn": true,
+          "discardEnergyFromHand": 1
         }
       ]
     },

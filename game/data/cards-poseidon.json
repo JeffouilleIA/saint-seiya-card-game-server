@@ -82,11 +82,11 @@
           "name": "Colère du Dieu des Mers",
           "cost": 4,
           "damage": 60,
-          "effectText": "Cette attaque inflige 10 dégâts supplémentaires pour chaque marqueur de dégâts sur le chevalier actif adverse.",
+          "effectText": "Cette attaque inflige 10 dégâts supplémentaires pour chaque marqueur de dégâts sur ce chevalier.",
           "effects": [
             {
               "type": "bonus_damage_per_damage_marker",
-              "target": "opponent_active",
+              "target": "self",
               "amountPerMarker": 10
             }
           ]

@@ -1,0 +1,156 @@
+{
+  "marine-aigle": {
+    "Corps à corps": "melee-kick",
+    "Météores de l'Aigle": "eagle-meteors",
+    "Griffes de l'Aigle": "eagle-claws"
+  },
+  "jamian-du-corbeau": {
+    "Le vol des corbeaux": "crow-swarm",
+    "Les Plumes Noires": "crow-feathers"
+  },
+  "dante-du-cerbere": {
+    "Corps à corps": "melee-punch",
+    "Chaînes mortelles": "chains-bind",
+    "Boulets de l'enfer": "hell-weights"
+  },
+  "arachne-de-la-tarentule": {
+    "La toile de la tarentule": "spider-web-drain",
+    "La toile mortelle": "spider-web-cage"
+  },
+  "babel-du-centaure": {
+    "Corps à corps": "melee-flame",
+    "Boules de Feu": "fire-balls",
+    "Tourbillon de Flamme": "fire-tornado"
+  },
+  "tremy-de-la-fleche": {
+    "Corps à corps": "melee-light",
+    "La flèche fantôme": "arrow-ghost",
+    "Les 100 flèches fantômes": "arrow-rain"
+  },
+  "moises-de-la-baleine": {
+    "Corps à corps": "melee-heavy",
+    "Typhon": "whale-typhoon",
+    "Écrasement": "whale-crush"
+  },
+  "agora-du-lotus": {
+    "Les 1000 poings de Shiva": "lotus-fists",
+    "Révolution du Lotus": "lotus-spin",
+    "Explosion du Lotus": "lotus-blast"
+  },
+  "shina-du-cobra": {
+    "Les griffes du tonnerre": "cobra-claws",
+    "La morsure du Cobra": "cobra-bite"
+  },
+  "misty-du-lezard": {
+    "Corps à corps": "lizard-dodge",
+    "Tourbillon du Lézard": "lizard-whirl"
+  },
+  "asterion-des-chiens-de-chasse": {
+    "Télépathie": "telepathy",
+    "Corps multiples": "clones"
+  },
+  "orphee-de-la-lyre": {
+    "Notes fatales": "music-notes",
+    "Symphonie Nocturne": "music-beam",
+    "Mélodie mortelle": "music-wave"
+  },
+  "argol-de-persee": {
+    "Bouclier de la Meduse": "medusa-shield"
+  },
+  "hakurai": {
+    "Collecte d'information": "scroll-draw",
+    "Cycle des Âmes de Praesepe": "soul-cycle"
+  },
+  "capela-du-cocher": {
+    "Disques tranchants": "disk-slash",
+    "Disques multiples": "disk-multi"
+  },
+  "kiki": {
+    "Pierres volantes": "stones",
+    "Kiki va chercher !": "magic-search"
+  },
+  "aldebaran_taureau": {
+    "Corne du Taureau": "aldebaran-great-horn"
+  },
+  "bronze_ichi": {
+    "Combo griffes": "ichi-combo-griffe"
+  },
+  "ikki-du-phenix": {
+    "Battement d'ailes": "phoenix-hoyoku-tensho"
+  },
+  "ikki-phenix-mechant": {
+    "Battement d’aile du Phénix": "phoenix-hoyoku-tensho"
+  },
+  "ikki-cosmo-ardent": {
+    "Le ph nix qui vole": "phoenix-hoyoku-tensho"
+  },
+  "seiya-de-pegase": {
+    "Corps   corps": "melee-light",
+    "M t ores de P gase": "pegasus-meteors"
+  },
+  "shiryu-du-dragon": {
+    "Corps   corps": "melee-light",
+    "Col re du dragon": "dragon-wrath"
+  },
+  "shiryu-cosmo-ardent": {
+    "Corps   corps": "melee-light",
+    "La fureur du dragon": "dragon-wrath"
+  },
+  "_fxTiming": {
+    "medusa-shield": {
+      "revealSec": 2.5,
+      "eyeFlashStartSec": 1.85,
+      "eyeFlashSec": 0.65,
+      "whiteFlashStartSec": 2.1,
+      "whiteFlashSec": 0.35,
+      "totalSec": 2.55,
+      "imagePath": "sons/BouclierMeduse.jpg"
+    },
+    "pegasus-meteors": {
+      "count": 42,
+      "ballPx": 36,
+      "flashPhaseSec": 3,
+      "meteorStartSec": 3,
+      "centerBias": 2.6,
+      "staggerSec": 0.0603,
+      "fallSec": 0.08,
+      "burstDelaySec": 0.268,
+      "burstSec": 0.509,
+      "veilSec": 1.273,
+      "sparksPerHit": 5
+    },
+    "aldebaran-great-horn": {
+      "durationMs": 7000,
+      "glowMs": 4000,
+      "chargeMs": 1700,
+      "videoStartSec": 3,
+      "videoFadeMs": 1000,
+      "chargeImpactRatio": 0.72,
+      "impactAtMs": 5224
+    },
+    "ichi-combo-griffe": {
+      "durationMs": 10070,
+      "videoPath": "./sons/KataCobra.mp4",
+      "videoStartSec": 0,
+      "videoOpacity": 0.35,
+      "videoVolume": 0.35,
+      "videoFadeInMs": 350,
+      "videoFadeOutMs": 700,
+      "impactAtMs": 7250
+    },
+    "phoenix-hoyoku-tensho": {
+      "durationMs": 14500,
+      "concentrationMs": 5000,
+      "stormMs": 8000,
+      "videoPath": "./assets/audio/attacks/BattementDailes.mp4",
+      "videoStartDelayMs": 0,
+      "videoInitialInvisibleMs": 0,
+      "videoFadeInMs": 4200,
+      "videoFadeOutAdvanceMs": 3000,
+      "particleCount": 260,
+      "particleTravelMs": 720,
+      "burstMs": 8000,
+      "fadeOutMs": 1500
+    }
+  }
+}

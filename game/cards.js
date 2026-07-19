@@ -361,6 +361,9 @@ function describeAttackEffects(effects) {
         parts.push(STATUS_LABELS[eff.status] || eff.status);
         break;
       case 'status_on_heads':
+        parts.push(`Face : ${STATUS_LABELS[eff.status] || eff.status}`);
+        break;
+      case 'status_on_tails':
         parts.push(`Pile : ${STATUS_LABELS[eff.status] || eff.status}`);
         break;
       case 'coin_flip':
@@ -500,7 +503,9 @@ function describeAttackEffects(effects) {
         break;
       case 'bonus_damage_per_damage_marker':
         parts.push(
-          `+${eff.amountPerMarker || 10} dégâts par marqueur de dégât sur le Chevalier actif adverse`,
+          eff.target === 'self' || eff.target === 'attacker'
+            ? `+${eff.amountPerMarker || 10} dégâts par marqueur de dégât sur ce chevalier`
+            : `+${eff.amountPerMarker || 10} dégâts par marqueur de dégât sur le Chevalier actif adverse`,
         );
         break;
       case 'bonus_damage_per_heads':
@@ -576,6 +581,11 @@ function describeAttackEffects(effects) {
           `Au prochain tour adverse, si ce chevalier est attaqué : pile −${eff.reduceOnPile ?? 40} dégâts, face annule et ${eff.counterDamage || 30} dégâts à l'actif adverse`,
         );
         break;
+      case 'when_attacked_coin_flip':
+        parts.push(
+          `Si actif et attaqué : pile −${eff.reduceOnPile ?? 60} dégâts${eff.blockStatusOnPile ? ', aucun état spécial' : ''} ; face : rien`,
+        );
+        break;
       case 'attack_blocked_unless_discard_energy':
         parts.push(
           `Au prochain tour adverse, l'actif doit défausser ${eff.energyCost || 2} Énergies pour attaquer`,
@@ -585,7 +595,11 @@ function describeAttackEffects(effects) {
         parts.push('Retournez face visible toutes vos Récompenses');
         break;
       case 'recover_from_discard':
-        parts.push('Récupère un chevalier de la défausse');
+        if (eff.filter?.cardType === 'objet') {
+          parts.push('Récupère un Objet de la défausse en main');
+        } else {
+          parts.push('Récupère un chevalier de la défausse');
+        }
         break;
       case 'destruction_outil':
         parts.push(`Défaussez jusqu'à ${eff.maxCibles ?? 2} Outil(s) en jeu`);
@@ -636,6 +650,16 @@ function describeAttackEffects(effects) {
         break;
       case 'recover_energy_from_discard':
         parts.push('Récupère 1 Énergie de la défausse');
+        break;
+      case 'recover_energy_discard_attach':
+        parts.push('Récupère une Énergie de la défausse et l\'attache à ce Chevalier');
+        break;
+      case 'recover_energy_discard_attach_knight':
+        parts.push(
+          eff.knightFilter?.knightType === 'GuerrierDivinAsgard'
+            ? 'Récupère une Énergie de la défausse et l\'attache à un Guerrier Divin d\'Asgard'
+            : 'Récupère une Énergie de la défausse et l\'attache à un chevalier allié',
+        );
         break;
       case 'distribute_damage_opponent_bench':
         parts.push(`Répartit ${eff.totalDamage || 30} dégâts sur le banc adverse`);
@@ -766,6 +790,13 @@ function describeTalent(talent) {
   if (talent.effects?.some((e) => e.type === 'on_play_swap_with_active')) {
     return talent.effect || 'Lorsque vous posez cette carte sur le banc, échangez-la avec votre actif.';
   }
+  if (talent.effects?.some((e) => e.type === 'when_attacked_coin_flip')) {
+    const w = talent.effects.find((e) => e.type === 'when_attacked_coin_flip');
+    return (
+      talent.effect ||
+      `Si actif et attaqué : pile −${w?.reduceOnPile ?? 60} dégâts${w?.blockStatusOnPile ? ', aucun état spécial' : ''} ; face : rien`
+    );
+  }
   if (talent.effects?.some((e) => e.type === 'solo_combat_modifiers')) {
     const s = talent.effects.find((e) => e.type === 'solo_combat_modifiers');
     return (
@@ -800,6 +831,9 @@ function describeTalent(talent) {
     return talent.effect;
   }
   if (talent.effects?.some((e) => e.type === 'swap_active_with_bench_tag')) {
+    return talent.effect;
+  }
+  if (talent.effects?.some((e) => e.type === 'swap_active_with_bench_filter')) {
     return talent.effect;
   }
   const copyOpp = talent.effects?.find((e) => e.type === 'copy_opponent_attack_on_active');

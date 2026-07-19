@@ -58,9 +58,12 @@ assert(
 );
 assert('Colère 4/60', colere?.cost === 4 && colere?.damage === 60);
 assert(
-  'Colère bonus per marker',
+  'Colère bonus per marker on self',
   colere?.effects?.some(
-    (e) => e.type === 'bonus_damage_per_damage_marker' && e.amountPerMarker === 10,
+    (e) =>
+      e.type === 'bonus_damage_per_damage_marker' &&
+      e.amountPerMarker === 10 &&
+      e.target === 'self',
   ),
 );
 
@@ -83,12 +86,12 @@ const colereIdx = god.attacks.findIndex((a) => a.name === 'Colère du Dieu des M
   assert('Trident 110 dmg', opp.currentHp === oppHpBefore - 110);
 }
 
-// Colère — formule dégâts selon marqueurs sur cible active
+// Colère — formule dégâts selon marqueurs sur l'attaquant (Poséidon)
 const mockGame = {
   state: {
     players: [
-      { active: { energies: [] }, bench: [], modifiers: {}, discard: [] },
-      { active: null, bench: [], modifiers: {}, discard: [] },
+      { active: { maxHp: 240, currentHp: 240, energies: [] }, bench: [], modifiers: {}, discard: [] },
+      { active: { maxHp: 100, currentHp: 100, energies: [] }, bench: [], modifiers: {}, discard: [] },
     ],
   },
 };
@@ -103,24 +106,26 @@ const colereCases = [
 ];
 
 for (const { lostHp, expected } of colereCases) {
-  const oppKnight = { maxHp: 100, currentHp: 100 - lostHp, energies: [] };
+  mockGame.state.players[0].active.currentHp = mockGame.state.players[0].active.maxHp - lostHp;
+  const oppKnight = mockGame.state.players[1].active;
   const damage = resolver.computeAttackDamage(0, colere, { opponentActive: oppKnight });
   const markers = Math.floor(lostHp / unit);
   assert(
-    `Colère ${markers} marqueur(s) (${lostHp} PV perdus) → ${expected} dmg`,
+    `Colère ${markers} marqueur(s) sur Poséidon (${lostHp} PV perdus) → ${expected} dmg`,
     damage === expected,
   );
 }
 
-// Colère — dégâts réels en combat (30 PV perdus = 3 marqueurs → 90 total)
+// Colère — dégâts réels en combat (Poséidon a 30 PV perdus = 3 marqueurs → 90 total)
 {
   const engine = makeEngine();
   engine.initAttackTest(POSEIDON_CARD_IDS.GOD);
+  const atk = engine.state.players[0].active;
+  atk.currentHp = atk.maxHp - 30;
   const opp = engine.state.players[1].active;
-  opp.currentHp = opp.maxHp - 30;
   const oppHpBefore = opp.currentHp;
   engine.attack(0, colereIdx);
-  assert('Colère 90 dmg with 3 markers', opp.currentHp === oppHpBefore - 90);
+  assert('Colère 90 dmg with 3 self markers', opp.currentHp === oppHpBefore - 90);
 }
 
 console.log('OK — Poséidon Dieu des Océans attaques validées');

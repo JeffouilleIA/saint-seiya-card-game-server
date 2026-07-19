@@ -36,7 +36,10 @@ function capEntryCount(cardId, count) {
 }
 
 /** @typedef {{ id: string, count: number }} DeckCardEntry */
-/** @typedef {{ id: string, name: string, cards: DeckCardEntry[], builtIn?: boolean }} SavedDeck */
+/** @typedef {{ id: string, name: string }} DeckFolder */
+/** @typedef {{ id: string, name: string, cards: DeckCardEntry[], builtIn?: boolean, folderId?: string }} SavedDeck */
+
+export const UNFILED_FOLDER_LABEL = 'Divers';
 
 function safeParse(json) {
   try {
@@ -72,20 +75,96 @@ export function getDefaultDeckEntry() {
   };
 }
 
+function normalizeDeckFolder(entry) {
+  if (!entry || typeof entry.id !== 'string' || typeof entry.name !== 'string') return null;
+  const name = entry.name.trim() || 'Sans nom';
+  return { id: entry.id, name };
+}
+
+function normalizeDeckFolders(parsed) {
+  if (!Array.isArray(parsed)) return [];
+  const out = [];
+  const seen = new Set();
+  for (const entry of parsed) {
+    const folder = normalizeDeckFolder(entry);
+    if (!folder || seen.has(folder.id)) continue;
+    seen.add(folder.id);
+    out.push(folder);
+  }
+  return out;
+}
+
 function normalizeSavedDecks(parsed) {
   if (!Array.isArray(parsed)) return [];
   return parsed
     .filter((d) => d && typeof d.id === 'string' && typeof d.name === 'string' && Array.isArray(d.cards))
-    .map((d) => ({
-      id: d.id,
-      name: d.name,
-      cards: d.cards
-        .filter((c) => c && typeof c.id === 'string')
-        .map((c) => ({ id: c.id, count: capEntryCount(c.id, c.count) }))
-        .filter((c) => c.count > 0),
-    }));
+    .map((d) => {
+      const deck = {
+        id: d.id,
+        name: d.name,
+        cards: d.cards
+          .filter((c) => c && typeof c.id === 'string')
+          .map((c) => ({ id: c.id, count: capEntryCount(c.id, c.count) }))
+          .filter((c) => c.count > 0),
+      };
+      if (typeof d.folderId === 'string' && d.folderId) deck.folderId = d.folderId;
+      return deck;
+    });
 }
 
+function parseDeckStoragePayload(parsed) {
+  if (Array.isArray(parsed)) {
+    return { folders: [], decks: normalizeSavedDecks(parsed) };
+  }
+  if (parsed && typeof parsed === 'object' && Array.isArray(parsed.decks)) {
+    return {
+      folders: normalizeDeckFolders(parsed.folders),
+      decks: normalizeSavedDecks(parsed.decks),
+    };
+  }
+  return { folders: [], decks: [] };
+}
+
+function readLocalDeckStorage() {
+  const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+  return parseDeckStoragePayload(raw ? safeParse(raw) : null);
+}
+
+function writeLocalDeckStorage(folders, decks) {
+  if (typeof localStorage === 'undefined') return;
+  const custom = decks.filter((d) => !d.builtIn && d.id !== DEFAULT_DECK_ID);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ folders, decks: custom }));
+}
+
+function applyServerDeckStorage(folders, decks) {
+  serverFoldersCache = folders;
+  serverDecksCache = decks;
+}
+
+function usesCachedDeckStorage() {
+  return sharedServerMode || serverDecksCache.length > 0 || serverFoldersCache.length > 0;
+}
+
+function persistDeckStorage(folders, decks) {
+  const custom = decks.filter((d) => !d.builtIn && d.id !== DEFAULT_DECK_ID);
+  const foldersCopy = folders.map((f) => ({ ...f }));
+  const decksCopy = custom.map((d) => ({
+    ...d,
+    cards: d.cards.map((c) => ({ ...c })),
+  }));
+  if (sharedServerMode) {
+    applyServerDeckStorage(foldersCopy, decksCopy);
+    persistDecksToServer(serverFoldersCache, serverDecksCache);
+    return;
+  }
+  if (serverDecksCache.length > 0 || serverFoldersCache.length > 0) {
+    applyServerDeckStorage(foldersCopy, decksCopy);
+  }
+  writeLocalDeckStorage(foldersCopy, decksCopy);
+}
+
+/** @type {DeckFolder[]} */
+let serverFoldersCache = [];
 /** @type {SavedDeck[]} */
 let serverDecksCache = [];
 let sharedServerMode = false;
@@ -97,7 +176,20 @@ export function isSharedDeckStorage() {
 }
 
 export function usesServerDeckStorage() {
-  return sharedServerMode || serverDecksCache.length > 0;
+  return usesCachedDeckStorage();
+}
+
+function loadDeckStorageFromApiPayload(data) {
+  if (!data || !Array.isArray(data.decks)) return false;
+  applyServerDeckStorage(normalizeDeckFolders(data.folders), normalizeSavedDecks(data.decks));
+  return true;
+}
+
+function loadDeckStorageFromJsonPayload(payload) {
+  const { folders, decks } = parseDeckStoragePayload(payload);
+  if (decks.length === 0 && folders.length === 0) return false;
+  applyServerDeckStorage(folders, decks);
+  return true;
 }
 
 export async function initDeckStorage() {
@@ -105,9 +197,8 @@ export async function initDeckStorage() {
     const res = await fetch('/api/decks', { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
-      if (data?.shared && Array.isArray(data.decks)) {
+      if (data?.shared && loadDeckStorageFromApiPayload(data)) {
         sharedServerMode = true;
-        serverDecksCache = normalizeSavedDecks(data.decks);
         return;
       }
     }
@@ -117,10 +208,7 @@ export async function initDeckStorage() {
   try {
     const res = await fetch('./data/saved-decks.json', { cache: 'no-store' });
     if (res.ok) {
-      const decks = await res.json();
-      if (Array.isArray(decks) && decks.length > 0) {
-        serverDecksCache = normalizeSavedDecks(decks);
-      }
+      loadDeckStorageFromJsonPayload(await res.json());
     }
   } catch {
     /* fichier projet absent */
@@ -132,24 +220,18 @@ export async function refreshDeckStorage() {
     try {
       const res = await fetch('/api/decks', { cache: 'no-store' });
       if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data.decks)) {
-          serverDecksCache = normalizeSavedDecks(data.decks);
-        }
+        loadDeckStorageFromApiPayload(await res.json());
       }
     } catch {
       /* ignore */
     }
     return;
   }
-  if (serverDecksCache.length > 0) {
+  if (usesCachedDeckStorage()) {
     try {
       const res = await fetch('./data/saved-decks.json', { cache: 'no-store' });
       if (res.ok) {
-        const decks = await res.json();
-        if (Array.isArray(decks)) {
-          serverDecksCache = normalizeSavedDecks(decks);
-        }
+        loadDeckStorageFromJsonPayload(await res.json());
       }
     } catch {
       /* ignore */
@@ -157,14 +239,14 @@ export async function refreshDeckStorage() {
   }
 }
 
-function persistDecksToServer(decks) {
+function persistDecksToServer(folders, decks) {
   if (!sharedServerMode) return;
   persistQueue = persistQueue
     .then(async () => {
       const res = await fetch('/api/decks', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ decks }),
+        body: JSON.stringify({ folders, decks }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
     })
@@ -173,53 +255,73 @@ function persistDecksToServer(decks) {
     });
 }
 
+function flushDeckPersistQueue() {
+  return persistQueue;
+}
+
+function mergeDeckStorageLayers(...layers) {
+  const folderById = new Map();
+  const deckById = new Map();
+  for (const layer of layers) {
+    for (const folder of layer.folders || []) folderById.set(folder.id, folder);
+    for (const deck of layer.decks || []) deckById.set(deck.id, deck);
+  }
+  return {
+    folders: [...folderById.values()],
+    decks: [...deckById.values()],
+  };
+}
+
+function readBrowserDeckStorage() {
+  const fromLocal = readLocalDeckStorage();
+  if (!usesCachedDeckStorage()) return fromLocal;
+  return mergeDeckStorageLayers(
+    { folders: serverFoldersCache, decks: serverDecksCache },
+    fromLocal,
+  );
+}
+
+export function loadDeckFolders() {
+  if (usesCachedDeckStorage()) {
+    return serverFoldersCache.map((f) => ({ ...f }));
+  }
+  return readLocalDeckStorage().folders;
+}
+
 export function loadSavedDecks() {
-  if (sharedServerMode || serverDecksCache.length > 0) {
+  if (usesCachedDeckStorage()) {
     return serverDecksCache.map((d) => ({
       ...d,
       cards: d.cards.map((c) => ({ ...c })),
     }));
   }
-  const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-  const parsed = raw ? safeParse(raw) : null;
-  return normalizeSavedDecks(parsed);
+  return readLocalDeckStorage().decks;
 }
 
 export function saveSavedDecks(decks) {
-  const custom = decks.filter((d) => !d.builtIn && d.id !== DEFAULT_DECK_ID);
-  if (sharedServerMode) {
-    serverDecksCache = custom.map((d) => ({
-      ...d,
-      cards: d.cards.map((c) => ({ ...c })),
-    }));
-    persistDecksToServer(serverDecksCache);
-    return;
-  }
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(custom));
-  }
+  persistDeckStorage(loadDeckFolders(), decks);
 }
 
 /** Fusionne localStorage + fichier projet → data/saved-decks.json (API requise). */
 export async function publishLocalDecksToProject() {
-  let fromServer = [];
+  await flushDeckPersistQueue();
+
+  let fromServer = { folders: [], decks: [] };
   try {
     const res = await fetch('/api/decks', { cache: 'no-store' });
     if (!res.ok) return { ok: false, error: 'API decks indisponible. Lancez le serveur Node.' };
     const data = await res.json();
-    fromServer = normalizeSavedDecks(data.decks || []);
+    fromServer = parseDeckStoragePayload({ folders: data.folders, decks: data.decks || [] });
   } catch {
     return { ok: false, error: 'API decks indisponible. Lancez le serveur Node.' };
   }
 
-  const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-  const fromLocal = normalizeSavedDecks(raw ? safeParse(raw) : null);
-  const byId = new Map();
-  for (const d of fromServer) byId.set(d.id, d);
-  for (const d of fromLocal) byId.set(d.id, d);
-  const merged = [...byId.values()];
+  const { folders: mergedFolders, decks: mergedDecks } = mergeDeckStorageLayers(
+    fromServer,
+    readBrowserDeckStorage(),
+  );
 
-  if (!merged.length) {
+  if (!mergedDecks.length) {
     return { ok: false, error: 'Aucun deck à publier (navigateur ou projet vide).' };
   }
 
@@ -227,15 +329,15 @@ export async function publishLocalDecksToProject() {
     const put = await fetch('/api/decks', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ decks: merged }),
+      body: JSON.stringify({ folders: mergedFolders, decks: mergedDecks }),
     });
     if (!put.ok) return { ok: false, error: `Échec enregistrement (HTTP ${put.status}).` };
     sharedServerMode = true;
-    serverDecksCache = merged;
+    applyServerDeckStorage(mergedFolders, mergedDecks);
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(STORAGE_KEY);
     }
-    return { ok: true, count: merged.length };
+    return { ok: true, count: mergedDecks.length };
   } catch {
     return { ok: false, error: 'Échec enregistrement réseau.' };
   }
@@ -258,10 +360,88 @@ export function saveDeck(deck) {
     name: (deck.name || 'Sans nom').trim() || 'Sans nom',
     cards,
   };
+  if ('folderId' in deck) {
+    entry.folderId = deck.folderId || undefined;
+  } else if (idx >= 0 && decks[idx].folderId) {
+    entry.folderId = decks[idx].folderId;
+  }
   if (idx >= 0) decks[idx] = entry;
   else decks.push(entry);
   saveSavedDecks(decks);
   return entry;
+}
+
+export function createDeckFolder(name) {
+  const trimmed = (name || '').trim();
+  if (!trimmed) return { error: 'Nom de dossier requis.' };
+  const folders = loadDeckFolders();
+  const entry = {
+    id: `folder-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    name: trimmed,
+  };
+  folders.push(entry);
+  persistDeckStorage(folders, loadSavedDecks());
+  return entry;
+}
+
+export function renameDeckFolder(folderId, name) {
+  const trimmed = (name || '').trim();
+  if (!trimmed) return { error: 'Nom de dossier requis.' };
+  const folders = loadDeckFolders();
+  const idx = folders.findIndex((f) => f.id === folderId);
+  if (idx < 0) return { error: 'Dossier introuvable.' };
+  folders[idx] = { ...folders[idx], name: trimmed };
+  persistDeckStorage(folders, loadSavedDecks());
+  return folders[idx];
+}
+
+export function deleteDeckFolder(folderId) {
+  const folders = loadDeckFolders().filter((f) => f.id !== folderId);
+  const decks = loadSavedDecks().map((deck) =>
+    deck.folderId === folderId ? { ...deck, folderId: undefined } : deck,
+  );
+  persistDeckStorage(folders, decks);
+}
+
+export function moveDeckToFolder(deckId, folderId) {
+  const folders = loadDeckFolders();
+  if (folderId && !folders.some((f) => f.id === folderId)) {
+    return { error: 'Dossier introuvable.' };
+  }
+  const decks = loadSavedDecks();
+  const idx = decks.findIndex((d) => d.id === deckId);
+  if (idx < 0) return { error: 'Deck introuvable.' };
+  const entry = {
+    ...decks[idx],
+    folderId: folderId || undefined,
+  };
+  decks[idx] = entry;
+  saveSavedDecks(decks);
+  return entry;
+}
+
+/**
+ * Regroupe les decks pour l'affichage (dossiers vides inclus).
+ * @param {SavedDeck[]} [decks]
+ * @param {DeckFolder[]} [folders]
+ */
+export function groupDecksByFolder(decks = loadSavedDecks(), folders = loadDeckFolders()) {
+  const folderIds = new Set(folders.map((f) => f.id));
+  const groups = [
+    {
+      folderId: null,
+      name: UNFILED_FOLDER_LABEL,
+      decks: decks.filter((d) => !d.folderId || !folderIds.has(d.folderId)),
+    },
+  ];
+  for (const folder of folders) {
+    groups.push({
+      folderId: folder.id,
+      name: folder.name,
+      decks: decks.filter((d) => d.folderId === folder.id),
+    });
+  }
+  return groups;
 }
 
 export function deleteDeck(id) {

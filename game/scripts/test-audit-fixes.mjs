@@ -167,6 +167,38 @@ function makeGame(overrides = {}) {
   else ok(`Distribute banc: 30 dmg → faible ${weakHit}, fort ${strongHit}`);
 }
 
+// Deuteros — 60 dégâts à lui-même à l'entrée en jeu
+{
+  const { game, resolver } = makeGame();
+  const p0 = game.state.players[0];
+  const deuteros = makeKnight('deuteros', 130, 'deut1');
+  p0.bench = [deuteros];
+  await resolver.applyOnEnterKnight(0, deuteros, getCardDef('deuteros'));
+  if (deuteros.currentHp !== 70) fail(`Deuteros: attendu 70 PV, reçu ${deuteros.currentHp}`);
+  else ok('Deuteros: 60 dégâts à lui-même à l\'entrée');
+}
+
+// distributeDamage — local humain (pas auto-résolu si 2+ cibles)
+{
+  const { game, resolver } = makeGame();
+  game.isAiControlled = () => false;
+  game.needsPlayerChoice = () => true;
+  const p1 = game.state.players[1];
+  p1.active = makeKnight('vieux-maitre', 150, 'opp-active');
+  p1.bench = [
+    makeKnight('vieux-maitre', 150, 'opp-bench-a'),
+    makeKnight('vieux-maitre', 150, 'opp-bench-b'),
+  ];
+  resolver.startDistributeDamage(0, 150, { benchOnly: false });
+  if (game.state.pending?.type !== 'distributeDamage') {
+    fail('Distribute: pending attendu pour humain');
+  } else if (game.isAiControlled(0)) {
+    fail('Distribute: ne doit pas auto-résoudre en local2p');
+  } else {
+    ok('Distribute: pending humain avec plusieurs cibles');
+  }
+}
+
 // P1 — Connais le futur : remise pioche dans l'ordre choisi
 {
   const { game, resolver } = makeGame();
@@ -187,6 +219,40 @@ function makeGame(overrides = {}) {
     if (top !== 'c2') fail(`Look top: dessus attendu c2, reçu ${top}`);
     else ok('Connais le futur: réordonnancement pioche OK');
   }
+}
+
+// Asmita — Retour au Sanctuaire : coût 1 Énergie en main
+{
+  const { game, resolver } = makeGame();
+  const p0 = game.state.players[0];
+  const asmita = makeKnight('asmita_vierge', 150, 'asmita1');
+  p0.bench = [asmita];
+  p0.discard = [{ cardId: 'septieme-sens', instanceId: 'tool1' }];
+  const eff = getCardDef('asmita_vierge')?.talent?.effects?.[0];
+
+  const noEnergy = resolver.resolveBenchReturnToHandTalent(0, asmita, eff);
+  if (noEnergy !== false || p0.bench.length !== 1) {
+    fail('Asmita: talent refusé sans Énergie en main');
+  } else ok('Asmita: talent refusé sans Énergie en main');
+
+  p0.hand = [{ cardId: 'energie-etoile', instanceId: 'e1' }];
+  const okUse = resolver.resolveBenchReturnToHandTalent(0, asmita, eff);
+  const inHand = p0.hand.some((c) => c.instanceId === 'asmita1');
+  const energyDiscarded = p0.discard.some((c) => c.instanceId === 'e1');
+  const toolRecovered = p0.hand.some((c) => c.instanceId === 'tool1');
+  if (!okUse || !inHand || p0.bench.length !== 0 || !energyDiscarded || !toolRecovered) {
+    fail(
+      `Asmita: attendu retour main + défausse Énergie + récup outil, bench=${p0.bench.length} hand=${p0.hand.map((c) => c.instanceId).join(',')}`,
+    );
+  } else ok('Asmita: 1 Énergie défaussée, retour main + outil récupéré');
+
+  p0.bench = [makeKnight('asmita_vierge', 150, 'asmita2')];
+  p0.hand = [{ cardId: 'energie-etoile', instanceId: 'e2' }];
+  game.needsPlayerChoice = () => true;
+  resolver.resolveBenchReturnToHandTalent(0, p0.bench[0], eff);
+  if (game.state.pending?.type !== 'discardEnergyFromHandForTalent') {
+    fail('Asmita: pending discardEnergyFromHandForTalent attendu pour humain');
+  } else ok('Asmita: choix défausse Énergie en pending humain');
 }
 
 process.exit(failed ? 1 : 0);

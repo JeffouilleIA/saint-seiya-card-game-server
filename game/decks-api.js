@@ -36,21 +36,23 @@ export function createDecksApi(decksFile) {
     if (!fs.existsSync(DECKS_FILE)) fs.writeFileSync(DECKS_FILE, '[]\n', 'utf8');
   }
 
-  function readSharedDecks() {
-    ensureDecksFile();
-    try {
-      const parsed = JSON.parse(fs.readFileSync(DECKS_FILE, 'utf8'));
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
+  function sanitizeFolderEntry(folder) {
+    if (!folder || typeof folder.id !== 'string' || typeof folder.name !== 'string') {
+      return null;
     }
+    return { id: folder.id, name: folder.name.trim() || 'Sans nom' };
   }
 
-  function writeSharedDecks(decks) {
-    ensureDecksFile();
-    const tmp = `${DECKS_FILE}.tmp`;
-    fs.writeFileSync(tmp, `${JSON.stringify(decks, null, 2)}\n`, 'utf8');
-    fs.renameSync(tmp, DECKS_FILE);
+  function sanitizeFolderList(folders) {
+    const out = [];
+    const seen = new Set();
+    for (const folder of folders || []) {
+      const clean = sanitizeFolderEntry(folder);
+      if (!clean || seen.has(clean.id)) continue;
+      seen.add(clean.id);
+      out.push(clean);
+    }
+    return out;
   }
 
   function sanitizeDeckEntry(deck) {
@@ -62,7 +64,11 @@ export function createDecksApi(decksFile) {
       .map((c) => ({ id: c.id, count: Math.max(0, Number(c.count) || 0) }))
       .filter((c) => c.count > 0);
     if (!cards.length) return null;
-    return { id: deck.id, name: deck.name.trim() || 'Sans nom', cards };
+    const clean = { id: deck.id, name: deck.name.trim() || 'Sans nom', cards };
+    if (typeof deck.folderId === 'string' && deck.folderId) {
+      clean.folderId = deck.folderId;
+    }
+    return clean;
   }
 
   function sanitizeDeckList(decks) {
@@ -77,9 +83,45 @@ export function createDecksApi(decksFile) {
     return out;
   }
 
+  function parseStoredDeckFile(parsed) {
+    if (Array.isArray(parsed)) {
+      return { folders: [], decks: sanitizeDeckList(parsed) };
+    }
+    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.decks)) {
+      return {
+        folders: sanitizeFolderList(parsed.folders),
+        decks: sanitizeDeckList(parsed.decks),
+      };
+    }
+    return { folders: [], decks: [] };
+  }
+
+  function readSharedDeckData() {
+    ensureDecksFile();
+    try {
+      const parsed = JSON.parse(fs.readFileSync(DECKS_FILE, 'utf8'));
+      return parseStoredDeckFile(parsed);
+    } catch {
+      return { folders: [], decks: [] };
+    }
+  }
+
+  function writeSharedDeckData({ folders = [], decks = [] } = {}) {
+    ensureDecksFile();
+    const payload = {
+      folders: sanitizeFolderList(folders),
+      decks: sanitizeDeckList(decks),
+    };
+    const tmp = `${DECKS_FILE}.tmp`;
+    fs.writeFileSync(tmp, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+    fs.renameSync(tmp, DECKS_FILE);
+    return payload;
+  }
+
   async function handleDecksApi(req, res, urlPath) {
     if (urlPath === '/api/decks' && req.method === 'GET') {
-      sendJson(res, 200, { ok: true, shared: true, decks: readSharedDecks() });
+      const data = readSharedDeckData();
+      sendJson(res, 200, { ok: true, shared: true, ...data });
       return true;
     }
     if (urlPath === '/api/decks' && req.method === 'PUT') {
@@ -95,13 +137,15 @@ export function createDecksApi(decksFile) {
         sendJson(res, 400, { ok: false, error: 'Champ "decks" (tableau) requis.' });
         return true;
       }
-      const decks = sanitizeDeckList(payload.decks);
-      writeSharedDecks(decks);
-      sendJson(res, 200, { ok: true, decks });
+      const data = writeSharedDeckData({
+        folders: payload.folders,
+        decks: payload.decks,
+      });
+      sendJson(res, 200, { ok: true, ...data });
       return true;
     }
     return false;
   }
 
-  return { DECKS_FILE, readSharedDecks, handleDecksApi };
+  return { DECKS_FILE, readSharedDecks: () => readSharedDeckData().decks, readSharedDeckData, handleDecksApi };
 }

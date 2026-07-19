@@ -261,6 +261,12 @@ function startMatch(menuHost, gameHost, playerDeckId, opponentDeckId, gameMode =
           damage: 40,
           label: '3',
         },
+        ikki: {
+          attackName: "Battement d'ailes",
+          attackerCardId: 'ikki-du-phenix',
+          damage: 80,
+          label: '3',
+        },
         mu: {
           attackName: 'Spirale Stellaire',
           attackerCardId: 'mu_belier',
@@ -332,6 +338,7 @@ function startMatch(menuHost, gameHost, playerDeckId, opponentDeckId, gameMode =
         which === 'aldebaran' ||
         which === 'shina' ||
         which === 'ichi' ||
+        which === 'ikki' ||
         which === 'mu' ||
         which === 'kagaho' ||
         which === 'misty' ||

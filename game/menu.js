@@ -19,7 +19,15 @@ import {
   TARGET_DECK_SIZE,
   MAX_COPIES_PER_CARD,
   loadSavedDecks,
+  loadDeckFolders,
   saveDeck,
+  createDeckFolder,
+  renameDeckFolder,
+  deleteDeck,
+  deleteDeckFolder,
+  moveDeckToFolder,
+  groupDecksByFolder,
+  UNFILED_FOLDER_LABEL,
   getAllDeckOptions,
   getDeckById,
   isSharedDeckStorage,
@@ -83,6 +91,9 @@ import {
 } from './combat-1000-jours.js';
 
 const DECK_LIMIT_HINT = `max ${MAX_COPIES_PER_CARD} par carte (énergies illimitées)`;
+/** Clé spéciale de navigation : afficher tous les decks (combat). */
+const ALL_FOLDERS_NAV_KEY = '__all__';
+const ALL_FOLDERS_LABEL = 'Tous';
 
 export const AI_DIFFICULTY_STORAGE_KEY = 'chevalier-ai-difficulty';
 export const AI_DIFFICULTIES = ['facile', 'moyen', 'difficile', 'expert', 'legende', 'ridicule', 'absurde'];
@@ -387,6 +398,7 @@ export class GameMenu {
     this.poolChevalierFilter = 'all';
     this.poolSearch = '';
     this.builderName = '';
+    this.builderFolderId = '';
     this.builderPreviewCardId = null;
     this._builderPreviewKeyHandler = null;
     this.aiDifficulty = loadAiDifficulty();
@@ -400,6 +412,10 @@ export class GameMenu {
     this.aiBattleResult = null;
     this.aiBattleRunning = false;
     this.combat1000EndMeta = null;
+    /** @type {string | null} null = liste des dossiers ; '' = Divers ; id = dossier ouvert ; ALL_FOLDERS_NAV_KEY = tous */
+    this.editPickFolderId = null;
+    /** @type {string | null} null = liste des dossiers ; ALL_FOLDERS_NAV_KEY = tous les decks */
+    this.combatDraftFolderId = null;
   }
 
   showCombat1000Config() {
@@ -408,6 +424,7 @@ export class GameMenu {
   }
 
   showCombat1000Draft() {
+    this.combatDraftFolderId = null;
     this.screen = 'combat-1000-draft';
     this.render();
   }
@@ -444,6 +461,7 @@ export class GameMenu {
     this.builderEditingId = editingDeck?.id ?? null;
     this.builderCards = editingDeck ? editingDeck.cards.map((c) => ({ ...c })) : [];
     this.builderName = editingDeck?.name || '';
+    this.builderFolderId = editingDeck?.folderId || '';
     this.poolFilter = 'all';
     this.poolChevalierFilter = 'all';
     this.poolSearch = '';
@@ -456,6 +474,7 @@ export class GameMenu {
   }
 
   showEditPicker() {
+    this.editPickFolderId = null;
     this.screen = 'edit-pick';
     this.render();
   }
@@ -849,32 +868,257 @@ export class GameMenu {
     });
   }
 
+  encodeFolderNavKey(folderId) {
+    return folderId ?? '';
+  }
+
+  decodeFolderNavKey(key) {
+    return key === '' ? null : key;
+  }
+
+  isAllFoldersNavKey(key) {
+    return key === ALL_FOLDERS_NAV_KEY;
+  }
+
+  getDecksForFolderNavKey(folderKey, decks = loadSavedDecks()) {
+    if (this.isAllFoldersNavKey(folderKey)) return decks;
+    return this.findDeckFolderGroup(folderKey, decks)?.decks || [];
+  }
+
+  getDeckFolderGroupsForNav(decks = loadSavedDecks()) {
+    return groupDecksByFolder(decks).filter((group) => group.decks.length > 0 || group.folderId);
+  }
+
+  findDeckFolderGroup(folderKey, decks = loadSavedDecks()) {
+    const decoded = this.decodeFolderNavKey(folderKey);
+    return this.getDeckFolderGroupsForNav(decks).find((group) =>
+      decoded ? group.folderId === decoded : !group.folderId,
+    );
+  }
+
+  renderDeckFolderNavList(groups, pickAttr = 'data-pick-folder', { showAllOption = false, allDeckCount = 0 } = {}) {
+    const visible = groups.filter((group) => group.decks.length > 0 || group.folderId);
+    const allItem =
+      showAllOption && allDeckCount > 0
+        ? `
+          <li class="deck-folder-nav-item">
+            <button type="button" class="deck-folder-nav-btn" ${pickAttr}="${this.escapeAttr(ALL_FOLDERS_NAV_KEY)}">
+              <span class="deck-folder-nav-main">
+                <span class="saved-deck-name">${this.escapeHtml(ALL_FOLDERS_LABEL)}</span>
+                <span class="saved-deck-count">${allDeckCount} deck${allDeckCount !== 1 ? 's' : ''}</span>
+              </span>
+              <span class="deck-folder-nav-chevron" aria-hidden="true">›</span>
+            </button>
+          </li>`
+        : '';
+    if (!visible.length && !allItem) {
+      return '<p class="menu-empty-hint">Aucun dossier disponible.</p>';
+    }
+    return `<ul class="saved-deck-list deck-folder-nav-list">${allItem}${visible
+      .map((group) => {
+        const key = this.encodeFolderNavKey(group.folderId);
+        const countLabel = `${group.decks.length} deck${group.decks.length !== 1 ? 's' : ''}`;
+        const folderActions =
+          group.folderId
+            ? `<div class="deck-folder-actions">
+                <button type="button" class="btn-folder-action" data-rename-folder="${this.escapeAttr(group.folderId)}" aria-label="Renommer ${this.escapeAttr(group.name)}">Renommer</button>
+                <button type="button" class="btn-folder-action btn-folder-action-danger" data-delete-folder="${this.escapeAttr(group.folderId)}" aria-label="Supprimer ${this.escapeAttr(group.name)}">Supprimer</button>
+              </div>`
+            : '';
+        return `
+          <li class="deck-folder-nav-item">
+            <button type="button" class="deck-folder-nav-btn" ${pickAttr}="${this.escapeAttr(key)}">
+              <span class="deck-folder-nav-main">
+                <span class="saved-deck-name">${this.escapeHtml(group.name)}</span>
+                <span class="saved-deck-count">${countLabel}</span>
+              </span>
+              <span class="deck-folder-nav-chevron" aria-hidden="true">›</span>
+            </button>
+            ${folderActions}
+          </li>`;
+      })
+      .join('')}</ul>`;
+  }
+
+  bindDeckFolderToolbarActions({ onRefresh, pickAttr = 'data-pick-folder', onPickFolder }) {
+    this.host.querySelector('[data-action="new-folder"]')?.addEventListener('click', () => {
+      const name = window.prompt('Nom du nouveau dossier :');
+      if (name == null) return;
+      const created = createDeckFolder(name);
+      if (created.error) {
+        window.alert(created.error);
+        return;
+      }
+      onRefresh();
+    });
+    for (const btn of this.host.querySelectorAll('[data-rename-folder]')) {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const folderId = btn.getAttribute('data-rename-folder');
+        const folder = loadDeckFolders().find((f) => f.id === folderId);
+        if (!folder) return;
+        const name = window.prompt('Nouveau nom du dossier :', folder.name);
+        if (name == null) return;
+        const renamed = renameDeckFolder(folderId, name);
+        if (renamed.error) {
+          window.alert(renamed.error);
+          return;
+        }
+        onRefresh();
+      });
+    }
+    for (const btn of this.host.querySelectorAll('[data-delete-folder]')) {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const folderId = btn.getAttribute('data-delete-folder');
+        const folder = loadDeckFolders().find((f) => f.id === folderId);
+        if (!folder) return;
+        const ok = window.confirm(
+          `Supprimer le dossier « ${folder.name} » ? Les decks qu'il contient seront déplacés vers « ${UNFILED_FOLDER_LABEL} ».`,
+        );
+        if (!ok) return;
+        deleteDeckFolder(folderId);
+        onRefresh();
+      });
+    }
+    if (onPickFolder) {
+      for (const btn of this.host.querySelectorAll(`[${pickAttr}]`)) {
+        btn.addEventListener('click', () => {
+          onPickFolder(btn.getAttribute(pickAttr) ?? '');
+        });
+      }
+    }
+  }
+
+  bindSavedDeckRowActions({ onRefresh, onEdit, onDeleteConfirm }) {
+    for (const select of this.host.querySelectorAll('.deck-folder-move')) {
+      select.addEventListener('change', () => {
+        const deckId = select.getAttribute('data-deck-id');
+        const folderId = select.value || '';
+        const moved = moveDeckToFolder(deckId, folderId);
+        if (moved.error) {
+          window.alert(moved.error);
+          onRefresh();
+          return;
+        }
+        onRefresh();
+      });
+    }
+    for (const btn of this.host.querySelectorAll('[data-edit-id]')) {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-edit-id');
+        const deck = loadSavedDecks().find((d) => d.id === id);
+        if (deck) onEdit(deck);
+      });
+    }
+    for (const btn of this.host.querySelectorAll('[data-delete-deck]')) {
+      btn.addEventListener('click', () => {
+        const deckId = btn.getAttribute('data-delete-deck');
+        const deck = loadSavedDecks().find((d) => d.id === deckId);
+        if (!deck) return;
+        const ok = window.confirm(
+          onDeleteConfirm?.(deck) ??
+            `Supprimer le deck « ${deck.name} » ? Cette action est irréversible.`,
+        );
+        if (!ok) return;
+        deleteDeck(deckId);
+        onRefresh();
+      });
+    }
+  }
+
+  buildDeckFolderOptions(selectedId = '') {
+    const folders = loadDeckFolders();
+    const opts = [
+      `<option value="">${this.escapeHtml(UNFILED_FOLDER_LABEL)}</option>`,
+      ...folders.map(
+        (folder) =>
+          `<option value="${this.escapeAttr(folder.id)}"${selectedId === folder.id ? ' selected' : ''}>${this.escapeHtml(folder.name)}</option>`,
+      ),
+    ];
+    return opts.join('');
+  }
+
+  renderSavedDeckRow(deck, { showMove = true, showEdit = true, showDelete = false, pickButton = null } = {}) {
+    const actions = [];
+    if (pickButton) {
+      actions.push(
+        `<button type="button" class="btn-edit-deck" data-pick-deck="${this.escapeAttr(pickButton)}">Choisir</button>`,
+      );
+    }
+    if (showEdit) {
+      actions.push(
+        `<button type="button" class="btn-edit-deck" data-edit-id="${this.escapeAttr(deck.id)}">Modifier</button>`,
+      );
+    }
+    if (showDelete) {
+      actions.push(
+        `<button type="button" class="btn-delete-deck" data-delete-deck="${this.escapeAttr(deck.id)}">Supprimer</button>`,
+      );
+    }
+    const moveHtml = showMove
+      ? `<label class="deck-folder-move-label">
+          <span class="visually-hidden">Dossier pour ${this.escapeHtml(deck.name)}</span>
+          <select class="deck-folder-move" data-deck-id="${this.escapeAttr(deck.id)}" aria-label="Dossier du deck ${this.escapeAttr(deck.name)}">
+            ${this.buildDeckFolderOptions(deck.folderId || '')}
+          </select>
+        </label>`
+      : '';
+    return `
+      <li>
+        <div class="saved-deck-meta">
+          <span class="saved-deck-name">${this.escapeHtml(deck.name)}</span>
+          <span class="saved-deck-count">${countDeckCards(deck.cards)} / ${TARGET_DECK_SIZE} cartes</span>
+        </div>
+        ${moveHtml}
+        ${actions.length ? `<div class="saved-deck-actions">${actions.join('')}</div>` : ''}
+      </li>`;
+  }
+
   renderEditPicker() {
     const saved = loadSavedDecks();
-    const listHtml =
-      saved.length === 0
-        ? '<p class="menu-empty-hint">Aucun deck enregistré. Créez-en un depuis le menu principal.</p>'
-        : `<ul class="saved-deck-list" id="saved-deck-list">${saved
-            .map(
-              (d) => `
-          <li>
-            <div class="saved-deck-meta">
-              <span class="saved-deck-name">${this.escapeHtml(d.name)}</span>
-              <span class="saved-deck-count">${countDeckCards(d.cards)} / ${TARGET_DECK_SIZE} cartes</span>
-            </div>
-            <button type="button" class="btn-edit-deck" data-edit-id="${this.escapeAttr(d.id)}">Modifier</button>
-          </li>`,
-            )
-            .join('')}</ul>`;
+    const groups = this.getDeckFolderGroupsForNav(saved);
+    const inFolderView = this.editPickFolderId !== null;
+    const currentGroup = inFolderView ? this.findDeckFolderGroup(this.editPickFolderId, saved) : null;
+
+    let bodyHtml;
+    if (saved.length === 0) {
+      bodyHtml = '<p class="menu-empty-hint">Aucun deck enregistré. Créez-en un depuis le menu principal.</p>';
+    } else if (!inFolderView) {
+      bodyHtml = `
+        <p class="menu-subtitle deck-folder-nav-hint">Choisissez un dossier pour voir ses decks</p>
+        ${this.renderDeckFolderNavList(groups)}`;
+    } else if (!currentGroup) {
+      bodyHtml = '<p class="menu-empty-hint">Dossier introuvable.</p>';
+    } else {
+      bodyHtml = `
+        <h2 class="deck-folder-title deck-folder-open-title">${this.escapeHtml(currentGroup.name)}</h2>
+        ${
+          currentGroup.decks.length
+            ? `<ul class="saved-deck-list">${currentGroup.decks.map((deck) => this.renderSavedDeckRow(deck, { showDelete: true })).join('')}</ul>`
+            : '<p class="deck-folder-empty">Aucun deck dans ce dossier.</p>'
+        }`;
+    }
 
     this.host.innerHTML = `
       <div class="menu-screen menu-edit-pick">
         <div class="menu-bar">
-          <button type="button" class="btn-back" data-action="back">← Menu principal</button>
+          ${
+            inFolderView
+              ? '<button type="button" class="btn-back" data-action="back-folders">← Dossiers</button>'
+              : '<button type="button" class="btn-back" data-action="back">← Menu principal</button>'
+          }
         </div>
         <h1 class="menu-title">Modifier un deck</h1>
-        <p class="menu-subtitle">Choisissez un deck à modifier</p>
-        ${listHtml}
+        ${
+          inFolderView
+            ? '<p class="menu-subtitle">Modifiez, déplacez ou supprimez un deck</p>'
+            : '<p class="menu-subtitle">Parcourez vos dossiers de decks</p>'
+        }
+        <div class="deck-folder-toolbar">
+          <button type="button" class="btn-menu" data-action="new-folder">Nouveau dossier</button>
+        </div>
+        ${bodyHtml}
         <div class="menu-footer-actions">
           <button type="button" class="btn-menu" data-action="builder">Créer un nouveau deck</button>
         </div>
@@ -882,12 +1126,26 @@ export class GameMenu {
     `;
 
     this.host.querySelector('[data-action="back"]')?.addEventListener('click', () => this.showMain());
+    this.host.querySelector('[data-action="back-folders"]')?.addEventListener('click', () => {
+      this.editPickFolderId = null;
+      this.renderEditPicker();
+    });
     this.host.querySelector('[data-action="builder"]')?.addEventListener('click', () => this.showBuilder());
-    for (const btn of this.host.querySelectorAll('[data-edit-id]')) {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-edit-id');
-        const deck = loadSavedDecks().find((d) => d.id === id);
-        if (deck) this.showBuilder(deck);
+
+    this.bindDeckFolderToolbarActions({
+      onRefresh: () => this.renderEditPicker(),
+      onPickFolder: !inFolderView
+        ? (folderKey) => {
+            this.editPickFolderId = folderKey;
+            this.renderEditPicker();
+          }
+        : null,
+    });
+
+    if (inFolderView && currentGroup) {
+      this.bindSavedDeckRowActions({
+        onRefresh: () => this.renderEditPicker(),
+        onEdit: (deck) => this.showBuilder(deck),
       });
     }
   }
@@ -907,6 +1165,10 @@ export class GameMenu {
         <div class="deck-form-row">
           <label for="deck-name">Nom du deck</label>
           <input type="text" id="deck-name" maxlength="48" placeholder="Mon deck" value="${this.escapeAttr(this.builderName)}" />
+        </div>
+        <div class="deck-form-row">
+          <label for="deck-folder">Dossier</label>
+          <select id="deck-folder">${this.buildDeckFolderOptions(this.builderFolderId)}</select>
         </div>
         <div id="builder-msg"></div>
         <div class="deck-builder-layout">
@@ -942,6 +1204,9 @@ export class GameMenu {
 
     this.host.querySelector('#deck-name')?.addEventListener('input', (e) => {
       this.builderName = e.target.value;
+    });
+    this.host.querySelector('#deck-folder')?.addEventListener('change', (e) => {
+      this.builderFolderId = e.target.value;
     });
 
     this.host.querySelector('[data-action="back"]')?.addEventListener('click', () => this.showMain());
@@ -1230,7 +1495,9 @@ export class GameMenu {
 
   saveBuilderDeck() {
     const nameInput = this.host.querySelector('#deck-name');
+    const folderInput = this.host.querySelector('#deck-folder');
     const name = (nameInput?.value || '').trim() || 'Sans nom';
+    const folderId = folderInput?.value || '';
     const validation = validateDeck(this.builderCards);
     const msgEl = this.host.querySelector('#builder-msg');
 
@@ -1245,6 +1512,7 @@ export class GameMenu {
     const saved = saveDeck({
       id: this.builderEditingId || undefined,
       name,
+      folderId: folderId || undefined,
       cards: this.builderCards.map((c) => ({ ...c })),
     });
     if (saved.error) {
@@ -1305,22 +1573,81 @@ export class GameMenu {
     this.bindTwelveHousesLegendTabs();
   }
 
-  buildDeckSelectOptions(decks) {
+  buildDeckSelectOptions(decks, folderKey = null) {
     if (!decks.length) {
       return {
         empty: true,
         optionsHtml: '<option value="">— Aucun deck enregistré —</option>',
+        folderOptionsHtml: '',
+        defaultFolderKey: '',
       };
     }
+    const groups = this.getDeckFolderGroupsForNav(decks).filter((group) => group.decks.length > 0);
+    const defaultFolderKey =
+      folderKey != null &&
+      (this.isAllFoldersNavKey(folderKey) ||
+        groups.some((group) => this.encodeFolderNavKey(group.folderId) === folderKey))
+        ? folderKey
+        : this.encodeFolderNavKey(groups[0]?.folderId);
+    const activeFolderKey = folderKey != null ? folderKey : defaultFolderKey;
+    const scopedDecks = this.getDecksForFolderNavKey(activeFolderKey, decks);
+    const folderOptionsHtml = [
+      `<option value="${this.escapeAttr(ALL_FOLDERS_NAV_KEY)}"${activeFolderKey === ALL_FOLDERS_NAV_KEY ? ' selected' : ''}>${this.escapeHtml(ALL_FOLDERS_LABEL)} (${decks.length})</option>`,
+      ...groups.map((group) => {
+        const key = this.encodeFolderNavKey(group.folderId);
+        return `<option value="${this.escapeAttr(key)}"${key === activeFolderKey ? ' selected' : ''}>${this.escapeHtml(group.name)} (${group.decks.length})</option>`;
+      }),
+    ].join('');
+    const optionsHtml = scopedDecks.length
+      ? scopedDecks
+          .map(
+            (d) =>
+              `<option value="${this.escapeAttr(d.id)}">${this.escapeHtml(d.name)} (${countDeckCards(d.cards)} cartes)</option>`,
+          )
+          .join('')
+      : '<option value="">— Aucun deck dans ce dossier —</option>';
     return {
       empty: false,
-      optionsHtml: decks
-        .map(
-          (d) =>
-            `<option value="${this.escapeAttr(d.id)}">${this.escapeHtml(d.name)} (${countDeckCards(d.cards)} cartes)</option>`,
-        )
-        .join(''),
+      optionsHtml,
+      folderOptionsHtml,
+      defaultFolderKey,
     };
+  }
+
+  bindFolderDeckCascade({ folderSelectId, deckSelectId, decks, defaultDeckIndex = 0 }) {
+    const folderSelect = this.host.querySelector(`#${folderSelectId}`);
+    const deckSelect = this.host.querySelector(`#${deckSelectId}`);
+    if (!folderSelect || !deckSelect) return;
+
+    const refreshDecks = (applyDefaultIndex = false) => {
+      const folderDecks = this.getDecksForFolderNavKey(folderSelect.value, decks);
+      deckSelect.innerHTML = folderDecks.length
+        ? folderDecks
+            .map(
+              (d) =>
+                `<option value="${this.escapeAttr(d.id)}">${this.escapeHtml(d.name)} (${countDeckCards(d.cards)} cartes)</option>`,
+            )
+            .join('')
+        : '<option value="">— Aucun deck dans ce dossier —</option>';
+      if (applyDefaultIndex && defaultDeckIndex > 0 && deckSelect.options.length > defaultDeckIndex) {
+        deckSelect.selectedIndex = defaultDeckIndex;
+      }
+    };
+
+    folderSelect.addEventListener('change', () => refreshDecks(false));
+    refreshDecks(true);
+  }
+
+  renderFolderDeckPickerRow({ folderSelectId, deckSelectId, folderLabel, deckLabel, folderOptionsHtml, deckOptionsHtml }) {
+    return `
+      <div class="deck-form-row">
+        <label for="${this.escapeAttr(folderSelectId)}">${this.escapeHtml(folderLabel)}</label>
+        <select id="${this.escapeAttr(folderSelectId)}">${folderOptionsHtml}</select>
+      </div>
+      <div class="deck-form-row">
+        <label for="${this.escapeAttr(deckSelectId)}">${this.escapeHtml(deckLabel)}</label>
+        <select id="${this.escapeAttr(deckSelectId)}">${deckOptionsHtml}</select>
+      </div>`;
   }
 
   renderNoDecksHint(actionLabel = 'Créer un deck') {
@@ -1338,7 +1665,7 @@ export class GameMenu {
 
   renderTwelveHousesPick() {
     const decks = getAllDeckOptions();
-    const { empty, optionsHtml: opts } = this.buildDeckSelectOptions(decks);
+    const { empty, folderOptionsHtml, optionsHtml } = this.buildDeckSelectOptions(decks);
     const houseCount = this.twelveHousesMeta?.totalHouses ?? (this.twelveHousesDifficulty === 'facile' ? 10 : 12);
     const diffKey = normalizeTwelveHousesDifficulty(
       this.twelveHousesMeta?.modeDifficulty ?? this.twelveHousesDifficulty,
@@ -1357,10 +1684,14 @@ export class GameMenu {
         <div id="twelve-houses-pick-msg"></div>
         ${empty ? this.renderNoDecksHint() : `
         <div class="start-decks">
-          <div class="deck-form-row">
-            <label for="twelve-deck-player">Votre deck</label>
-            <select id="twelve-deck-player">${opts}</select>
-          </div>
+          ${this.renderFolderDeckPickerRow({
+            folderSelectId: 'twelve-deck-folder',
+            deckSelectId: 'twelve-deck-player',
+            folderLabel: 'Dossier',
+            deckLabel: 'Votre deck',
+            folderOptionsHtml,
+            deckOptionsHtml: optionsHtml,
+          })}
         </div>
         <div class="menu-footer-actions">
           <button type="button" class="btn-menu primary" data-action="start-run">Commencer la conquête</button>
@@ -1376,6 +1707,11 @@ export class GameMenu {
     if (empty) {
       this.bindNoDecksBuilderAction();
     } else {
+      this.bindFolderDeckCascade({
+        folderSelectId: 'twelve-deck-folder',
+        deckSelectId: 'twelve-deck-player',
+        decks,
+      });
       this.host.querySelector('[data-action="start-run"]')?.addEventListener('click', () => {
         const playerId = this.host.querySelector('#twelve-deck-player')?.value;
         if (!playerId) return;
@@ -1749,30 +2085,54 @@ export class GameMenu {
     if (!ids.length) {
       return '<p class="menu-empty-hint">Aucun deck disponible.</p>';
     }
-    return `<ul class="saved-deck-list combat-1000-deck-pick">${ids
-      .map((id) => {
-        const deck = getDeckById(id);
-        const name = deck?.name || id;
-        const count = countDeckCards(deck?.cards || []);
-        if (selectable) {
-          return `
-          <li>
-            <div class="saved-deck-meta">
-              <span class="saved-deck-name">${this.escapeHtml(name)}</span>
-              <span class="saved-deck-count">${count} / ${TARGET_DECK_SIZE} cartes</span>
-            </div>
-            <button type="button" class="btn-edit-deck" data-pick-deck="${this.escapeAttr(id)}">Choisir</button>
-          </li>`;
-        }
-        return `
-          <li>
-            <div class="saved-deck-meta">
-              <span class="saved-deck-name">${this.escapeHtml(name)}</span>
-              <span class="saved-deck-count">${count} cartes</span>
-            </div>
-          </li>`;
-      })
-      .join('')}</ul>`;
+
+    const decks = ids.map((id) => getDeckById(id)).filter(Boolean);
+    const groups = this.getDeckFolderGroupsForNav(decks).filter((group) =>
+      group.decks.some((deck) => ids.includes(deck.id)),
+    );
+    const inFolderView = this.combatDraftFolderId !== null;
+    const currentGroup = inFolderView
+      ? this.isAllFoldersNavKey(this.combatDraftFolderId)
+        ? { name: ALL_FOLDERS_LABEL, decks }
+        : this.findDeckFolderGroup(this.combatDraftFolderId, decks)
+      : null;
+
+    if (!inFolderView) {
+      return `
+        <p class="menu-subtitle deck-folder-nav-hint">Choisissez un dossier</p>
+        ${this.renderDeckFolderNavList(
+          groups.map((group) => ({
+            ...group,
+            decks: group.decks.filter((deck) => ids.includes(deck.id)),
+          })),
+          'data-pick-draft-folder',
+          { showAllOption: true, allDeckCount: decks.length },
+        )}`;
+    }
+
+    if (!currentGroup) {
+      return '<p class="menu-empty-hint">Dossier introuvable.</p>';
+    }
+
+    const visibleDecks = currentGroup.decks.filter((deck) => ids.includes(deck.id));
+    return `
+      <div class="deck-folder-draft-header">
+        <button type="button" class="btn-back" data-action="back-draft-folders">← Dossiers</button>
+        <h3 class="deck-folder-open-title">${this.escapeHtml(currentGroup.name)}</h3>
+      </div>
+      ${
+        visibleDecks.length
+          ? `<ul class="saved-deck-list combat-1000-deck-pick">${visibleDecks
+              .map((deck) =>
+                this.renderSavedDeckRow(deck, {
+                  showMove: false,
+                  showEdit: false,
+                  pickButton: selectable ? deck.id : null,
+                }),
+              )
+              .join('')}</ul>`
+          : '<p class="deck-folder-empty">Aucun deck disponible dans ce dossier.</p>'
+      }`;
   }
 
   renderCombat1000RosterSummary(run) {
@@ -1842,6 +2202,22 @@ export class GameMenu {
     `;
 
     this.host.querySelector('[data-action="back"]')?.addEventListener('click', () => this.showCombat1000Config());
+    this.host.querySelector('[data-action="back-draft-folders"]')?.addEventListener('click', () => {
+      this.combatDraftFolderId = null;
+      this.renderCombat1000Draft();
+    });
+
+    this.bindDeckFolderToolbarActions({
+      onRefresh: () => this.renderCombat1000Draft(),
+      pickAttr: 'data-pick-draft-folder',
+      onPickFolder:
+        this.combatDraftFolderId === null
+          ? (folderKey) => {
+              this.combatDraftFolderId = folderKey;
+              this.renderCombat1000Draft();
+            }
+          : null,
+    });
 
     for (const btn of this.host.querySelectorAll('[data-pick-deck]')) {
       btn.addEventListener('click', () => {
@@ -1855,6 +2231,7 @@ export class GameMenu {
           }
           return;
         }
+        this.combatDraftFolderId = null;
         if (isDraftComplete(run)) {
           beginSecretPickPhase(run);
           this.showCombat1000SecretPick();
@@ -1920,6 +2297,23 @@ export class GameMenu {
       </div>
     `;
 
+    this.host.querySelector('[data-action="back-draft-folders"]')?.addEventListener('click', () => {
+      this.combatDraftFolderId = null;
+      this.renderCombat1000SecretPick();
+    });
+
+    this.bindDeckFolderToolbarActions({
+      onRefresh: () => this.renderCombat1000SecretPick(),
+      pickAttr: 'data-pick-draft-folder',
+      onPickFolder:
+        this.combatDraftFolderId === null
+          ? (folderKey) => {
+              this.combatDraftFolderId = folderKey;
+              this.renderCombat1000SecretPick();
+            }
+          : null,
+    });
+
     for (const btn of this.host.querySelectorAll('[data-pick-deck]')) {
       btn.addEventListener('click', () => {
         const deckId = btn.getAttribute('data-pick-deck');
@@ -1932,6 +2326,7 @@ export class GameMenu {
           }
           return;
         }
+        this.combatDraftFolderId = null;
         this.renderCombat1000SecretPick();
       });
     }
@@ -2070,7 +2465,7 @@ export class GameMenu {
 
   renderStart() {
     const decks = getAllDeckOptions();
-    const { empty, optionsHtml: opts } = this.buildDeckSelectOptions(decks);
+    const { empty, folderOptionsHtml, optionsHtml } = this.buildDeckSelectOptions(decks);
     const difficultyRadios = AI_DIFFICULTIES.map(
       (d) => {
         const hint = AI_DIFFICULTY_HINTS[d];
@@ -2110,14 +2505,22 @@ export class GameMenu {
         </fieldset>
         ${empty ? this.renderNoDecksHint() : `
         <div class="start-decks">
-          <div class="deck-form-row">
-            <label for="deck-player">Deck — Joueur</label>
-            <select id="deck-player">${opts}</select>
-          </div>
-          <div class="deck-form-row">
-            <label for="deck-opponent">Deck — Adversaire</label>
-            <select id="deck-opponent">${opts}</select>
-          </div>
+          ${this.renderFolderDeckPickerRow({
+            folderSelectId: 'deck-player-folder',
+            deckSelectId: 'deck-player',
+            folderLabel: 'Dossier — Joueur',
+            deckLabel: 'Deck — Joueur',
+            folderOptionsHtml,
+            deckOptionsHtml: optionsHtml,
+          })}
+          ${this.renderFolderDeckPickerRow({
+            folderSelectId: 'deck-opponent-folder',
+            deckSelectId: 'deck-opponent',
+            folderLabel: 'Dossier — Adversaire',
+            deckLabel: 'Deck — Adversaire',
+            folderOptionsHtml,
+            deckOptionsHtml: optionsHtml,
+          })}
         </div>
         <div class="menu-footer-actions">
           <button type="button" class="btn-menu primary" data-action="play">Commencer la partie</button>
@@ -2150,6 +2553,17 @@ export class GameMenu {
     if (empty) {
       this.bindNoDecksBuilderAction();
     } else {
+      this.bindFolderDeckCascade({
+        folderSelectId: 'deck-player-folder',
+        deckSelectId: 'deck-player',
+        decks,
+      });
+      this.bindFolderDeckCascade({
+        folderSelectId: 'deck-opponent-folder',
+        deckSelectId: 'deck-opponent',
+        decks,
+        defaultDeckIndex: 1,
+      });
       this.host.querySelector('[data-action="play"]')?.addEventListener('click', () => {
         const playerId = this.host.querySelector('#deck-player')?.value;
         const opponentId = this.host.querySelector('#deck-opponent')?.value;
@@ -2172,17 +2586,12 @@ export class GameMenu {
           aiDifficulty: gameMode === 'ai' ? aiDifficulty : undefined,
         });
       });
-
-      const selects = this.host.querySelectorAll('select');
-      if (selects[1] && decks.length > 1) {
-        selects[1].selectedIndex = Math.min(1, decks.length - 1);
-      }
     }
   }
 
   renderAiBattlePick() {
     const decks = getAllDeckOptions();
-    const { empty, optionsHtml: opts } = this.buildDeckSelectOptions(decks);
+    const { empty, folderOptionsHtml, optionsHtml } = this.buildDeckSelectOptions(decks);
     const needsTwoDecks = !empty && decks.length < 2;
     const difficultyRadios = AI_DIFFICULTIES.map(
       (d) => {
@@ -2216,14 +2625,22 @@ export class GameMenu {
           <button type="button" class="btn-menu primary" data-action="builder">Créer un deck</button>
         </div>` : `
         <div class="start-decks">
-          <div class="deck-form-row">
-            <label for="ai-battle-deck-a">Deck A</label>
-            <select id="ai-battle-deck-a">${opts}</select>
-          </div>
-          <div class="deck-form-row">
-            <label for="ai-battle-deck-b">Deck B</label>
-            <select id="ai-battle-deck-b">${opts}</select>
-          </div>
+          ${this.renderFolderDeckPickerRow({
+            folderSelectId: 'ai-battle-folder-a',
+            deckSelectId: 'ai-battle-deck-a',
+            folderLabel: 'Dossier — Deck A',
+            deckLabel: 'Deck A',
+            folderOptionsHtml,
+            deckOptionsHtml: optionsHtml,
+          })}
+          ${this.renderFolderDeckPickerRow({
+            folderSelectId: 'ai-battle-folder-b',
+            deckSelectId: 'ai-battle-deck-b',
+            folderLabel: 'Dossier — Deck B',
+            deckLabel: 'Deck B',
+            folderOptionsHtml,
+            deckOptionsHtml: optionsHtml,
+          })}
         </div>
         <div class="menu-footer-actions">
           <button type="button" class="btn-menu primary" data-action="run-ai-battle"${this.aiBattleRunning ? ' disabled' : ''}>Lancer la simulation</button>
@@ -2245,10 +2662,17 @@ export class GameMenu {
     if (empty || needsTwoDecks) {
       this.bindNoDecksBuilderAction();
     } else {
-      const selects = this.host.querySelectorAll('select');
-      if (selects[1] && decks.length > 1) {
-        selects[1].selectedIndex = Math.min(1, decks.length - 1);
-      }
+      this.bindFolderDeckCascade({
+        folderSelectId: 'ai-battle-folder-a',
+        deckSelectId: 'ai-battle-deck-a',
+        decks,
+      });
+      this.bindFolderDeckCascade({
+        folderSelectId: 'ai-battle-folder-b',
+        deckSelectId: 'ai-battle-deck-b',
+        decks,
+        defaultDeckIndex: 1,
+      });
 
       this.host.querySelector('[data-action="run-ai-battle"]')?.addEventListener('click', () => {
         void this.runAiBattleSimulation();

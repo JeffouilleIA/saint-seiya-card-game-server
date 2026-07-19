@@ -442,7 +442,14 @@
     "retreat": 3,
     "talent": {
       "name": "Chef de meute",
-      "effect": "Si ce chevalier est votre chevalier actif, vous pouvez l'échanger contre un chevalier d'Argent de votre banc."
+      "effect": "Si ce chevalier est votre chevalier actif, vous pouvez l'échanger contre un chevalier d'Argent de votre banc.",
+      "effects": [
+        {
+          "type": "swap_active_with_bench_filter",
+          "requiresActive": true,
+          "filter": { "type": "chevalier-argent" }
+        }
+      ]
     },
     "attacks": [
       {

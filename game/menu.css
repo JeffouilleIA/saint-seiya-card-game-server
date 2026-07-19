@@ -658,6 +658,179 @@
   color: var(--gold);
 }
 
+.deck-folder-toolbar {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 0 1rem;
+}
+
+.deck-folder-group {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 0 1.25rem;
+}
+
+.deck-folder-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.deck-folder-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.deck-folder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.btn-folder-action {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.78rem;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  background: #2a3548;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.btn-folder-action:hover {
+  border-color: var(--gold-dim);
+  color: var(--text);
+}
+
+.btn-folder-action-danger:hover {
+  border-color: #c45;
+  color: #f8a;
+}
+
+.deck-folder-empty {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.deck-folder-move-label {
+  flex-shrink: 0;
+}
+
+.deck-folder-move {
+  max-width: 9rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.82rem;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  background: #1e2736;
+  color: var(--text);
+}
+
+.deck-folder-nav-hint {
+  margin: -0.75rem 0 1rem;
+  text-align: center;
+  max-width: 520px;
+}
+
+.deck-folder-nav-list .deck-folder-nav-item {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+
+.deck-folder-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.deck-folder-nav-btn:hover .saved-deck-name,
+.deck-folder-nav-btn:focus-visible .saved-deck-name {
+  color: var(--gold);
+}
+
+.deck-folder-nav-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.deck-folder-nav-chevron {
+  flex-shrink: 0;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--gold-dim);
+}
+
+.deck-folder-nav-list .deck-folder-actions {
+  justify-content: flex-end;
+  padding: 0 0.25rem 0.15rem;
+}
+
+.deck-folder-open-title {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 0 0.75rem;
+  text-align: center;
+}
+
+.deck-folder-draft-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto 0.75rem;
+}
+
+.deck-folder-draft-header .deck-folder-open-title {
+  margin: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.saved-deck-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.btn-delete-deck {
+  flex-shrink: 0;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  border: 1px solid #8b3a3a;
+  background: #2a2028;
+  color: #f0c0c0;
+  cursor: pointer;
+}
+
+.btn-delete-deck:hover {
+  border-color: #c45c5c;
+  color: #ffd0d0;
+}
+
 .menu-stats .menu-screen {
   max-height: 100vh;
 }
