@@ -44,7 +44,16 @@ if (!fs.existsSync(GAME_ROOT)) {
 }
 
 const { createDecksApi } = await import(pathToFileURL(path.join(GAME_ROOT, 'decks-api.js')).href);
-const { readSharedDecks, handleDecksApi } = createDecksApi(DECKS_FILE);
+const { readSharedDecks, readSharedDeckData, handleDecksApi } = createDecksApi(DECKS_FILE);
+
+function menuHasDeckFolders() {
+  try {
+    const menuPath = path.join(GAME_ROOT, 'menu.js');
+    return fs.readFileSync(menuPath, 'utf8').includes('UNFILED_FOLDER_LABEL');
+  } catch {
+    return false;
+  }
+}
 
 const app = express();
 app.disable('x-powered-by');
@@ -70,11 +79,15 @@ function sendJson(res, status, body) {
 }
 
 app.get('/health', (_req, res) => {
+  const deckData = readSharedDeckData();
   sendJson(res, 200, {
     ok: true,
     gameRoot: GAME_ROOT,
     decksFile: DECKS_FILE,
-    deckCount: readSharedDecks().length,
+    deckCount: deckData.decks.length,
+    folderCount: deckData.folders.length,
+    menuHasDeckFolders: menuHasDeckFolders(),
+    gitCommit: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.GIT_COMMIT || null,
     port: PORT,
     railway: IS_RAILWAY,
     socketio: true,
@@ -95,10 +108,12 @@ app.use(async (req, res, next) => {
 app.use(
   express.static(GAME_ROOT, {
     index: 'index.html',
+    etag: false,
+    lastModified: false,
     setHeaders(res, filePath) {
       const ext = path.extname(filePath);
       if (['.js', '.html', '.json', '.css'].includes(ext)) {
-        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Cache-Control', 'no-store');
       }
     },
   }),
@@ -108,6 +123,7 @@ app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/')) {
     return next();
   }
+  res.set('Cache-Control', 'no-store');
   res.sendFile(path.join(GAME_ROOT, 'index.html'), (err) => {
     if (err) next();
   });
