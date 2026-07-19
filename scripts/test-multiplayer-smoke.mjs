@@ -52,17 +52,33 @@ async function main() {
   });
   if (!joined.ok) throw new Error(`join failed: ${joined.error}`);
 
-  const deckId = 'deck-1780782458146-lptba';
+  const deckA = 'deck-1780782458146-lptba';
+  const deckB = 'deck-1779521498797-xud5i';
 
-  let hostReady = await emitAsync(host, 'mp:update', { deckId, ready: true });
-  let guestReady = await emitAsync(guest, 'mp:update', { deckId, ready: true });
+  let hostReady = await emitAsync(host, 'mp:update', { deckId: deckA, ready: true });
+  let guestReady = await emitAsync(guest, 'mp:update', { deckId: deckA, ready: true });
   assertBothReady(guestReady.room, 'after both ready');
 
   // Simulate lobby re-render auto-sync (deck only, no ready flag).
-  hostReady = await emitAsync(host, 'mp:update', { deckId });
+  hostReady = await emitAsync(host, 'mp:update', { deckId: deckA });
   assertBothReady(hostReady.room, 'after host deck resync');
-  guestReady = await emitAsync(guest, 'mp:update', { deckId });
+  guestReady = await emitAsync(guest, 'mp:update', { deckId: deckA });
   assertBothReady(guestReady.room, 'after guest deck resync');
+
+  // Host changes deck: ready must reset, then host can ready again before start.
+  hostReady = await emitAsync(host, 'mp:update', { deckId: deckB, ready: false });
+  const hostPlayer = hostReady.room?.players?.find((p) => p.seat === 0);
+  if (!hostPlayer?.deckId || hostPlayer.deckId !== deckB) {
+    throw new Error(`after deck change: expected host deck ${deckB}, got ${JSON.stringify(hostPlayer)}`);
+  }
+  if (hostPlayer.ready) {
+    throw new Error('after deck change: host ready must be false');
+  }
+  hostReady = await emitAsync(host, 'mp:update', { deckId: deckB, ready: true });
+  if (!hostReady.room?.players?.find((p) => p.seat === 0)?.ready) {
+    throw new Error('after deck change: host should be ready again');
+  }
+  assertBothReady(hostReady.room, 'after host deck change and re-ready');
 
   const startPromise = new Promise((resolve) => {
     guest.once('mp:start', resolve);

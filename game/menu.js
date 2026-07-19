@@ -854,10 +854,14 @@ export class GameMenu {
     }
 
     const decks = getAllDeckOptions();
-    const { empty, folderOptionsHtml, optionsHtml } = this.buildDeckSelectOptions(decks);
     const mySeat = this.onlineClient.seat ?? 0;
     const players = room.players || [];
     const me = players.find((p) => p.seat === mySeat) || players[0];
+    const preferredFolderKey = this.getFolderNavKeyForDeckId(decks, me?.deckId);
+    const { empty, folderOptionsHtml, optionsHtml } = this.buildDeckSelectOptions(
+      decks,
+      preferredFolderKey,
+    );
     const opp = players.find((p) => p.seat !== mySeat);
     const isHost = this.isOnlineRoomHost(room);
     const bothConnected = players.length >= 2 && players.every((p) => p.connected);
@@ -905,7 +909,7 @@ export class GameMenu {
             deckOptionsHtml: optionsHtml,
           })}
           <label class="online-ready">
-            <input type="checkbox" id="online-ready" ${me?.ready ? 'checked' : ''} ${me?.deckId ? '' : 'disabled'} />
+            <input type="checkbox" id="online-ready" ${me?.ready ? 'checked' : ''} disabled />
             Prêt
           </label>
         </div>
@@ -929,13 +933,19 @@ export class GameMenu {
       deckSelectId: 'online-deck',
       decks,
       defaultDeckIndex: 0,
+      initialFolderKey: preferredFolderKey,
+      initialDeckId: me?.deckId || null,
+      onDeckChange: (deckId) => this.syncOnlineLobbyDeck(deckId),
+      onFolderChange: (deckId) => this.syncOnlineLobbyDeck(deckId),
     });
 
     const deckSelect = this.host.querySelector('#online-deck');
     const readyBox = this.host.querySelector('#online-ready');
-    if (deckSelect && me?.deckId) deckSelect.value = me.deckId;
+    const selectedDeckId = deckSelect?.value || '';
+    const deckConfirmed = Boolean(me?.deckId && me.deckId === selectedDeckId);
 
-    const selectedDeckId = deckSelect?.value;
+    if (readyBox) readyBox.disabled = !deckConfirmed;
+
     if (selectedDeckId && !me?.deckId && this._onlineDeckSyncId !== selectedDeckId) {
       this._onlineDeckSyncId = selectedDeckId;
       void this.onlineClient.updateSelf({ deckId: selectedDeckId }).finally(() => {
@@ -947,17 +957,10 @@ export class GameMenu {
     readyBox?.addEventListener('change', () => {
       const deckId = this.host.querySelector('#online-deck')?.value;
       if (!deckId) return;
+      const liveMe = this.onlineClient.room?.players?.find((p) => p.seat === mySeat);
       const payload =
-        me?.deckId === deckId ? { ready: readyBox.checked } : { deckId, ready: readyBox.checked };
+        liveMe?.deckId === deckId ? { ready: readyBox.checked } : { deckId, ready: readyBox.checked };
       void this.onlineClient.updateSelf(payload);
-    });
-
-    deckSelect?.addEventListener('change', () => {
-      const deckId = deckSelect.value;
-      if (!deckId) return;
-      if (readyBox) readyBox.disabled = false;
-      void this.onlineClient.updateSelf({ deckId, ready: false });
-      if (readyBox) readyBox.checked = false;
     });
 
     this.host.querySelector('[data-action="start-game"]')?.addEventListener('click', async () => {
@@ -1231,6 +1234,14 @@ export class GameMenu {
     return this.getDeckFolderGroupsForNav(decks).find((group) =>
       decoded ? group.folderId === decoded : !group.folderId,
     );
+  }
+
+  /** Dossier contenant un deck (pour restaurer le sélecteur lobby en ligne). */
+  getFolderNavKeyForDeckId(decks, deckId) {
+    if (!deckId) return null;
+    const deck = decks.find((d) => d.id === deckId);
+    if (!deck) return ALL_FOLDERS_NAV_KEY;
+    return this.encodeFolderNavKey(deck.folderId ?? null);
   }
 
   renderDeckFolderNavList(groups, pickAttr = 'data-pick-folder', { showAllOption = false, allDeckCount = 0 } = {}) {
@@ -1951,10 +1962,40 @@ export class GameMenu {
     };
   }
 
-  bindFolderDeckCascade({ folderSelectId, deckSelectId, decks, defaultDeckIndex = 0 }) {
+  syncOnlineLobbyDeck(deckId) {
+    if (!deckId) return;
+    this._onlineDeckSyncId = null;
+    const readyBox = this.host.querySelector('#online-ready');
+    if (readyBox) {
+      readyBox.checked = false;
+      readyBox.disabled = true;
+    }
+    void this.onlineClient.updateSelf({ deckId, ready: false });
+  }
+
+  bindFolderDeckCascade({
+    folderSelectId,
+    deckSelectId,
+    decks,
+    defaultDeckIndex = 0,
+    initialFolderKey = null,
+    initialDeckId = null,
+    onDeckChange = null,
+    onFolderChange = null,
+  }) {
     const folderSelect = this.host.querySelector(`#${folderSelectId}`);
     const deckSelect = this.host.querySelector(`#${deckSelectId}`);
     if (!folderSelect || !deckSelect) return;
+
+    if (initialFolderKey != null) folderSelect.value = initialFolderKey;
+
+    const pickDeckInSelect = (deckId) => {
+      if (!deckId) return false;
+      const hasOption = [...deckSelect.options].some((option) => option.value === deckId);
+      if (!hasOption) return false;
+      deckSelect.value = deckId;
+      return true;
+    };
 
     const refreshDecks = (applyDefaultIndex = false) => {
       const folderDecks = this.getDecksForFolderNavKey(folderSelect.value, decks);
@@ -1966,13 +2007,19 @@ export class GameMenu {
             )
             .join('')
         : '<option value="">— Aucun deck dans ce dossier —</option>';
+      if (pickDeckInSelect(initialDeckId)) return;
       if (applyDefaultIndex && defaultDeckIndex > 0 && deckSelect.options.length > defaultDeckIndex) {
         deckSelect.selectedIndex = defaultDeckIndex;
       }
     };
 
-    folderSelect.addEventListener('change', () => refreshDecks(false));
+    folderSelect.addEventListener('change', () => {
+      refreshDecks(false);
+      onFolderChange?.(deckSelect.value);
+    });
+    deckSelect.addEventListener('change', () => onDeckChange?.(deckSelect.value));
     refreshDecks(true);
+    pickDeckInSelect(initialDeckId);
   }
 
   renderFolderDeckPickerRow({ folderSelectId, deckSelectId, folderLabel, deckLabel, folderOptionsHtml, deckOptionsHtml }) {
