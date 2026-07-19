@@ -666,6 +666,23 @@ export class GameMenu {
     return Number(this.onlineClient.seat) === 0;
   }
 
+  explainOnlineStartBlock({ isHost, bothConnected, players, room, canStart }) {
+    if (!isHost || canStart || room?.status !== 'waiting') return '';
+    const reasons = [];
+    if (players.length < 2) reasons.push('En attente du 2e joueur.');
+    else if (!bothConnected) {
+      const away = players.filter((p) => !p.connected).map((p) => p.name);
+      if (away.length) reasons.push(`Joueur(s) hors ligne : ${away.join(', ')}.`);
+    }
+    for (const p of players) {
+      if (!p.deckId) reasons.push(`${p.name} : deck non confirmé côté serveur.`);
+      else if (!p.ready) reasons.push(`${p.name} : pas prêt.`);
+    }
+    return reasons.length
+      ? `<p class="online-start-hint">${this.escapeHtml(reasons.join(' '))}</p>`
+      : '';
+  }
+
   beginOnlineMatch(start) {
     if (!start || this.screen === 'online-match') return;
     this.screen = 'online-match';
@@ -849,6 +866,13 @@ export class GameMenu {
       bothConnected &&
       players.every((p) => p.deckId && p.ready) &&
       room.status === 'waiting';
+    const startBlockHint = this.explainOnlineStartBlock({
+      isHost,
+      bothConnected,
+      players,
+      room,
+      canStart,
+    });
 
     const playerRows = (room.players || [])
       .map((p) => {
@@ -886,7 +910,7 @@ export class GameMenu {
           </label>
         </div>
         <div class="menu-footer-actions">
-          ${isHost ? `<button type="button" class="btn-menu primary" data-action="start-game" ${canStart ? '' : 'disabled'}>Lancer la partie</button>` : `<p class="online-wait-host">${opp?.connected ? 'En attente de l’hôte…' : 'En attente du 2e joueur…'}</p>`}
+          ${isHost ? `<button type="button" class="btn-menu primary" data-action="start-game" ${canStart ? '' : 'disabled'}>Lancer la partie</button>${startBlockHint}` : `<p class="online-wait-host">${opp?.connected ? 'En attente de l’hôte…' : 'En attente du 2e joueur…'}</p>`}
         </div>`}
       </div>
     `;
@@ -912,15 +936,20 @@ export class GameMenu {
     if (deckSelect && me?.deckId) deckSelect.value = me.deckId;
 
     const selectedDeckId = deckSelect?.value;
-    if (selectedDeckId && !me?.deckId) {
-      if (readyBox) readyBox.disabled = false;
-      void this.onlineClient.updateSelf({ deckId: selectedDeckId, ready: false });
+    if (selectedDeckId && !me?.deckId && this._onlineDeckSyncId !== selectedDeckId) {
+      this._onlineDeckSyncId = selectedDeckId;
+      void this.onlineClient.updateSelf({ deckId: selectedDeckId }).finally(() => {
+        const synced = this.onlineClient.room?.players?.find((p) => p.seat === mySeat)?.deckId;
+        if (synced === selectedDeckId) this._onlineDeckSyncId = null;
+      });
     }
 
     readyBox?.addEventListener('change', () => {
       const deckId = this.host.querySelector('#online-deck')?.value;
       if (!deckId) return;
-      void this.onlineClient.updateSelf({ deckId, ready: readyBox.checked });
+      const payload =
+        me?.deckId === deckId ? { ready: readyBox.checked } : { deckId, ready: readyBox.checked };
+      void this.onlineClient.updateSelf(payload);
     });
 
     deckSelect?.addEventListener('change', () => {

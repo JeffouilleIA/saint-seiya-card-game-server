@@ -2021,3 +2021,11 @@
   color: var(--text-muted, #a8b4c8);
   font-style: italic;
 }
+
+.online-start-hint {
+  margin-top: 0.65rem;
+  color: var(--text-muted, #a8b4c8);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-align: center;
+}

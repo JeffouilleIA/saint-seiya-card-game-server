@@ -47,6 +47,10 @@ async function main() {
   await emitAsync(host, 'mp:update', { deckId: 'deck-1780782458146-lptba', ready: true });
   await emitAsync(guest, 'mp:update', { deckId: 'deck-1780782458146-lptba', ready: true });
 
+  // Simulate lobby re-render auto-sync (deck only, no ready flag).
+  await emitAsync(host, 'mp:update', { deckId: 'deck-1780782458146-lptba' });
+  await emitAsync(guest, 'mp:update', { deckId: 'deck-1780782458146-lptba' });
+
   const startPromise = new Promise((resolve) => {
     guest.once('mp:start', resolve);
   });
