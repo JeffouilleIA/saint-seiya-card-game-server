@@ -660,16 +660,29 @@ export class GameMenu {
     });
   }
 
+  isOnlineRoomHost(room = this.onlineClient.room) {
+    const socketId = this.onlineClient.socket?.id;
+    if (room?.hostId && socketId) return room.hostId === socketId;
+    return Number(this.onlineClient.seat) === 0;
+  }
+
+  beginOnlineMatch(start) {
+    if (!start || this.screen === 'online-match') return;
+    this.screen = 'online-match';
+    this.onStartOnlineMatch({
+      seat: this.onlineClient.seat,
+      start,
+      client: this.onlineClient,
+    });
+  }
+
   bindOnlineLobbyClient() {
     this.onlineClient.onRoomUpdate = (room) => {
+      if (room?.status === 'playing' || room?.inGame) return;
       if (this.screen === 'online-lobby') this.renderOnlineLobby();
     };
     this.onlineClient.onGameStart = (start) => {
-      this.onStartOnlineMatch({
-        seat: this.onlineClient.seat,
-        start,
-        client: this.onlineClient,
-      });
+      this.beginOnlineMatch(start);
     };
     this.onlineClient.onOpponentLeft = () => {
       this.onlineMsg = 'L’adversaire s’est déconnecté.';
@@ -826,14 +839,15 @@ export class GameMenu {
     const decks = getAllDeckOptions();
     const { empty, folderOptionsHtml, optionsHtml } = this.buildDeckSelectOptions(decks);
     const mySeat = this.onlineClient.seat ?? 0;
-    const me = room.players?.find((p) => p.seat === mySeat) || room.players?.[0];
-    const opp = room.players?.find((p) => p.seat !== mySeat);
-    const isHost = mySeat === 0;
-    const bothConnected = room.players?.every((p) => p.connected);
+    const players = room.players || [];
+    const me = players.find((p) => p.seat === mySeat) || players[0];
+    const opp = players.find((p) => p.seat !== mySeat);
+    const isHost = this.isOnlineRoomHost(room);
+    const bothConnected = players.length >= 2 && players.every((p) => p.connected);
     const canStart =
       isHost &&
       bothConnected &&
-      room.players?.every((p) => p.deckId && p.ready) &&
+      players.every((p) => p.deckId && p.ready) &&
       room.status === 'waiting';
 
     const playerRows = (room.players || [])
@@ -894,9 +908,15 @@ export class GameMenu {
     });
 
     const deckSelect = this.host.querySelector('#online-deck');
+    const readyBox = this.host.querySelector('#online-ready');
     if (deckSelect && me?.deckId) deckSelect.value = me.deckId;
 
-    const readyBox = this.host.querySelector('#online-ready');
+    const selectedDeckId = deckSelect?.value;
+    if (selectedDeckId && !me?.deckId) {
+      if (readyBox) readyBox.disabled = false;
+      void this.onlineClient.updateSelf({ deckId: selectedDeckId, ready: false });
+    }
+
     readyBox?.addEventListener('change', () => {
       const deckId = this.host.querySelector('#online-deck')?.value;
       if (!deckId) return;
@@ -912,10 +932,14 @@ export class GameMenu {
     });
 
     this.host.querySelector('[data-action="start-game"]')?.addEventListener('click', async () => {
+      const btn = this.host.querySelector('[data-action="start-game"]');
+      if (btn?.disabled) return;
       const reply = await this.onlineClient.startGame();
       if (!reply.ok) {
         window.alert(reply.error || 'Impossible de lancer la partie.');
+        return;
       }
+      if (reply.start) this.beginOnlineMatch(reply.start);
     });
   }
 
