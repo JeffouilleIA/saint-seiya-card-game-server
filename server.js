@@ -12,6 +12,11 @@ import os from 'os';
 import { Server as SocketServer } from 'socket.io';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { attachMultiplayerLobby, getLobbyStats } from './lobby.js';
+import {
+  mergeDeckStorageFiles,
+  parseDeckStorageFile,
+  writeDeckStorageFile,
+} from './scripts/merge-deck-storage.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3000;
@@ -30,9 +35,36 @@ function resolveGameRoot() {
 }
 
 const GAME_ROOT = resolveGameRoot();
+const BUNDLED_DECKS_FILE = path.join(GAME_ROOT, 'data', 'saved-decks.json');
+const PERSISTENT_DECKS_DIR = process.env.DECKS_DIR || (IS_RAILWAY ? '/data' : null);
 const DECKS_FILE = path.resolve(
-  process.env.DECKS_FILE || path.join(GAME_ROOT, 'data', 'saved-decks.json'),
+  process.env.DECKS_FILE
+    || (PERSISTENT_DECKS_DIR
+      ? path.join(PERSISTENT_DECKS_DIR, 'saved-decks.json')
+      : BUNDLED_DECKS_FILE),
 );
+
+function ensurePersistentDecksFile() {
+  if (DECKS_FILE === path.resolve(BUNDLED_DECKS_FILE)) return;
+  const persistent = parseDeckStorageFile(DECKS_FILE);
+  const bundled = parseDeckStorageFile(BUNDLED_DECKS_FILE);
+  const hasPersistent = persistent.decks.length > 0 || persistent.folders.length > 0;
+  const hasBundled = bundled.decks.length > 0 || bundled.folders.length > 0;
+  if (!hasPersistent && hasBundled) {
+    writeDeckStorageFile(DECKS_FILE, bundled);
+    console.log(`Decks initialisés depuis le bundle → ${DECKS_FILE}`);
+    return;
+  }
+  if (hasPersistent && hasBundled) {
+    const merged = mergeDeckStorageFiles(DECKS_FILE, BUNDLED_DECKS_FILE);
+    if (merged.decks.length > persistent.decks.length) {
+      writeDeckStorageFile(DECKS_FILE, merged);
+      console.log(
+        `Decks fusionnés (persistant=${persistent.decks.length}, bundle=${bundled.decks.length}, total=${merged.decks.length})`,
+      );
+    }
+  }
+}
 
 if (!fs.existsSync(GAME_ROOT)) {
   console.error(`Dossier jeu introuvable : ${GAME_ROOT}`);
@@ -43,6 +75,8 @@ if (!fs.existsSync(GAME_ROOT)) {
   }
   process.exit(1);
 }
+
+ensurePersistentDecksFile();
 
 const { createDecksApi } = await import(pathToFileURL(path.join(GAME_ROOT, 'decks-api.js')).href);
 const { readSharedDecks, readSharedDeckData, handleDecksApi } = createDecksApi(DECKS_FILE);

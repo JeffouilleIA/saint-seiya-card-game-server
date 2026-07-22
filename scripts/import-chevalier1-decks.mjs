@@ -175,18 +175,28 @@ for (const dir of browserLevelDbDirs()) {
   }
 }
 
-const existing = fs.existsSync(OUT_FILE)
-  ? mergeDecks(JSON.parse(fs.readFileSync(OUT_FILE, 'utf8')))
-  : [];
+const existingRaw = fs.existsSync(OUT_FILE)
+  ? JSON.parse(fs.readFileSync(OUT_FILE, 'utf8'))
+  : null;
+const existingParsed = Array.isArray(existingRaw)
+  ? { folders: [], decks: existingRaw }
+  : existingRaw && Array.isArray(existingRaw.decks)
+    ? { folders: existingRaw.folders || [], decks: existingRaw.decks }
+    : { folders: [], decks: [] };
 
 const defaultDeck = await loadDefaultDeck();
-const merged = mergeDecks([...existing, ...allRaw, defaultDeck]);
+const mergedDecks = mergeDecks([...existingParsed.decks, ...allRaw, defaultDeck]);
+
+const payload = {
+  folders: existingParsed.folders,
+  decks: mergedDecks,
+};
 
 fs.mkdirSync(path.dirname(OUT_FILE), { recursive: true });
-fs.writeFileSync(OUT_FILE, `${JSON.stringify(merged, null, 2)}\n`, 'utf8');
+fs.writeFileSync(OUT_FILE, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
-console.log(`Importé ${merged.length} deck(s) dans le projet Chevalier1 :`);
-for (const d of merged) {
+console.log(`Importé ${mergedDecks.length} deck(s) dans le projet Chevalier1 :`);
+for (const d of mergedDecks) {
   const total = d.cards.reduce((s, c) => s + c.count, 0);
   console.log(`  • ${d.name} (${total} cartes)`);
 }

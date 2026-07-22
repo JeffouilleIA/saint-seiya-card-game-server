@@ -74,7 +74,18 @@ Branche distante attendue : `refs/heads/chevalier-multi` (commit multijoueur, ex
 | Variable | Valeur | Effet |
 |----------|--------|--------|
 | `GIT_BRANCH` | `chevalier-multi` | Affichée dans `/health` si Railway ne la fournit pas |
+| `DECKS_FILE` | `/data/saved-decks.json` | *(défaut sur Railway)* Fichier decks persistant |
+| `DECKS_DIR` | `/data` | Dossier du volume Railway pour les decks |
 | `PORT` | *(auto Railway)* | Ne pas fixer manuellement sauf besoin spécifique |
+
+### Persistance des decks (important)
+
+Les decks créés via le jeu en ligne sont enregistrés via `/api/decks`. **Sans volume Railway**, chaque redéploiement repart du fichier embarqué `game/data/saved-decks.json` (18 decks dans le dépôt) et **efface** les decks ajoutés uniquement sur le serveur.
+
+1. Railway → service → **Volumes** → **Add volume**, monter sur **`/data`**
+2. (Optionnel) variable `DECKS_FILE=/data/saved-decks.json` — c’est déjà le défaut sur Railway
+3. Après redéploiement, le serveur **fusionne** le volume avec le bundle (ne supprime pas les decks du volume)
+4. Pour versionner de nouveaux decks dans le dépôt : menu **« Publier mes decks dans mon projet »** puis commit `Chevalier1/data/saved-decks.json`
 
 Ne pas fusionner `chevalier-multi` dans `main` tant que vous voulez le multijoueur **uniquement** sur cette branche.
 
