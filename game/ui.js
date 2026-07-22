@@ -217,6 +217,7 @@ export class GameUI {
         'optionalDiscardNamedCardsForAttack',
         'pickHuitiemeSensTransfer',
         'donDeVie',
+        'stadiumBenchTrim',
       ];
       if (interactive.includes(pending.type)) {
         return pendingOwner;
@@ -6311,7 +6312,7 @@ export class GameUI {
       }
       el.appendChild(slot);
     });
-    while (el.children.length < RULES.maxBench) {
+    while (el.children.length < (this.engine.getEffectiveMaxBench?.() ?? RULES.maxBench)) {
       const empty = document.createElement('div');
       empty.className = 'bench-slot empty';
       el.appendChild(empty);
@@ -6808,8 +6809,8 @@ export class GameUI {
         return;
       }
       const cur = state.players[acting];
-      if (cur.bench.length >= RULES.maxBench) {
-        this.showBanner('Banc plein — 5 chevaliers maximum.', 'warn');
+      if (cur.bench.length >= (this.engine.getEffectiveMaxBench?.() ?? RULES.maxBench)) {
+        this.showBanner(`Banc plein — ${this.engine.getEffectiveMaxBench?.() ?? RULES.maxBench} chevaliers maximum.`, 'warn');
       } else if (cur.modifiers.cantPlayCardNextTurn) {
         this.showBanner('Vous ne pouvez pas jouer de carte ce tour.', 'warn');
       }
@@ -7281,12 +7282,30 @@ export class GameUI {
     if (this.tryHumanPickOpponentBenchActive(index)) return;
     if (this.tryHumanPickOwnBenchActive(index)) return;
     if (this.tryHumanPickBenchForDeckEnergy(index)) return;
+    if (this.tryHumanStadiumBenchTrimDiscard(index)) return;
     if (this.tryHumanAccelerationDiscardBench(index)) return;
     const state = this.engine.state;
     const acting = this.getActingPlayer(state);
     const knight = state.players[acting].bench[index];
     if (knight) this.onCardClick(knight.cardId, knight, index);
     else this.onCardClick(null, null, index);
+  }
+
+  tryHumanStadiumBenchTrimDiscard(benchIndex) {
+    const state = this.engine.state;
+    const acting = this.getActingPlayer(state);
+    const pending = state.pending;
+    if (pending?.type !== 'stadiumBenchTrim' || pending.playerIndex !== acting) {
+      return false;
+    }
+    const knight = state.players[acting].bench[benchIndex];
+    if (!knight) return false;
+    const ok = this.execEngine('resolveStadiumBenchTrimDiscard', acting, benchIndex);
+    if (ok) {
+      this.setMode(null);
+      this.setTargeting(false);
+    }
+    return ok;
   }
 
   tryHumanAccelerationDiscardBench(benchIndex) {
@@ -7792,6 +7811,15 @@ export class GameUI {
       this.setMode(null);
       this.setTargeting(true);
       this.showAccelerationDiscardModal(p, acting);
+      return;
+    }
+    if (p.type === 'stadiumBenchTrim' && p.playerIndex === acting) {
+      this.setMode(null);
+      this.setTargeting(true);
+      this.showBanner(
+        `Mégalopole : défaussez des chevaliers de banc jusqu'à ${p.targetCount}.`,
+        'stadium',
+      );
       return;
     }
     if (p.type === 'accelerationEnergieAttach' && p.playerIndex === acting) {

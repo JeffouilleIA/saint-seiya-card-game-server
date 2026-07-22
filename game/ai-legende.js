@@ -367,7 +367,7 @@ export function scoreDeckSearchPick(game, playerIndex, card, cheatLevel = 'none'
   }
 
   if (isBaseChevalier(card.cardId)) {
-    score += p.bench.length < (RULES.maxBench ?? 5) ? 35 : 10;
+    score += p.bench.length < (game?.getEffectiveMaxBench?.() ?? RULES.maxBench ?? 5) ? 35 : 10;
     score += (def.hp || 0) * 0.3;
   }
 

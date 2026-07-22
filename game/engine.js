@@ -101,6 +101,7 @@ function createFieldKnight(cardInstance) {
     modifiers: {},
     attackedLastTurn: false,
     attackedThisTurn: false,
+    meleeUsedThisTurn: false,
     attachedTool: null,
     underCard: null,
   };
@@ -124,6 +125,7 @@ function cloneFieldKnightState(knight) {
     modifiers: { ...knight.modifiers },
     attackedLastTurn: !!knight.attackedLastTurn,
     attackedThisTurn: !!knight.attackedThisTurn,
+    meleeUsedThisTurn: !!knight.meleeUsedThisTurn,
     attachedTool: knight.attachedTool ? { ...knight.attachedTool } : null,
     underCard: knight.underCard ? { ...knight.underCard } : null,
   };
@@ -817,8 +819,85 @@ export class GameEngine {
   findStadiumRule(type) {
     const fx = this.getStadiumEffect();
     if (!fx?.def) return null;
-    const list = [...(fx.def.effects || []), ...(fx.def.passiveEffects || [])];
+    return this.findStadiumRuleOnDef(fx.def, type);
+  }
+
+  findStadiumRuleOnDef(def, type) {
+    if (!def) return null;
+    const list = [...(def.effects || []), ...(def.passiveEffects || [])];
     return list.find((e) => e.type === type) || null;
+  }
+
+  getEffectiveMaxBench() {
+    const rule = this.findStadiumRule('stadium_bench_max');
+    return rule?.max ?? rule?.amount ?? RULES.maxBench;
+  }
+
+  startStadiumBenchTrimOnLeave(stadiumOwnerIndex, targetCount = 5) {
+    const needsTrim = this.state.players.some((p) => p.bench.length > targetCount);
+    if (!needsTrim) return false;
+    const order = [stadiumOwnerIndex, 1 - stadiumOwnerIndex];
+    this._advanceStadiumBenchTrimPlayer(order, 0, targetCount);
+    return true;
+  }
+
+  _advanceStadiumBenchTrimPlayer(playerOrder, orderIdx, targetCount) {
+    if (orderIdx >= playerOrder.length) {
+      this.state.pending = null;
+      this.emit();
+      return;
+    }
+    const playerIndex = playerOrder[orderIdx];
+    const p = this.state.players[playerIndex];
+    if (!p || p.bench.length <= targetCount) {
+      this._advanceStadiumBenchTrimPlayer(playerOrder, orderIdx + 1, targetCount);
+      return;
+    }
+    if (this.isAiControlled(playerIndex)) {
+      while (p.bench.length > targetCount) {
+        const idx = this.pickAiBenchPromoteIndexFor(playerIndex, { preferWeakest: true });
+        this.effects.discardBenchKnightVoluntary(p, idx);
+      }
+      this._advanceStadiumBenchTrimPlayer(playerOrder, orderIdx + 1, targetCount);
+      return;
+    }
+    this.state.pending = {
+      type: 'stadiumBenchTrim',
+      playerIndex,
+      orderIdx,
+      playerOrder,
+      targetCount,
+    };
+    this.feedback(
+      `Mégalopole : défaussez des chevaliers de banc jusqu'à ${targetCount} (${p.bench.length} actuellement).`,
+      'stadium',
+    );
+    this.emit();
+  }
+
+  resolveStadiumBenchTrimDiscard(playerIndex, benchIndex) {
+    const pending = this.state.pending;
+    if (
+      !pending ||
+      pending.type !== 'stadiumBenchTrim' ||
+      pending.playerIndex !== playerIndex
+    ) {
+      return false;
+    }
+    const p = this.state.players[playerIndex];
+    if (!p || benchIndex < 0 || benchIndex >= p.bench.length) return false;
+    if (p.bench.length <= pending.targetCount) return false;
+    this.effects.discardBenchKnightVoluntary(p, benchIndex);
+    if (p.bench.length <= pending.targetCount) {
+      this._advanceStadiumBenchTrimPlayer(
+        pending.playerOrder,
+        pending.orderIdx + 1,
+        pending.targetCount,
+      );
+    } else {
+      this.emit();
+    }
+    return true;
   }
 
   stadiumBlocksRetreat() {
@@ -876,6 +955,16 @@ export class GameEngine {
 
   getEffectiveAttackCost(knight, attack) {
     let cost = attack?.cost ?? 0;
+    const knightDef = getCardDef(knight?.cardId);
+    const ownerIndex = this.effects.findKnightOwnerIndex(knight);
+    const freeMelee = knightDef?.talent?.effects?.some((e) => e.type === 'melee_attack_free');
+    if (
+      freeMelee &&
+      this.effects.isMeleeAttack(attack) &&
+      (ownerIndex == null || !this.effects.isTalentSilenced(knight, ownerIndex))
+    ) {
+      return 0;
+    }
     if (knight?.attachedTool) {
       const toolDef = getCardDef(knight.attachedTool.cardId);
       for (const eff of toolDef?.passiveEffects || []) {
@@ -929,11 +1018,17 @@ export class GameEngine {
 
     if (this.state.stadium) {
       const prev = this.state.stadium;
+      const prevDef = getCardDef(prev.cardId);
+      const prevOwner = prev.playerIndex;
+      const trimRule = this.findStadiumRuleOnDef(prevDef, 'stadium_bench_trim_on_leave');
       this.discardStadiumToOwner(prev);
       this.feedback(
-        `${prev.name || getCardDef(prev.cardId)?.name} remplacé — envoyé à la défausse.`,
+        `${prev.name || prevDef?.name} remplacé — envoyé à la défausse.`,
         'stadium',
       );
+      if (trimRule) {
+        this.startStadiumBenchTrimOnLeave(prevOwner, trimRule.targetCount ?? trimRule.maxAfterLeave ?? 5);
+      }
     }
 
     const played = p.hand.splice(handIndex, 1)[0];
@@ -1356,6 +1451,7 @@ export class GameEngine {
     }
     endingPlayer.modifiers.cantReplayCardIds = [];
     await this.effects.applyStadiumEndTurnDamage();
+    await this.effects.applyStadiumEndTurnStatusDamage();
     this.effects.applyAthenaExclamationEndTurn(this.state.turn);
     this.effects.applyEndOfTurnKnightTalents(this.state.turn);
     const p = this.player;
@@ -1369,6 +1465,7 @@ export class GameEngine {
     for (const knight of [endingPlayer.active, ...endingPlayer.bench].filter(Boolean)) {
       knight.attackedLastTurn = !!knight.attackedThisTurn;
       knight.attackedThisTurn = false;
+      knight.meleeUsedThisTurn = false;
       if (knight.modifiers?.copiedAttackThisTurn) {
         knight.modifiers.copiedAttackThisTurn = null;
       }
@@ -2271,7 +2368,8 @@ export class GameEngine {
       pending.type === 'recoverDiscard' ||
       pending.type === 'distributeDamage' ||
       pending.type === 'discardForAttack' ||
-      pending.type === 'pickDisableOpponentAttack'
+      pending.type === 'pickDisableOpponentAttack' ||
+      pending.type === 'stadiumBenchTrim'
     ) {
       return actor === playerIndex;
     }
@@ -2854,7 +2952,7 @@ export class GameEngine {
     if (this.state.phase !== 'main' || this.state.turn !== playerIndex) return false;
     const p = this.state.players[playerIndex];
     if (p.modifiers.cantPlayCardNextTurn) return false;
-    if (p.bench.length >= RULES.maxBench) return false;
+    if (p.bench.length >= this.getEffectiveMaxBench()) return false;
     if (handIndex == null) {
       return p.hand.some((c) => canPlayKnightCardFromHand(c.cardId, p));
     }
@@ -2905,7 +3003,7 @@ export class GameEngine {
     ensureUniqueFieldKnights(p);
     this.maybeTriggerTalent(p, fk);
     await this.triggerOnEnterKnight(playerIndex, fk);
-    this.feedback(`${def.name} envoyé sur le banc (${p.bench.length}/${RULES.maxBench}).`, 'play');
+    this.feedback(`${def.name} envoyé sur le banc (${p.bench.length}/${this.getEffectiveMaxBench()}).`, 'play');
     this.anim('playCard', { from: 'hand', cardId: card.cardId });
     this.emit();
     return true;
@@ -4593,6 +4691,9 @@ export class GameEngine {
     );
 
     if (p.active) p.active.attackedThisTurn = true;
+    if (p.active && this.effects.isMeleeAttack(atk)) {
+      p.active.meleeUsedThisTurn = true;
+    }
 
     this._deferredAttackSplashDone = false;
     this._deferredAttackSplashDamage = 0;
@@ -5080,6 +5181,18 @@ export class GameEngine {
 
   _computeAndApplyAttackDamage(playerIndex, atk, ctx) {
     let damage = this.effects.computeAttackDamage(playerIndex, atk, ctx);
+    const opp = this.state.players[1 - playerIndex];
+    if (
+      this.effects.shouldSuppressMeleeDamageVsUsedTarget(
+        this.state.players[playerIndex].active,
+        atk,
+        opp.active,
+        playerIndex,
+      )
+    ) {
+      damage = 0;
+      this.feedback('Sans valeurs : aucun dégât (cible déjà en Corps à corps ce tour).', 'talent');
+    }
     if (
       atk.effects?.some((e) => e.type === 'attack_miss_on_tails') &&
       ctx.coin === RULES.coin.tails
@@ -5093,6 +5206,18 @@ export class GameEngine {
 
   async _computeAndApplyAttackDamageAsync(playerIndex, atk, ctx) {
     let damage = this.effects.computeAttackDamage(playerIndex, atk, ctx);
+    const opp = this.state.players[1 - playerIndex];
+    if (
+      this.effects.shouldSuppressMeleeDamageVsUsedTarget(
+        this.state.players[playerIndex].active,
+        atk,
+        opp.active,
+        playerIndex,
+      )
+    ) {
+      damage = 0;
+      this.feedback('Sans valeurs : aucun dégât (cible déjà en Corps à corps ce tour).', 'talent');
+    }
     if (
       atk.effects?.some((e) => e.type === 'attack_miss_on_tails') &&
       ctx.coin === RULES.coin.tails
@@ -6700,6 +6825,16 @@ export class GameEngine {
         const opt = pending.options?.[0];
         if (!opt) return this.cancelPending(playerIndex);
         return this.resolvePickBenchForDeckEnergy(playerIndex, opt.instanceId);
+      }
+
+      case 'stadiumBenchTrim': {
+        if (pending.playerIndex !== playerIndex) return false;
+        const p = this.state.players[playerIndex];
+        while (p.bench.length > pending.targetCount) {
+          const idx = this.pickAiBenchPromoteIndexFor(playerIndex, { preferWeakest: true });
+          if (!this.resolveStadiumBenchTrimDiscard(playerIndex, idx)) break;
+        }
+        return true;
       }
 
       case 'pickDamageOpponentKnight': {

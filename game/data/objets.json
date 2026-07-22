@@ -174,11 +174,22 @@
       {
         "type": "acceleration_energie",
         "maxDefausse": 3,
-        "cibleDefausse": ["Chevalier Noir"],
-        "source": ["main", "banc"],
+        "cibleDefausse": [
+          "Chevalier Noir"
+        ],
+        "source": [
+          "main",
+          "banc"
+        ],
         "parCarteDefaussee": {
-          "chercherDeck": { "type": "energie", "quantite": 1 },
-          "attacherA": ["Chevalier Noir", "Phénix Méchant"]
+          "chercherDeck": {
+            "type": "energie",
+            "quantite": 1
+          },
+          "attacherA": [
+            "Chevalier Noir",
+            "Phénix Méchant"
+          ]
         }
       }
     ]
@@ -702,6 +713,42 @@
       }
     ],
     "image": "stadium_dead_queen_island.jpg"
+  },
+  {
+    "id": "stadium_megalopole",
+    "name": "Mégalopole",
+    "category": "stade",
+    "type": "stadium",
+    "effectText": "Chaque joueur peut avoir jusqu'à 8 Chevaliers sur son banc. Lorsque ce Stade quitte le jeu, chaque joueur défausse l'excédent jusqu'à 5 Chevaliers de banc ; le propriétaire du Stade choisit en premier quels Chevaliers garder.",
+    "effects": [
+      {
+        "type": "stadium_bench_max",
+        "max": 8
+      },
+      {
+        "type": "stadium_bench_trim_on_leave",
+        "targetCount": 5,
+        "ownerChoosesFirst": true
+      }
+    ],
+    "image": "megalopole.jpg"
+  },
+  {
+    "id": "stadium_terres_glacees",
+    "name": "Terres glacées",
+    "category": "stade",
+    "type": "stadium",
+    "effectText": "En fin de tour : 20 dégâts aux Chevaliers gelés, 30 aux Chevaliers paralysés.",
+    "effects": [
+      {
+        "type": "stadium_end_turn_status_damage",
+        "damageByStatus": {
+          "frozen": 20,
+          "paralyzed": 30
+        }
+      }
+    ],
+    "image": "terres_glacees.jpg"
   },
   {
     "id": "objet_sceau_athena",
