@@ -1168,6 +1168,7 @@ body {
   flex-shrink: 0;
   position: relative;
   z-index: 100;
+  pointer-events: none;
   height: 200px;
   min-height: 200px;
   padding: 6px 16px 4px;
@@ -1192,6 +1193,7 @@ body {
 }
 
 .hand-card {
+  pointer-events: auto;
   margin: 0 calc(-1 * var(--hand-overlap, 18px));
   transform: rotate(var(--fan-rotate, 0deg)) translateY(var(--fan-y, 0));
   transform-origin: bottom center;
@@ -1211,6 +1213,8 @@ body {
 
 /* --- Controls --- */
 .controls {
+  position: relative;
+  z-index: 110;
   display: flex;
   align-items: center;
   gap: 10px;

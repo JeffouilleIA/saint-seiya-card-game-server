@@ -6106,8 +6106,13 @@ export class GameUI {
       this.setTargeting(false);
     }
 
-    if (state.pending) this.handlePending(state);
-    else {
+    if (state.pending) {
+      this.handlePending(state);
+      if (!this.canHumanActOnPending(state, acting)) {
+        this.resetPickOverlay();
+        this.els.overlay.classList.add('hidden');
+      }
+    } else {
       this.resetPickOverlay();
       this.els.overlay.classList.add('hidden');
       if (state.phase === 'chooseActive' && state.pending?.playerIndex === acting) {
@@ -6472,6 +6477,7 @@ export class GameUI {
   }
 
   onTalentClick(acting, zone, state) {
+    if (!this.canOnlineGuestAct(state)) return;
     if (state.turn !== acting || state.phase !== 'main' || state.pending) return;
     const ok = this.execEngine('useTalent', acting, zone);
     if (!ok) {
@@ -6497,6 +6503,7 @@ export class GameUI {
     const attackTest = this.isAttackTestMode();
     if (attackTest) acting = state.turn;
     if (state.turn !== acting || state.phase !== 'main' || state.winner) return;
+    if (this.isOnline2p() && !this.canOnlineGuestAct(state)) return;
 
     const firstTurnBlock = attackTest ? false : !this.engine.canAttackThisTurn(acting);
     const opts = this.engine.getAttackOptions(acting);
@@ -6510,6 +6517,7 @@ export class GameUI {
       }
       btn.textContent = `${o.attack.fromTool ? '★ ' : ''}${o.attack.label}: ${o.attack.name}`;
       btn.addEventListener('click', () => {
+        if (!this.canOnlineGuestAct(this.engine.state)) return;
         if (!this.engine.canAttackThisTurn(acting)) {
           this.showBanner('Premier tour : vous ne pouvez pas attaquer.', 'warn');
           return;
