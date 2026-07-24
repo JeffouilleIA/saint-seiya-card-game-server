@@ -10,6 +10,19 @@
   background: radial-gradient(ellipse 120% 80% at 50% 0%, #1a2438 0%, var(--bg-deep) 55%);
 }
 
+/* Fond d'écran d'accueil — chevaliers d'or */
+#menu-host:has(.menu-main) {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(6, 10, 22, 0.42) 0%,
+      rgba(6, 10, 22, 0.55) 45%,
+      rgba(6, 10, 22, 0.78) 100%
+    ),
+    url('./assets/ui/accueil-chevaliers-or.png') center / cover no-repeat;
+  background-color: #070b14;
+}
+
 #menu-host[hidden] {
   display: none !important;
 }
@@ -32,6 +45,36 @@
   max-width: 1100px;
   margin: 0 auto;
   width: 100%;
+}
+
+.menu-main {
+  max-width: none;
+  justify-content: center;
+  min-height: 100%;
+  padding-top: clamp(2.5rem, 8vh, 4.5rem);
+  padding-bottom: clamp(2.5rem, 8vh, 4.5rem);
+}
+
+.menu-main .menu-title {
+  text-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.85),
+    0 0 28px rgba(201, 162, 39, 0.35);
+}
+
+.menu-main .menu-subtitle,
+.menu-main .menu-shared-hint {
+  color: rgba(232, 236, 245, 0.92);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.85);
+}
+
+.menu-main .menu-actions .btn-menu {
+  background: linear-gradient(180deg, rgba(28, 36, 54, 0.88) 0%, rgba(14, 18, 28, 0.92) 100%);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.menu-main .menu-actions .btn-menu.primary {
+  background: linear-gradient(180deg, rgba(52, 62, 86, 0.92) 0%, rgba(28, 34, 50, 0.95) 100%);
 }
 
 .menu-title {
