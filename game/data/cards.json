@@ -160,6 +160,32 @@
     ]
   },
   {
+    "id": "homme-de-phenix",
+    "name": "Homme de Phénix",
+    "stage": "base",
+    "evolvesFrom": null,
+    "hp": 10,
+    "type": "chevalier-noir",
+    "retreat": 1,
+    "image": "homme_phenix.jpg",
+    "talent": {
+      "name": "Sans valeurs",
+      "effects": [
+        {
+          "type": "zero_prize_on_knockout"
+        }
+      ]
+    },
+    "attacks": [
+      {
+        "name": "Corps à corps",
+        "cost": 0,
+        "damage": 10,
+        "effects": []
+      }
+    ]
+  },
+  {
     "id": "ikki-phenix-mechant",
     "name": "Ikki du Phénix méchant",
     "stage": "base",

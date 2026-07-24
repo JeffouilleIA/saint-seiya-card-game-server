@@ -783,6 +783,15 @@ function describeTalent(talent) {
   if (talent.effects?.some((e) => e.type === 'immune_all_status_if_hades_on_bench')) {
     return talent.effect || 'Immunisé aux états spéciaux tant qu\'Hadès est sur le banc.';
   }
+  if (
+    talent.effects?.some((e) => e.type === 'melee_attack_free') ||
+    talent.effects?.some((e) => e.type === 'melee_no_damage_if_target_used_melee')
+  ) {
+    return (
+      talent.effect ||
+      'Les attaques Corps à corps de ce Chevalier ne coûtent pas d\'énergie. Si l\'attaque vise un Chevalier qui a déjà utilisé Corps à corps ce tour, elle n\'inflige aucun dégât.'
+    );
+  }
   if (talent.effects?.some((e) => e.type === 'on_play_draw')) {
     const d = talent.effects.find((e) => e.type === 'on_play_draw');
     return talent.effect || `Lorsque vous posez cette carte, piochez ${d?.count || 1} carte(s).`;
