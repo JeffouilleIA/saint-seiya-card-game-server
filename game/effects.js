@@ -300,6 +300,17 @@ export class EffectResolver {
     return name.includes('corps') || (attack.cost === 0 && (attack.damage ?? 0) <= 30);
   }
 
+  shouldSuppressMeleeDamageVsUsedTarget(attacker, attack, target, attackerIndex) {
+    if (!attacker || !target || !this.isMeleeAttack(attack)) return false;
+    const def = getCardDef(attacker.cardId);
+    const hasRule = def?.talent?.effects?.some(
+      (e) => e.type === 'melee_no_damage_if_target_used_melee',
+    );
+    if (!hasRule) return false;
+    if (attackerIndex != null && this.isTalentSilenced(attacker, attackerIndex)) return false;
+    return !!target.meleeUsedThisTurn;
+  }
+
   getBenchBonusActiveAttackDamage(attackerIndex) {
     const player = this.game.state.players[attackerIndex];
     const activeId = getCardDef(player.active?.cardId)?.id || player.active?.cardId;
@@ -699,6 +710,13 @@ export class EffectResolver {
       g.findStadiumRule?.('stadium_end_turn_damage') ||
       g.findStadiumRule?.('end_turn_damage') ||
       (fx.def.effect?.endTurnDamage ? { type: 'stadium_end_turn_damage', ...fx.def.effect } : null);
+    if (!rule) return;
+
+    if (rule.target === 'knights_by_rules' && rule.rules?.length) {
+      await this.applyStadiumEndTurnDamageByRules(fx, rule);
+      return;
+    }
+
     if (!rule?.endTurnDamage) return;
 
     const dmg = rule.endTurnDamage || 0;
@@ -728,6 +746,85 @@ export class EffectResolver {
 
     g.feedback(`${fx.name || fx.def.name} : ${dmg} dégâts sur chaque Chevalier actif concerné.`, 'stadium');
     for (const { player, knight } of targets) {
+      g.damageKnight(player, knight, dmg, 'stadium');
+    }
+  }
+
+  async applyStadiumEndTurnDamageByRules(fx, rule) {
+    const g = this.game;
+    const targets = [];
+    for (const player of g.state.players) {
+      const knights =
+        rule.scope === 'active_and_bench'
+          ? [player.active, ...player.bench].filter(Boolean)
+          : player.active
+            ? [player.active]
+            : [];
+      for (const knight of knights) {
+        const dmg = this.getStadiumRuleDamageForKnight(knight, rule);
+        if (dmg > 0) targets.push({ player, knight, dmg });
+      }
+    }
+    if (!targets.length) return;
+
+    g.feedback(
+      `${fx.name || fx.def.name} : dégâts de fin de tour (${targets.length} cible(s)).`,
+      'stadium',
+    );
+    for (const { player, knight, dmg } of targets) {
+      g.damageKnight(player, knight, dmg, 'stadium');
+    }
+  }
+
+  getStadiumRuleDamageForKnight(knight, rule) {
+    if (!knight || !rule?.rules?.length) return 0;
+    let maxDmg = 0;
+    for (const sub of rule.rules) {
+      if (this.knightMatchesStadiumDamageFilter(knight, sub.filter)) {
+        maxDmg = Math.max(maxDmg, sub.endTurnDamage || 0);
+      }
+    }
+    return maxDmg;
+  }
+
+  knightMatchesStadiumDamageFilter(knight, filter = {}) {
+    if (!filter) return false;
+    if (filter.statuses?.some((s) => knight.statuses?.includes(s))) return true;
+    const def = getCardDef(knight?.cardId);
+    const rawType = def?.rawType || def?.type;
+    if (filter.rawTypes?.includes(rawType)) return true;
+    if (filter.tags?.some((t) => def?.tags?.includes(t))) return true;
+    return false;
+  }
+
+  /** Fin de tour : dégâts selon statuts (ex. Terres glacées). */
+  async applyStadiumEndTurnStatusDamage() {
+    const g = this.game;
+    const rule = g.findStadiumRule?.('stadium_end_turn_status_damage');
+    if (!rule?.damageByStatus) return;
+
+    const dmgMap = rule.damageByStatus;
+    const targets = [];
+    for (const player of g.state.players) {
+      for (const knight of [player.active, ...player.bench].filter(Boolean)) {
+        let dmg = 0;
+        if (knight.statuses.includes('frozen') && dmgMap.frozen) {
+          dmg = Math.max(dmg, dmgMap.frozen);
+        }
+        if (knight.statuses.includes('paralyzed') && dmgMap.paralyzed) {
+          dmg = Math.max(dmg, dmgMap.paralyzed);
+        }
+        if (dmg > 0) targets.push({ player, knight, dmg });
+      }
+    }
+    if (!targets.length) return;
+
+    const fx = g.getStadiumEffect?.();
+    g.feedback(
+      `${fx?.name || fx?.def?.name || 'Stade'} : dégâts de fin de tour aux chevaliers gelés/paralysés.`,
+      'stadium',
+    );
+    for (const { player, knight, dmg } of targets) {
       g.damageKnight(player, knight, dmg, 'stadium');
     }
   }
@@ -5529,7 +5626,7 @@ export class EffectResolver {
     g.feedback(`${getCardDef(energyCard.cardId).name} ajouté à la main.`, 'energy');
     g.anim('drawReveal', { cardId: energyCard.cardId, playerIndex });
 
-    const benchFull = player.bench.length >= RULES.maxBench;
+    const benchFull = player.bench.length >= (g.getEffectiveMaxBench?.() ?? RULES.maxBench);
     const canPlace =
       !benchFull && g.canPlayChevalier(playerIndex, silverPick.handIndex);
 
