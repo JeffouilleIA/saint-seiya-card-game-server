@@ -194,15 +194,17 @@ export class EffectResolver {
         damage += player.modifiers.bonusAttackDamageThisTurn;
       }
       // Bonus talent (ex. Protecteur d'Athéna) — annulé si le talent est silencieux (Sorrento, etc.)
+      // et n'affecte pas Corps à corps.
       if (
         attacker?.modifiers?.bonusAttackDamageThisTurn &&
-        !this.isTalentSilenced(attacker, attackerIndex)
+        !this.isTalentSilenced(attacker, attackerIndex) &&
+        !this.isMeleeAttack(attack)
       ) {
         damage += attacker.modifiers.bonusAttackDamageThisTurn;
       }
       if (ctx.ioBonusDamage) damage += ctx.ioBonusDamage;
       damage += this.getBenchBonusActiveAttackDamage(attackerIndex);
-      damage += this.getAllyAttackBonusByRawTypes(attackerIndex, attacker);
+      damage += this.getAllyAttackBonusByRawTypes(attackerIndex, attacker, attack);
       damage += this.getMarinaAttackBonusFromPoseidon(attackerIndex, attacker);
       if (this.isMeleeAttack(attack)) {
         damage += this.getBonusMeleeFromAllies(this.game.state.players[attackerIndex]);
@@ -332,7 +334,7 @@ export class EffectResolver {
     return bonus;
   }
 
-  getAllyAttackBonusByRawTypes(attackerIndex, attacker) {
+  getAllyAttackBonusByRawTypes(attackerIndex, attacker, attack = null) {
     if (!attacker) return 0;
     const attackerDef = getCardDef(attacker.cardId);
     const player = this.game.state.players[attackerIndex];
@@ -342,6 +344,7 @@ export class EffectResolver {
       const allyDef = getCardDef(ally.cardId);
       const eff = allyDef?.talent?.effects?.find((e) => e.type === 'ally_attack_bonus_by_raw_types');
       if (!eff?.rawTypes?.length) continue;
+      if (eff.excludeMelee && attack && this.isMeleeAttack(attack)) continue;
       if (eff.rawTypes.includes(attackerDef?.rawType)) return eff.amount || 30;
     }
     return 0;
@@ -3414,7 +3417,7 @@ export class EffectResolver {
         });
       }
       g.feedback(
-        `Protecteur d'Athéna : +${eff.bonusDamage || 0} dégâts aux attaques de ${getCardDef(knight.cardId).name} ce tour.`,
+        `Protecteur d'Athéna : +${eff.bonusDamage || 0} dégâts aux attaques (hors Corps à corps) de ${getCardDef(knight.cardId).name} ce tour.`,
         'talent',
       );
     }

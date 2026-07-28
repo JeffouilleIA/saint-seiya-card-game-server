@@ -247,12 +247,13 @@
     "retreat": 3,
     "talent": {
       "name": "Protecteur d'Athéna",
-      "effect": "Si vous avez joué Athéna ou Enfant Divin ce tour-ci, soignez 30 dégâts à ce chevalier. Les attaques de ce chevalier infligent 30 dégâts supplémentaires jusqu'à la fin du tour.",
+      "effect": "Si vous avez joué Athéna ou Enfant Divin ce tour-ci, soignez 30 dégâts à ce chevalier. Les attaques de ce chevalier (hors Corps à corps) infligent 30 dégâts supplémentaires jusqu'à la fin du tour.",
       "effects": [
         {
           "type": "athena_or_divine_child_synergy",
           "heal": 30,
-          "bonusDamage": 30
+          "bonusDamage": 30,
+          "excludeMelee": true
         }
       ]
     },

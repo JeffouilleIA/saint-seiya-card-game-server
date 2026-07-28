@@ -684,7 +684,7 @@ function describeTalent(talent) {
   if (aioros) {
     return (
       talent.effect ||
-      `Si vous avez joué Athéna ou Enfant Divin ce tour-ci, soignez ${aioros.heal || 30} dégâts à ce chevalier. Les attaques de ce chevalier infligent ${aioros.bonusDamage || 30} dégâts supplémentaires jusqu'à la fin du tour.`
+      `Si vous avez joué Athéna ou Enfant Divin ce tour-ci, soignez ${aioros.heal || 30} dégâts à ce chevalier. Les attaques de ce chevalier (hors Corps à corps) infligent ${aioros.bonusDamage || 30} dégâts supplémentaires jusqu'à la fin du tour.`
     );
   }
   const search = talent.effects?.find((e) => e.type === 'search_deck');
@@ -730,9 +730,10 @@ function describeTalent(talent) {
   }
   const allyBonus = talent.effects?.find((e) => e.type === 'ally_attack_bonus_by_raw_types');
   if (allyBonus) {
+    const horsMelee = allyBonus.excludeMelee ? ' (hors Corps à corps)' : '';
     return (
       talent.effect ||
-      `Les attaques de vos Chevaliers de Bronze, d'Argent et d'Or infligent ${allyBonus.amount || 30} dégâts supplémentaires.`
+      `Les attaques de vos Chevaliers de Bronze, d'Argent et d'Or${horsMelee} infligent ${allyBonus.amount || 30} dégâts supplémentaires.`
     );
   }
   const sacrifice = talent.effects?.find((e) => e.type === 'athena_sacrifice');
