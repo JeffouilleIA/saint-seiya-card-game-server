@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "test:online-attach": "node scripts/test-online-attach-energy.mjs",
-    "test:online-attack": "node scripts/test-online-attack.mjs"
+    "test:online-attack": "node scripts/test-online-attack.mjs",
+    "test:online-end-turn": "node scripts/test-online-end-turn.mjs"
   }
 }
