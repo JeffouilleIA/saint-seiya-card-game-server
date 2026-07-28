@@ -183,4 +183,49 @@ assert('card image mapped', images['sorrento-sirene'] === 'Sorento.jpg');
   );
 }
 
+// Flûtiste — annule Protecteur d'Athéna (Aioros : pas de soin ni +30 dégâts)
+{
+  const { engine } = makeEngine();
+  engine.reset({ gameMode: 'local2p', deckLists: [[], []] });
+  const p0 = engine.state.players[0];
+  const p1 = engine.state.players[1];
+  const aioros = benchKnight('aioros_sagittaire', 'aioros-1');
+  aioros.currentHp = 100;
+  aioros.energies = [
+    { cardId: 'energie-etoile', instanceId: 'ae1' },
+    { cardId: 'energie-etoile', instanceId: 'ae2' },
+    { cardId: 'energie-etoile', instanceId: 'ae3' },
+  ];
+  p0.active = aioros;
+  p1.active = benchKnight('sorrento-sirene', 'sorrento-vs-aioros');
+  engine.state.turn = 0;
+  engine.state.phase = 'main';
+  engine.state.pending = null;
+  engine.state.turnCount = 2;
+  engine.resetTurnActions();
+
+  assert('aioros silenced by sorrento flute', engine.effects.isTalentSilenced(p0.active, 0));
+  engine.effects.applyAiorosProtecteurIfEligible(0, { fromSupporter: true });
+  assert('protecteur heal blocked while silenced', p0.active.currentHp === 100);
+  assert(
+    'protecteur bonus not applied while silenced',
+    (p0.active.modifiers.bonusAttackDamageThisTurn || 0) === 0,
+  );
+
+  // Bonus already on Aioros, then Sorrento becomes active — damage must ignore bonus
+  p1.active = benchKnight('baian-cheval-marin', 'temp-baian');
+  p0.active.currentHp = 100;
+  p0.active.modifiers = {};
+  engine.effects.applyAiorosProtecteurIfEligible(0, { fromSupporter: true });
+  assert('protecteur applies without sorrento', (p0.active.modifiers.bonusAttackDamageThisTurn || 0) === 30);
+  assert('protecteur heals without sorrento', p0.active.currentHp === 130);
+  p1.active = benchKnight('sorrento-sirene', 'sorrento-late');
+  const foudre = getCardDef('aioros_sagittaire').attacks.find((a) => a.name === 'Foudre atomique');
+  const dmgSilenced = engine.effects.computeAttackDamage(0, foudre, { opponentActive: p1.active });
+  assert('protecteur bonus ignored at damage time vs sorrento', dmgSilenced === 60);
+  p1.active = benchKnight('baian-cheval-marin', 'baian-again');
+  const dmgFree = engine.effects.computeAttackDamage(0, foudre, { opponentActive: p1.active });
+  assert('protecteur bonus returns without sorrento', dmgFree === 90);
+}
+
 console.log('All Sorrento tests passed.');

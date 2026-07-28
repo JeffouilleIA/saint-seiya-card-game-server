@@ -193,7 +193,11 @@ export class EffectResolver {
       if (player.modifiers.bonusAttackDamageThisTurn) {
         damage += player.modifiers.bonusAttackDamageThisTurn;
       }
-      if (attacker?.modifiers?.bonusAttackDamageThisTurn) {
+      // Bonus talent (ex. Protecteur d'Athéna) — annulé si le talent est silencieux (Sorrento, etc.)
+      if (
+        attacker?.modifiers?.bonusAttackDamageThisTurn &&
+        !this.isTalentSilenced(attacker, attackerIndex)
+      ) {
         damage += attacker.modifiers.bonusAttackDamageThisTurn;
       }
       if (ctx.ioBonusDamage) damage += ctx.ioBonusDamage;
@@ -3384,6 +3388,7 @@ export class EffectResolver {
     const knights = [player.active, ...player.bench].filter(Boolean);
     for (const knight of knights) {
       if (!this.isAiorosKnight(knight.cardId)) continue;
+      if (this.isTalentSilenced(knight, playerIndex)) continue;
       const eff = getCardDef(knight.cardId)?.talent?.effects?.find(
         (e) => e.type === 'athena_or_divine_child_synergy',
       );
