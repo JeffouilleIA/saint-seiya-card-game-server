@@ -94,6 +94,10 @@ function guestOwnsPending(engine, guestIndex = GUEST_SEAT) {
 }
 
 function guestCanRelayEngineCall(engine, args = []) {
+  // endTurn and other no-arg methods omit playerIndex; only allow on the guest's turn.
+  if (args.length === 0) {
+    return engine.state.turn === GUEST_SEAT && engine.state.phase === 'main' && !engine.state.winner;
+  }
   if (args[0] !== GUEST_SEAT) return false;
   if (engine.state.turn === GUEST_SEAT && engine.state.phase === 'main' && !engine.state.winner) {
     return true;
