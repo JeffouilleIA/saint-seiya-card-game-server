@@ -6490,11 +6490,14 @@ export class GameUI {
       pending?.type === 'pickOwnBenchActive' ||
       pending?.type === 'pickOpponentBenchActive' ||
       pending?.type === 'teleportPickSide' ||
-      pending?.type === 'searchDeck'
+      pending?.type === 'searchDeck' ||
+      pending?.type === 'promoteActive'
     ) {
       this.setTargeting(true);
-      this.render(this.engine.state);
     }
+    // Sacrifice d'Athéna et autres talents asynchrones : re-render après le KO / pending.
+    this.render(this.engine.state);
+    setTimeout(() => this.render(this.engine.state), 50);
   }
 
   renderAttacks(state, acting = this.getActingPlayer(state)) {

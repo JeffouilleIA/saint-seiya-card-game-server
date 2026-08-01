@@ -740,7 +740,7 @@ function describeTalent(talent) {
   if (sacrifice) {
     return (
       talent.effect ||
-      `Sacrifice (${sacrifice.minEnergy || 2}+ Énergies) : ${sacrifice.damage || 110} dégâts, fin de tour, adversaire prend ${sacrifice.opponentPrizes || 2} Récompenses.`
+      `Sacrifice (${sacrifice.minEnergy || 2}+ Énergies, actif ou banc) : ce chevalier est KO. Si c'était l'actif, choisissez un remplaçant. Fin de tour ; l'adversaire prend les Récompenses.`
     );
   }
   const hadesRecover = talent.effects?.find((e) => e.type === 'turn_start_recover_discard');

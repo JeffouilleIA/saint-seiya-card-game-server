@@ -4329,6 +4329,11 @@ export class EffectResolver {
     }
   }
 
+  /**
+   * Sacrifice d'Athéna : le chevalier Athéna (actif ou banc, ≥2 Énergies) est KO.
+   * L'adversaire prend les Récompenses du KO ; s'il était actif, choix d'un remplaçant ;
+   * puis fin de tour.
+   */
   resolveAthenaSacrifice(playerIndex, knight, eff) {
     const g = this.game;
     const player = g.state.players[playerIndex];
@@ -4337,21 +4342,25 @@ export class EffectResolver {
       g.feedback(`Sacrifice : au moins ${minEnergy} Énergies requises.`, 'warn');
       return false;
     }
-    while (knight.energies.length) {
-      const e = knight.energies.pop();
-      player.discard.push({ cardId: e.cardId, instanceId: e.instanceId });
-    }
-    const opp = g.state.players[1 - playerIndex];
-    if (opp.active) {
-      g.damageKnight(opp, opp.active, eff.damage || 110, 'talent', playerIndex, knight.cardId);
-    }
-    const prizeCount = eff.opponentPrizes ?? 2;
-    void g.takePrizes(opp, prizeCount);
     if (eff.oncePerTurn) knight.modifiers.talentOnceThisTurn = true;
     knight.talentUsed = true;
-    g.feedback('Sacrifice d\'Athéna : tour terminé, Récompenses pour l\'adversaire.', 'talent');
-    g.state.forceEndTurnAfterTalent = true;
+    knight.currentHp = 0;
+    g.feedback(
+      'Sacrifice d\'Athéna : ce chevalier est sacrifié. L\'adversaire prend les Récompenses.',
+      'talent',
+    );
     g.emit();
+
+    void g.knockOut(player, knight, { source: 'talent' }).then(async () => {
+      if (g.state.winner) return;
+      const waitingPromote =
+        g.state.pending?.type === 'promoteActive' && g.state.pending.playerIndex === playerIndex;
+      if (waitingPromote) {
+        g._endTurnAfterOwnPromote = playerIndex;
+        return;
+      }
+      await g.endTurn();
+    });
     return true;
   }
 

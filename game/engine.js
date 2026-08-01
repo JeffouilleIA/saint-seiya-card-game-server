@@ -313,6 +313,7 @@ export class GameEngine {
     clearTimeout(this._autoEndTurnTimer);
     this._autoEndTurnTimer = null;
     this._autoEndTurnAfterPromote = null;
+    this._endTurnAfterOwnPromote = null;
     this._deferCerbereForPlayerIndex = null;
     this._huitiemeSensTransferResolve = null;
     this._damageAttribution = null;
@@ -3510,12 +3511,7 @@ export class GameEngine {
         this.feedback('Sacrifice déjà utilisé ce tour.', 'warn');
         return false;
       }
-      const ok = this.effects.resolveAthenaSacrifice(playerIndex, knight, sacrifice);
-      if (ok && this.state.forceEndTurnAfterTalent) {
-        this.state.forceEndTurnAfterTalent = false;
-        void this.endTurn();
-      }
-      return ok;
+      return this.effects.resolveAthenaSacrifice(playerIndex, knight, sacrifice);
     }
     const benchDmg = effects.find((e) => e.type === 'bench_damage_once_per_turn');
     if (benchDmg) {
@@ -6581,6 +6577,11 @@ export class GameEngine {
     this.feedback(`${getCardDef(p.active.cardId).name} devient actif.`, 'play');
     this._tryApplyDeferredCerbere();
     this.emit();
+    if (this._endTurnAfterOwnPromote === playerIndex) {
+      this._endTurnAfterOwnPromote = null;
+      void this.endTurn();
+      return true;
+    }
     if (this._autoEndTurnAfterPromote != null) {
       this.maybeScheduleAutoEndTurnAfterPromote();
     } else if (this.isAiControlled(playerIndex)) {

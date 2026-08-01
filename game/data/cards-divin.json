@@ -322,7 +322,7 @@
     "retreat": 3,
     "talent": {
       "name": "Athéna et ses chevaliers",
-      "effect": "Les attaques de vos Chevaliers de Bronze, d'Argent et d'Or (hors Corps à corps) infligent 30 dégâts supplémentaires. Une fois par tour, si ce chevalier a au moins 2 Énergies, vous pouvez les défausser toutes : infligez 110 dégâts au chevalier actif adverse, votre tour se termine et l'adversaire prend 2 Récompenses.",
+      "effect": "Les attaques de vos Chevaliers de Bronze, d'Argent et d'Or (hors Corps à corps) infligent 30 dégâts supplémentaires. Une fois par tour, si ce chevalier (actif ou banc) a au moins 2 Énergies : sacrifiez-le (KO). Si c'était votre actif, choisissez un remplaçant. Votre tour se termine et l'adversaire prend les Récompenses correspondantes.",
       "effects": [
         {
           "type": "ally_attack_bonus_by_raw_types",
@@ -337,8 +337,6 @@
         {
           "type": "athena_sacrifice",
           "minEnergy": 2,
-          "damage": 110,
-          "opponentPrizes": 2,
           "oncePerTurn": true
         }
       ]
